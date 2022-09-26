@@ -36,7 +36,7 @@
 #define WRITE_RATE 780800 /* GATT Write bps recorded in this test */
 
 extern uint32_t central_gatt_write(uint32_t count);
-extern uint32_t peripheral_gatt_write(uint32_t count);
+extern uint32_t peripheral_gatt_write(uint32_t count, bool scan_enabled);
 
 #define FAIL(...)					\
 	do {						\
@@ -75,7 +75,7 @@ static void test_peripheral_main(void)
 {
 	uint32_t write_rate;
 
-	write_rate = peripheral_gatt_write(COUNT);
+	write_rate = peripheral_gatt_write(COUNT, false);
 
 	printk("%s: Write Rate = %u bps\n", __func__, write_rate);
 	if (write_rate == WRITE_RATE) {

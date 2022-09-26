@@ -153,8 +153,48 @@ static bool le_param_req(struct bt_conn *conn, struct bt_le_conn_param *param)
 static void le_param_updated(struct bt_conn *conn, uint16_t interval,
 			     uint16_t latency, uint16_t timeout)
 {
+	struct bt_le_conn_param conn_param[] = {
+		{ 0x0028, 0x0028, 0U, 42U},
+		{ 0x0028, 0x0028, 0U, 42U},
+		{ 0x0006, 0x0006, 0U, 10U},
+	};
+	struct bt_conn_info conn_info;
+	static uint8_t curr;
+	int err;
+
 	printk("%s: int 0x%04x lat %u to %u\n", __func__, interval,
 	       latency, timeout);
+
+	err = bt_conn_get_info(conn, &conn_info);
+	if (err) {
+		printk("Failed to get connection info (%d).\n", err);
+		return;
+	}
+
+	if (conn_info.role == BT_CONN_ROLE_CENTRAL) {
+		return;
+	}
+
+	/* Iterate from the last connection parameter entry */
+	if (!curr) {
+		curr = sizeof(conn_param) / sizeof(struct bt_le_conn_param);
+	}
+
+	curr--;
+
+	/* Stop connection parameter when previous parameter is equal to
+	 * current in the list
+	 */
+	if ((interval >= conn_param[curr].interval_min) &&
+	    (interval <= conn_param[curr].interval_max)) {
+		return;
+	}
+
+	err = bt_conn_le_param_update(conn, &conn_param[curr]);
+	if (err) {
+		printk("Failed to update connection parameters (err %d)\n",
+		       err);
+	}
 }
 
 #if defined(CONFIG_BT_SMP)
