@@ -12,6 +12,8 @@
 
    <a href="https://bestpractices.coreinfrastructure.org/projects/74"><img
    src="https://bestpractices.coreinfrastructure.org/projects/74/badge"></a>
+   <a href="https://api.securityscorecards.dev/projects/github.com/zephyrproject-rtos/zephyr"><img
+   src="https://api.securityscorecards.dev/projects/github.com/zephyrproject-rtos/zephyr/badge"></a>
    <a
    href="https://github.com/zephyrproject-rtos/zephyr/actions/workflows/twister.yaml?query=branch%3Amain">
    <img
