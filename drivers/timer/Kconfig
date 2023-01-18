@@ -93,6 +93,7 @@ source "drivers/timer/Kconfig.sam0_rtc"
 source "drivers/timer/Kconfig.smartbond"
 source "drivers/timer/Kconfig.stm32_lptim"
 source "drivers/timer/Kconfig.xlnx_psttc"
+source "drivers/timer/Kconfig.xlnx_tmrctr"
 source "drivers/timer/Kconfig.xtensa"
 
 endmenu
