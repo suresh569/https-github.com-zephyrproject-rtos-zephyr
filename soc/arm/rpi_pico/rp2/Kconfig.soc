@@ -48,3 +48,84 @@ config RP2_FLASH_AT25SF128A
 	help
 	  Configure RP2 to use a AT25SF128A flash chip, or similar. Should be selected
 	  by the board definition, not the user.
+config RP2_BINARY_INFO
+	bool "Generate RaspberryPi Pico binary info"
+	default y
+	help
+	  Binary info is able to embed machine readable information with the binary in FLASH.
+	  It can read with picotool(https://github.com/raspberrypi/picotool).
+
+config RP2_BINARY_INFO_RP_PROGRAM_BUILD_DATE_OVERRIDE
+	bool "Override build date in binary info"
+	help
+	  Override RP_PROGRAM_BUILD_DATE_STRING field of binary info
+	  by RP2_BINARY_INFO_RP_PROGRAM_BUILD_DATE value.
+	  If not specified, set the value of __DATE__ macro to the field.
+
+config RP2_BINARY_INFO_RP_PROGRAM_BUILD_DATE
+	string "Override string for build date in binary info"
+	depends on RP2_BINARY_INFO_RP_PROGRAM_BUILD_DATE_OVERRIDE
+
+config RP2_BINARY_INFO_RP_PROGRAM_NAME_OVERRIDE
+	bool "Override program name in binary info"
+	help
+	  Override RP_PROGRAM_NAME field of binary info
+	  by RP2_BINARY_INFO_RP_PROGRAM_NAME value.
+	  If not specified, set the directory name of the project to the field.
+
+config RP2_BINARY_INFO_RP_PROGRAM_NAME
+	string "Override string for program name in binary info"
+	depends on RP2_BINARY_INFO_RP_PROGRAM_NAME_OVERRIDE
+
+config RP2_BINARY_INFO_RP_PICO_BOARD_OVERRIDE
+	bool "Override board in binary info"
+	help
+	  Override RP_PICO_BOARD field of binary info
+	  by RP2_BINARY_INFO_RP_PICO_BOARD value.
+	  If not specified, set the 'CONFIG_BOARD' value to this field.
+
+config RP2_BINARY_INFO_RP_PICO_BOARD
+	string "Override string for board in binary info"
+	depends on RP2_BINARY_INFO_RP_PICO_BOARD_OVERRIDE
+
+config RP2_BINARY_INFO_RP_SDK_VERSION_STRING_OVERRIDE
+	bool "Override sdk version in binary info"
+	help
+	  Override RP_SDK_VERSION field of binary info
+	  by RP2_BINARY_INFO_SDK_VERSION_STRING value.
+	  If not specified, set the SDK version defined in the pico-sdk to the field.
+
+config RP2_BINARY_INFO_RP_SDK_VERSION_STRING
+	string "Override string for sdk version in binary info"
+	depends on RP2_BINARY_INFO_RP_SDK_VERSION_STRING_OVERRIDE
+
+config RP2_BINARY_INFO_RP_PROGRAM_VERSION_STRING_OVERRIDE
+	bool "Override program version in binary info"
+	help
+	  Override RP_PROGRAM_VERSION_STRING field of binary info
+	  by RP2_BINARY_INFO_RP_PROGRAM_VERSION_STRING value.
+	  If not specified, set the zephyr's BUILD_VERSION definition to the field.
+
+config RP2_BINARY_INFO_RP_PROGRAM_VERSION_STRING
+	string "Override string for program version in binary info"
+	depends on RP2_BINARY_INFO_RP_PROGRAM_VERSION_STRING_OVERRIDE
+
+config RP2_BINARY_INFO_RP_PROGRAM_DESCRIPTION_OVERRIDE
+	bool "Override program descrpition in binary info"
+	help
+	  Override RP_PROGRAM_DESCRIPTION field of binary info
+	  by RP2_BINARY_INFO_RP_PROGRAM_DESCRIPTION value.
+	  If not specified, set an empty string to the field.
+
+config RP2_BINARY_INFO_RP_PROGRAM_DESCRIPTION
+	string "String for program description in binary info"
+
+config RP2_BINARY_INFO_RP_PROGRAM_URL_OVERRIDE
+	bool "Override program url in binary info"
+	help
+	  Override RP_PROGRAM_URL field of binary info
+	  by RP2_BINARY_INFO_RP_PROGRAM_URL value.
+	  If not specified, set an empty string to the field.
+
+config RP2_BINARY_INFO_RP_PROGRAM_URL
+	string "String for program description in binary info"

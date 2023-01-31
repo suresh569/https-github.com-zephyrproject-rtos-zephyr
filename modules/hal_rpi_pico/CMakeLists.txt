@@ -139,4 +139,20 @@ if(CONFIG_HAS_RPI_PICO)
   zephyr_include_directories_ifdef(CONFIG_PICOSDK_USE_CLAIM
           ${rp2_common_dir}/hardware_claim/include)
 
+  # binary info settings
+
+  zephyr_compile_definitions_ifdef(CONFIG_RP2_BINARY_INFO PICO_NO_BINARY_INFO=0)
+
+  get_filename_component(APPLICATION_SOURCE_DIR_BASE ${APPLICATION_SOURCE_DIR} NAME)
+  zephyr_compile_definitions_ifdef(CONFIG_RP2_BINARY_INFO APPLICATION_SOURCE_DIR_BASE="${APPLICATION_SOURCE_DIR_BASE}")
+
+  if (NOT "${flash_type}" STREQUAL "")
+    zephyr_compile_definitions_ifdef(CONFIG_RP2_BINARY_INFO PICO_BOOT_STAGE2_CHOOSE_${flash_type}=1)
+  endif()
+
+  if ("${PICO_SDK_VERSION_STRING}" STREQUAL "")
+    include(${ZEPHYR_HAL_RPI_PICO_MODULE_DIR}/pico_sdk_version.cmake)
+  endif()
+  zephyr_compile_definitions_ifdef(CONFIG_RP2_BINARY_INFO PICO_SDK_VERSION_STRING="${PICO_SDK_VERSION_STRING}")
+
 endif()
