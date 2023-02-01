@@ -30,7 +30,9 @@
 #define asm __asm
 
 /* Disable binary info */
+#ifndef PICO_NO_BINARY_INFO
 #define PICO_NO_BINARY_INFO 1
+#endif
 
 /* Zephyr compatible way of forcing inline */
 #ifndef __always_inline
