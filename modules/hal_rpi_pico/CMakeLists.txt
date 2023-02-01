@@ -60,6 +60,7 @@ if(CONFIG_HAS_RPI_PICO)
   )
 
   zephyr_include_directories(
+    ${rp2_common_dir}/boot_stage2/include
     ${rp2_common_dir}/hardware_base/include
     ${rp2_common_dir}/hardware_clocks/include
     ${rp2_common_dir}/hardware_watchdog/include
@@ -73,6 +74,7 @@ if(CONFIG_HAS_RPI_PICO)
     ${rp2040_dir}/hardware_regs/include
     ${rp2040_dir}/hardware_structs/include
     ${common_dir}/pico_base/include
+    ${common_dir}/pico_binary_info/include
     ${rp2_common_dir}/pico_platform/include
     ${CMAKE_CURRENT_LIST_DIR}
   )
