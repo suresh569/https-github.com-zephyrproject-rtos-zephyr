@@ -13,6 +13,8 @@ import contextlib
 
 from devicetree import edtlib
 
+from dtsh.model import DTModel
+
 
 class DTShTests:
     """Access test resource files, data samples, etc."""
@@ -41,6 +43,7 @@ class DTShTests:
     """The unit tests board model."""
 
     _sample_edt: Optional[edtlib.EDT] = None
+    _sample_dtmodel: Optional[DTModel] = None
 
     @classmethod
     @contextlib.contextmanager
@@ -137,6 +140,23 @@ class DTShTests:
         return cls._sample_edt
 
     @classmethod
+    def get_sample_dtmodel(cls, force_reload: bool = False) -> DTModel:
+        """Get the sample Devicetree model (DTModel).
+
+        Args:
+            force_reload: Force reloading the model (default is to return
+              a cached model).
+
+        Returns:
+            The sample Devicetree model (DTModel).
+        """
+        if force_reload:
+            return cls._read_sample_dtmodel()
+        if not cls._sample_dtmodel:
+            cls._sample_dtmodel = cls._read_sample_dtmodel()
+        return cls._sample_dtmodel
+
+    @classmethod
     def _read_sample_edt(cls) -> edtlib.EDT:
         with cls.from_res():
             return edtlib.EDT(
@@ -144,4 +164,12 @@ class DTShTests:
                 bindings_dirs=[
                     os.path.join(cls.ZEPHYR_BASE, "dts", "bindings")
                 ],
+            )
+
+    @classmethod
+    def _read_sample_dtmodel(cls) -> DTModel:
+        with cls.from_res():
+            return DTModel.create(
+                dts_path="zephyr.dts",
+                binding_dirs=[os.path.join(cls.ZEPHYR_BASE, "dts", "bindings")],
             )
