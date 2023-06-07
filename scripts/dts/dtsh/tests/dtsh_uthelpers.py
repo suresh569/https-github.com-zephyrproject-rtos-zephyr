@@ -28,6 +28,15 @@ from dtsh.shell import (
     DTShUsageError,
     DTShCommandError,
 )
+from dtsh.shellutils import (
+    DTSH_NODE_ORDER_BY,
+    DTShArgFixedDepth,
+    DTShArgOrderBy,
+    DTShParamDTPath,
+    DTShParamDTPaths,
+    DTShParamAlias,
+    DTShParamChosen,
+)
 
 
 class DTShTests:
@@ -349,6 +358,186 @@ class DTShTests:
             if not isinstance(flag, DTShFlagHelp):
                 assert flag.isset
                 assert cmd.with_flag(flag.__class__)
+
+    @classmethod
+    def check_cmd_arg_order_by(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check "--order-by KEY" argument upon command execution.
+
+        Test:
+        - the expected sorter argument for all valid keys
+        - expect DTShUsageError for invalid keys
+
+        Args:
+            cmd: The command under test.
+            sh: The context shell.
+            out: An output stream.
+        """
+        arg = cmd.with_arg(DTShArgOrderBy)
+
+        for key in DTSH_NODE_ORDER_BY:
+            cmd.execute(["--order-by", key], sh, out)
+            assert DTSH_NODE_ORDER_BY[key].sorter is arg.sorter
+            assert (
+                DTSH_NODE_ORDER_BY[key].sorter
+                is cmd.with_arg(DTShArgOrderBy).sorter
+            )
+
+        with pytest.raises(DTShUsageError):
+            cmd.execute(["--order-by", "not a key"], sh, out)
+
+    @classmethod
+    def check_cmd_arg_fixed_depth(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check "--fixed-depth DEPTH" argument upon command execution.
+
+        Test:
+        - the expected depth for valid argument values
+        - expect DTShUsageError for invalid argument values
+
+        Args:
+            cmd: The command under test.
+            sh: The context shell.
+            out: An output stream.
+        """
+        arg = cmd.with_arg(DTShArgFixedDepth)
+
+        cmd.execute(["--fixed-depth", "2"], sh, out)
+        assert arg.isset
+        assert 2 == arg.depth
+        assert 2 == cmd.with_arg(DTShArgFixedDepth).depth
+
+        with pytest.raises(DTShUsageError):
+            cmd.execute(["--fixed-depth", "not an int"], sh, out)
+        with pytest.raises(DTShUsageError):
+            # Negative values not allowed.
+            cmd.execute(["--fixed-depth", "-2"], sh, out)
+
+    @classmethod
+    def check_cmd_param_dtpath(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check the PATH parameter upon command execution.
+
+        Will test:
+        - parameter's state and multiplicity
+        - invalid parameter values (i.e. invalid paths)
+
+        The metadata and parameter specific properties of DTShParamDTPath
+        are tested in test_dtsh_shellutils.py.
+
+        Args:
+            cmd: The command under test, that does not support path expansion.
+            sh: The context shell.
+            out: An output stream.
+        """
+        param = cmd.with_param(DTShParamDTPath)
+
+        # Parameter's state and multiplicity.
+        cls.check_param(param)
+
+        with pytest.raises(DTShCommandError):
+            # Path not found.
+            cmd.execute(["/not/a/node"], sh, out)
+        with pytest.raises(DTShCommandError):
+            # No path expansion: despite "/leds" exists, this should fail.
+            cmd.execute(["/leds*"], sh, out)
+
+    @classmethod
+    def check_cmd_param_dtpaths(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check the PATHs parameter upon command execution.
+
+        Will test:
+        - parameter's state and multiplicity
+        - invalid parameter values (i.e. invalid paths)
+
+        The metadata and parameter specific properties of DTShParamDTPaths
+        are tested in test_dtsh_shellutils.py.
+
+        Args:
+            cmd: The command under test, that does support path expansion.
+            sh: The context shell.
+            out: An output stream.
+        """
+        param = cmd.with_param(DTShParamDTPaths)
+
+        # Parameter's state and multiplicity.
+        cls.check_param(param)
+
+        with pytest.raises(DTShCommandError):
+            # Path not found.
+            cmd.execute(["/not/a/node"], sh, out)
+        with pytest.raises(DTShCommandError):
+            # Empty expansions are errors.
+            cmd.execute(["/soc/empty*"], sh, out)
+
+    @classmethod
+    def check_cmd_param_alias(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check the ALIAS parameter upon command execution.
+
+        Will test:
+        - parameter's state and multiplicity
+        - invalid parameter values (i.e. invalid alias names)
+
+        The metadata and parameter specific properties of DTShParamAlias
+        are tested in test_dtsh_shellutils.py.
+
+        Args:
+            cmd: The command under test, that does support path expansion.
+            sh: The context shell.
+            out: An output stream.
+        """
+        param = cmd.with_param(DTShParamAlias)
+
+        # Parameter's state and multiplicity.
+        cls.check_param(param)
+
+        alias = "led0"
+        cmd.execute([alias], sh, out)
+        assert alias == param.alias
+        assert alias == cmd.with_param(DTShParamAlias).alias
+
+        # Should not fail: the parameter is interpreted as a search string.
+        cmd.execute(["not-an-alias"], sh, out)
+
+    @classmethod
+    def check_cmd_param_chosen(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check the CHOSEN parameter upon command execution.
+
+        Will test:
+        - parameter's state and multiplicity
+        - invalid parameter values (i.e. invalid chosen names)
+
+        The metadata and parameter specific properties of DTShParamChosen
+        are tested in test_dtsh_shellutils.py.
+
+        Args:
+            cmd: The command under test, that does support path expansion.
+            sh: The context shell.
+            out: An output stream.
+        """
+        param = cmd.with_param(DTShParamChosen)
+
+        # Parameter's state and multiplicity.
+        cls.check_param(param)
+        assert "" == param.chosen
+
+        # Must be a valid choice.
+        chosen = "zephyr,entropy"
+        cmd.execute([chosen], sh, out)
+        assert chosen == param.chosen
+        assert chosen == cmd.with_param(DTShParamChosen).chosen
+
+        # Should not fail: the parameter is interpreted as a search string.
+        cmd.execute(["not-a-chosen"], sh, out)
 
     @classmethod
     def check_cmd_execute(
