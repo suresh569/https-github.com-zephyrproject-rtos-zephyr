@@ -29,14 +29,15 @@ from dtsh.shell import (
     DTShCommandError,
 )
 from dtsh.shellutils import (
-    DTSH_NODE_ORDER_BY,
     DTShArgFixedDepth,
     DTShArgOrderBy,
     DTShParamDTPath,
     DTShParamDTPaths,
     DTShParamAlias,
     DTShParamChosen,
+    DTSH_NODE_ORDER_BY,
 )
+from dtsh.rich.shellutils import DTShArgLongFmt, DTSH_NODE_FMT_SPEC
 
 
 class DTShTests:
@@ -414,6 +415,35 @@ class DTShTests:
         with pytest.raises(DTShUsageError):
             # Negative values not allowed.
             cmd.execute(["--fixed-depth", "-2"], sh, out)
+
+    @classmethod
+    def check_cmd_arg_longfmt(
+        cls, cmd: DTShCommand, sh: DTSh, out: DTShOutput
+    ) -> None:
+        """Check "--format FMT" argument when executing the command.
+
+        Test:
+        - the expected fields argument for all valid specifiers
+        - expect DTShUsageError for invalid format strings
+
+        Args:
+            cmd: The command under test.
+            sh: The shell that will execute the command.
+            out: An output stream.
+        """
+        arg = cmd.with_arg(DTShArgLongFmt)
+
+        for key, spec in DTSH_NODE_FMT_SPEC.items():
+            cmd.execute(["--format", key], sh, out)
+            assert arg.fmt
+            assert spec.col is arg.fmt[0]
+
+        all_fmt = "".join(spec for spec in DTSH_NODE_FMT_SPEC)
+        cmd.execute(["--format", all_fmt], sh, out)
+        assert [DTSH_NODE_FMT_SPEC[spec].col for spec in all_fmt] == arg.fmt
+
+        with pytest.raises(DTShCommandError):
+            cmd.execute(["--format", "invalid format string"], sh, out)
 
     @classmethod
     def check_cmd_param_dtpath(
