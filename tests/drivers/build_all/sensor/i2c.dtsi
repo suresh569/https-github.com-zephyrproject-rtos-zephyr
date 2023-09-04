@@ -1012,3 +1012,9 @@ test_i2c_ina226: ina226@8d {
 	current-lsb-microamps = <5000>;
 	rshunt-micro-ohms = <500>;
 };
+
+test_i2c_wsen_hids_2525020210002: wsen_hids_2525020210002@8e {
+	compatible = "we,wsen-hids-2525020210002";
+	reg = <0x8e>;
+	precision = "High";
+};
