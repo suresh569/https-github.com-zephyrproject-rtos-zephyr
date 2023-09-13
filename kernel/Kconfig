@@ -1086,3 +1086,4 @@ config DEVICE_DEPS_DYNAMIC
 endmenu
 
 rsource "Kconfig.vm"
+rsource "Kconfig.init"

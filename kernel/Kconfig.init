@@ -1,0 +1,11 @@
+
+
+config PLATFORM_EARLY_INIT
+	bool "Run early platform hook"
+	help
+	  Run an early platform initialization hook.
+
+config PLATFORM_LATE_INIT
+	bool "Run late platform hook"
+	help
+	  Run a late platform initialization hook.

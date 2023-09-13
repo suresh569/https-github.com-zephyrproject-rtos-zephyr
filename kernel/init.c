@@ -22,6 +22,7 @@
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/linker/linker-defs.h>
+#include <zephyr/platform/platform.h>
 #include <ksched.h>
 #include <string.h>
 #include <zephyr/sys/dlist.h>
@@ -316,6 +317,10 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 	z_sys_post_kernel = true;
 
 	z_sys_init_run_level(INIT_LEVEL_POST_KERNEL);
+#if CONFIG_PLATFORM_LATE_INIT
+	platform_late_initialize();
+#endif
+
 #if CONFIG_STACK_POINTER_RANDOM
 	z_stack_adjust_initialized = 1;
 #endif
@@ -550,6 +555,9 @@ FUNC_NORETURN void z_cstart(void)
 	/* do any necessary initialization of static devices */
 	z_device_state_init();
 
+#if CONFIG_PLATFORM_EARLY_INIT
+	platform_early_initialize();
+#endif
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
