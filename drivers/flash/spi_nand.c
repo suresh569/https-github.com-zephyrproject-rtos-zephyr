@@ -79,7 +79,7 @@ struct spi_nand_data {
 };
 
 static const struct flash_parameters flash_nand_parameters = {
-	.write_block_size = 1,
+	.write_block_size = SPI_NAND_SUB_PAGE_SIZE,
 	.erase_value = 0xff,
 };
 
@@ -567,6 +567,16 @@ static int spi_nand_write(const struct device *dev, off_t addr,
 	uint32_t offset = 0;
 	uint32_t chunk = 0;
 	uint32_t written_bytes = 0;
+
+	/* address must be sub-page-aligned */
+	if (!(addr & (SPI_NAND_SUB_PAGE_SIZE - 1)) && (addr != 0)) {
+		return -EINVAL;
+	}
+
+	/* size must be a multiple of sub-page */
+	if ((size % SPI_NAND_SUB_PAGE_SIZE) != 0) {
+		return -EINVAL;
+	}
 
 	acquire_device(dev);
 
