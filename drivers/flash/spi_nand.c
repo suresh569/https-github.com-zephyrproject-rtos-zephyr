@@ -19,6 +19,38 @@
 
 LOG_MODULE_REGISTER(spi_nand, CONFIG_FLASH_LOG_LEVEL);
 
+/* Indicates that an access command includes bytes for the address.
+ * If not provided the opcode is not followed by address bytes.
+ */
+#define NAND_ACCESS_ADDRESSED BIT(0)
+
+/* Indicates that addressed access uses a 8-bit address regardless of
+ * spi_nand_data::flag_8bit_addr.
+ */
+#define NAND_ACCESS_8BIT_ADDR BIT(1)
+
+/* Indicates that addressed access uses a 16-bit address regardless of
+ * spi_nand_data::flag_16bit_addr.
+ */
+#define NAND_ACCESS_16BIT_ADDR BIT(2)
+
+/* Indicates that addressed access uses a 24-bit address regardless of
+ * spi_nand_data::flag_32bit_addr.
+ */
+#define NAND_ACCESS_24BIT_ADDR BIT(3)
+
+/* Indicates that addressed access uses a 32-bit address regardless of
+ * spi_nand_data::flag_32bit_addr.
+ */
+#define NAND_ACCESS_32BIT_ADDR BIT(4)
+
+/* Indicates that an access command is performing a write.  If not
+ * provided access is a read.
+ */
+#define NAND_ACCESS_WRITE BIT(5)
+
+#define NAND_ACCESS_DUMMY BIT(6)
+
 /* Build-time data associated with the device. */
 struct spi_nand_config {
 	/* Devicetree SPI configuration */
@@ -83,39 +115,7 @@ static const struct flash_parameters flash_nand_parameters = {
 	.erase_value = 0xff,
 };
 
-/* Indicates that an access command includes bytes for the address.
- * If not provided the opcode is not followed by address bytes.
- */
-#define NAND_ACCESS_ADDRESSED BIT(0)
-
-/* Indicates that addressed access uses a 8-bit address regardless of
- * spi_nand_data::flag_8bit_addr.
- */
-#define NAND_ACCESS_8BIT_ADDR BIT(1)
-
-/* Indicates that addressed access uses a 16-bit address regardless of
- * spi_nand_data::flag_16bit_addr.
- */
-#define NAND_ACCESS_16BIT_ADDR BIT(2)
-
-/* Indicates that addressed access uses a 24-bit address regardless of
- * spi_nand_data::flag_32bit_addr.
- */
-#define NAND_ACCESS_24BIT_ADDR BIT(3)
-
-/* Indicates that addressed access uses a 32-bit address regardless of
- * spi_nand_data::flag_32bit_addr.
- */
-#define NAND_ACCESS_32BIT_ADDR BIT(4)
-
-/* Indicates that an access command is performing a write.  If not
- * provided access is a read.
- */
-#define NAND_ACCESS_WRITE BIT(5)
-
-#define NAND_ACCESS_DUMMY BIT(6)
-
-int bch_calculate_ecc(const struct device *dev, 
+void bch_calculate_ecc(const struct device *dev, 
 		unsigned char *buf, unsigned char *code)
 {
 	struct spi_nand_data *data = dev->data;
@@ -123,19 +123,15 @@ int bch_calculate_ecc(const struct device *dev,
 	memset(code, 0, data->ecc_bytes);
 
 	bch_encode(data->nbc.bch, buf, (unsigned int *)code);
-
-	return 0;
 }
 
-int bch_correct_data(const struct device *dev, 
+void bch_correct_data(const struct device *dev, 
 		unsigned char *buf, unsigned char *read_ecc, 
 		unsigned char *calc_ecc)
 {
 	struct spi_nand_data *data = dev->data;
 
 	bch_decode(data->nbc.bch, buf, (unsigned int *)calc_ecc);
-
-	return 0;
 }
 
 /*
