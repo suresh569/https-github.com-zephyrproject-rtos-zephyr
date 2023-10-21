@@ -1,0 +1,10 @@
+# Copyright (c) 2023-2024 Chen Xingyu <hi@xingrz.me>
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_CH565 || SOC_CH569
+
+config NUM_IRQS
+	int
+	default 256
+
+endif # SOC_CH565 || SOC_CH569
