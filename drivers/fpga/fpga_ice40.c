@@ -74,6 +74,7 @@
 #define FPGA_ICE40_LEADING_CLOCKS_MIN  8
 #define FPGA_ICE40_TRAILING_CLOCKS_MIN 49
 
+#define LOG_LEVEL LOG_LEVEL_DBG
 LOG_MODULE_REGISTER(fpga_ice40);
 
 struct fpga_ice40_data {
@@ -200,6 +201,25 @@ static enum FPGA_status fpga_ice40_get_status(const struct device *dev)
 	return st;
 }
 
+static int wait_for_cdone(const struct fpga_ice40_config *config, size_t timeout)
+{
+	int ret;
+
+	for (; timeout > 0; timeout--) {
+		ret = gpio_pin_get_dt(&config->cdone);
+		if (ret == 1) {
+			return 0;
+		}
+		if (ret < 0) {
+			LOG_ERR("failed to read CDONE, %d", ret);
+			return ret;
+		}
+	}
+
+	LOG_ERR("CDONE did not go high");
+	return -EIO;
+}
+
 /*
  * See iCE40 Family Handbook, Appendix A. SPI Slave Configuration Procedure,
  * pp 15-21.
@@ -246,14 +266,23 @@ static int fpga_ice40_load_gpio(const struct device *dev, uint32_t *image_ptr, u
 	__ASSERT(ret == 0, "Failed to initialize GPIO: %d", ret);
 
 	LOG_DBG("Set CRESET low");
+	*config->clear |= creset;
+
+	LOG_DBG("Delay 1 us");
+	k_busy_wait(1);
+
 	LOG_DBG("Set SPI_CS low");
-	*config->clear |= (creset | cs);
+	*config->clear |= cs;
 
 	/* Wait a minimum of 200ns */
 	LOG_DBG("Delay %u us", config->creset_delay_us);
-	fpga_ice40_delay(2 * config->mhz_delay_count * config->creset_delay_us);
+	k_busy_wait(1);
 
-	__ASSERT(gpio_pin_get_dt(&config->cdone) == 0, "CDONE was not high");
+	LOG_DBG("Checking CDONE");
+	ret = wait_for_cdone(config, 100);
+	if (ret < 0) {
+		goto unlock;
+	}
 
 	LOG_DBG("Set CRESET high");
 	*config->set |= creset;
@@ -278,14 +307,9 @@ static int fpga_ice40_load_gpio(const struct device *dev, uint32_t *image_ptr, u
 	fpga_ice40_send_clocks(config->mhz_delay_count, config->set, config->clear, clk,
 			       config->trailing_clocks);
 
-	LOG_DBG("checking CDONE");
-	ret = gpio_pin_get_dt(&config->cdone);
+	LOG_DBG("Checking CDONE");
+	ret = wait_for_cdone(config, 100);
 	if (ret < 0) {
-		LOG_ERR("failed to read CDONE: %d", ret);
-		goto unlock;
-	} else if (ret != 1) {
-		ret = -EIO;
-		LOG_ERR("CDONE did not go high");
 		goto unlock;
 	}
 
