@@ -21,6 +21,7 @@ volatile uintptr_t riscv_cpu_boot_flag;
 volatile void *riscv_cpu_sp;
 
 extern void __start(void);
+extern void z_soc_per_core_init(void);
 
 void arch_start_cpu(int cpu_num, k_thread_stack_t *stack, int sz,
 		    arch_cpustart_t fn, void *arg)
@@ -69,10 +70,14 @@ void z_riscv_secondary_cpu_init(int hartid)
 #ifdef CONFIG_SMP
 	irq_enable(RISCV_MACHINE_SOFT_IRQ);
 #endif
+#ifdef CONFIG_RISCV_SOC_HAS_CUSTOM_PER_CORE_INIT
+	z_soc_per_core_init();
+#endif
 	riscv_cpu_init[cpu_num].fn(riscv_cpu_init[cpu_num].arg);
 }
 
-#ifdef CONFIG_SMP
+/* IPI */
+#if defined(CONFIG_SMP) && !defined(CONFIG_RISCV_SOC_HAS_CUSTOM_SMP_IPI)
 
 #define MSIP(hartid) ((volatile uint32_t *)RISCV_MSIP_BASE)[hartid]
 
@@ -161,4 +166,4 @@ static int riscv_smp_init(void)
 }
 
 SYS_INIT(riscv_smp_init, PRE_KERNEL_2, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP && !CONFIG_RISCV_SOC_HAS_CUSTOM_SMP_IPI */
