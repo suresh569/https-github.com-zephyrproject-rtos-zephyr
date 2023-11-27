@@ -339,7 +339,9 @@ General Purpose I/O (GPIO)
   ``microchip,mcp230xx`` and ``microchip,mcp23sxx`` should change their devicetree ``compatible``
   values to the specific chip variant, e.g. :dtcompatible:`microchip,mcp23017`.
   The ``ngpios`` devicetree property has been removed, since it is implied by the model name.
-  (:github:`65797`)
+  Chip variants with open-drain outputs (``mcp23x09``, ``mcp23x18``) now correctly reflect this in
+  their driver API, users of these devices should ensure they pass appropriate values to
+  :c:func:`gpio_pin_set`. (:github:`65797`)
 
 GNSS
 ====
