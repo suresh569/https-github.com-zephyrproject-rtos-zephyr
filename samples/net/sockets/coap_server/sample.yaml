@@ -12,3 +12,14 @@ tests:
     platform_allow:
       - native_sim
       - qemu_x86
+  sample.net.sockets.coaps_server:
+    harness: net
+    extra_configs:
+      - CONFIG_NET_SAMPLE_COAPS_SERVICE=y
+    tags:
+      - net
+      - socket
+      - tls
+    platform_allow:
+      - native_posix
+      - qemu_x86
