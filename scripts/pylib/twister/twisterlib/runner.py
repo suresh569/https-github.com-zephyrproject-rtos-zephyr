@@ -692,7 +692,7 @@ class ProjectBuilder(FilterBuilder):
         # Run per-instance code coverage
         elif op == "coverage":
             logger.debug(f"Run coverage for '{self.instance.name}'")
-            self.instance.coverage_status, self.instance.coverage = run_coverage_instance(self.options, self.instance)
+            self.instance.coverage_status, self.instance.coverage, _ = run_coverage_instance(self.options, self.instance)
             pipeline.put({"op": "report", "test": self.instance})
 
         # Report results and output progress to screen

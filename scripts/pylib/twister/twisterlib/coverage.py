@@ -141,7 +141,7 @@ class CoverageTool:
             else:
                 coverage_completed = False
         logger.debug("All coverage data processed: {}".format(coverage_completed))
-        return coverage_completed, reports
+        return coverage_completed, reports, self.gcov_tool
 
 
 class Lcov(CoverageTool):

@@ -304,7 +304,8 @@ structure in the main Zephyr tree: boards/<arch>/<board_name>/""")
         help="Only run cmake, do not build or run.")
 
     coverage_group.add_argument("--enable-coverage", action="store_true",
-                                help="Enable code coverage collection using gcov.")
+                                help="Enable code coverage data collection using gcov. "
+                                "Use --coverage to compose reports from that data.")
 
     coverage_group.add_argument("-C", "--coverage", action="store_true",
                                 help="Generate coverage reports. Implies "
@@ -347,6 +348,17 @@ structure in the main Zephyr tree: boards/<arch>/<board_name>/""")
                                      selected to run with enabled coverage. Requires another reporting mode to
                                      be active (`--coverage-split`) to set at least one of the reporting modes.
                                      Default: %(default)s""")
+
+    coverage_group.add_argument("--coverage-sections", nargs="+", default=None,
+                        choices=['all','report','ztest','summary'],
+                        help="""Selects coverage data to include into the `twister.json` report as 'coverage'
+                                object and its properties either as the sections chosen, or all of them.
+                                With `--coverage-split` each test suite will have its own 'coverage' object
+                                with these sections as properties.
+                                The aggregated coverage of all executed test suites will be a top-level object.
+                                Each 'coverage' object will also have its execution 'status' property.
+                                Currently this mode is fully supported for the default 'gcovr' tool only.
+                                Default: %(default)s""")
 
     parser.add_argument("--test-config", action="store", default=os.path.join(ZEPHYR_BASE, "tests", "test_config.yaml"),
         help="Path to file with plans and test configurations.")
@@ -803,14 +815,14 @@ def parse_arguments(parser, args, options = None):
 
     if options.coverage:
         options.enable_coverage = True
-
-    if not options.coverage and (options.disable_coverage_aggregation or options.coverage_split):
-        logger.error("Enable coverage reporting to set its aggregation mode.")
-        sys.exit(1)
-
-    if options.coverage and options.disable_coverage_aggregation and not options.coverage_split:
-        logger.error("At least one coverage reporting mode should be enabled: "
-                     "either aggregation, or split, or both.")
+        if options.disable_coverage_aggregation and not options.coverage_split:
+            logger.error("At least one coverage reporting mode should be enabled: "
+                         "either aggregation, or split, or both.")
+            sys.exit(1)
+    elif (options.disable_coverage_aggregation or
+          options.coverage_split or
+          options.coverage_sections):
+        logger.error("Enable coverage reporting first to set its mode.")
         sys.exit(1)
 
     if not options.coverage_platform:
