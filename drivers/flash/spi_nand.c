@@ -98,7 +98,7 @@ struct spi_nand_data {
 	uint8_t ecc_bytes;
 	uint8_t ecc_steps;
 	uint8_t ecc_layout_pos;
-	uint32_t  ecc_size;
+	uint32_t ecc_size;
 	uint8_t *ecc_calc;
 	uint8_t *ecc_code;
 	uint8_t *page_buf;
@@ -107,7 +107,7 @@ struct spi_nand_data {
 		struct bch_code      *bch;
 		unsigned int         *errloc;
 		unsigned char        *eccmask;
-	}nbc;
+	} nbc;
 };
 
 static const struct flash_parameters flash_nand_parameters = {
@@ -115,7 +115,7 @@ static const struct flash_parameters flash_nand_parameters = {
 	.erase_value = 0xff,
 };
 
-void bch_calculate_ecc(const struct device *dev, 
+void bch_calculate_ecc(const struct device *dev,
 		unsigned char *buf, unsigned char *code)
 {
 	struct spi_nand_data *data = dev->data;
@@ -126,7 +126,7 @@ void bch_calculate_ecc(const struct device *dev,
 }
 
 void bch_correct_data(const struct device *dev, 
-		unsigned char *buf, unsigned char *read_ecc, 
+		unsigned char *buf, unsigned char *read_ecc,
 		unsigned char *calc_ecc)
 {
 	struct spi_nand_data *data = dev->data;
@@ -212,15 +212,8 @@ static int spi_nand_access(const struct device *const dev,
 
 #define spi_nand_cmd_read(dev, opcode, dest, length) \
 	spi_nand_access(dev, opcode, 0, 0, dest, length)
-#define spi_nand_cmd_addr_read(dev, opcode, addr, dest, length) \
-	spi_nand_access(dev, opcode, NAND_ACCESS_ADDRESSED, addr, dest, length)
 #define spi_nand_cmd_write(dev, opcode) \
 	spi_nand_access(dev, opcode, NAND_ACCESS_WRITE, 0, NULL, 0)
-#define spi_nand_cmd_addr_write(dev, opcode, addr, src, length) \
-	spi_nand_access(dev, opcode, NAND_ACCESS_WRITE | NAND_ACCESS_ADDRESSED, \
-		       addr, (void *)src, length)
-
-
 
 /* Everything necessary to acquire owning access to the device.
  *
@@ -340,7 +333,8 @@ static int spi_nand_conti_read_enable(const struct device *dev)
 		LOG_ERR("Enable continuous read failed: %d\n", secur_reg);
 	}
 
-out:	release_device(dev);
+out:
+	release_device(dev);
 	return ret;
 }
 
@@ -374,16 +368,14 @@ static int spi_nand_conti_read_disable(const struct device *dev)
 		LOG_ERR("Disable continuous read failed: %d\n", secur_reg);
 	}
 
-out:	release_device(dev);
+out:
+	release_device(dev);
 	return ret;
 }
 
 static int spi_nand_conti_read_exit(const struct device *dev)
 {
-	int ret;	
-	ret = spi_nand_cmd_write(dev, SPI_NAND_CMD_RESET);
-
-	return ret;
+	return spi_nand_cmd_write(dev, SPI_NAND_CMD_RESET);
 }
 
 static int spi_nand_read_cont(const struct device *dev, off_t addr, void *dest,
@@ -414,7 +406,8 @@ static int spi_nand_read_cont(const struct device *dev, off_t addr, void *dest,
 
 	ret = spi_nand_conti_read_exit(dev);
 
-out:	release_device(dev);
+out:
+	release_device(dev);
 
 	return ret;
 }
@@ -724,7 +717,7 @@ void bch_ecc_init(const struct device *dev, uint8_t ecc_bits)
 	unsigned int eccsize = 410;
 	unsigned int eccbytes = 0;
 
-	m = fls(1 + 8 * eccsize);
+	m = find_last_set(1 + 8 * eccsize);
 	t = ecc_bits;
 
 	data->ecc_bytes = eccbytes = ((m * t + 31) / 32) * 4;

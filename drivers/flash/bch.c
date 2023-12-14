@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2022 Macronix International Co., Ltd.
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,7 +9,7 @@
 #include "bch.h"
 #include <drivers/spi.h>
 
-int fls(int x)
+int find_last_set(int x)
 {
     int r = 32;
 
@@ -46,7 +46,7 @@ void bch_encode(struct bch_code *bch, unsigned char *data, unsigned int *ecc)
 	unsigned int *p;
 	unsigned int *c[16];
 	unsigned int *t[16];
-	
+
 	t[0] = bch->mod_tab;
 	for (i = 1; i < 16; i++)
 		t[i] = t[i-1] + 4 * (bch->ecc_words);
@@ -80,7 +80,7 @@ void bch_encode(struct bch_code *bch, unsigned char *data, unsigned int *ecc)
 			}
 		}
 		bch->ecc[i] = c[0][i];
-	  	for (j = 1; j < 16; j++) {
+		for (j = 1; j < 16; j++) {
 			bch->ecc[i] ^= c[j][i];
 		}
 	}
@@ -89,7 +89,7 @@ void bch_encode(struct bch_code *bch, unsigned char *data, unsigned int *ecc)
 		for (i = 0; i < bch->ecc_words; i++) {
 			ecc[i] = bch->ecc[i];
 		}
-	}  
+	}
 }
 
 static inline int mod(struct bch_code *bch, unsigned int v)
@@ -106,7 +106,7 @@ static void build_syndrome(struct bch_code *bch)
 	int i, j;
 	int ecc_bits;
 	unsigned int *ecc;
-	
+
 	memset(bch->syn, 0, 2 * bch->t * sizeof(*bch->syn));
 
 	ecc_bits = bch->ecc_bits;
@@ -116,8 +116,8 @@ static void build_syndrome(struct bch_code *bch)
 		ecc_bits = i;
 		while (*ecc) {
 			if (*ecc & (unsigned int)1) {
-  			for (j = 0; j < 2*bch->t; j++)
-  				bch->syn[j] ^= bch->a_pow[mod(bch, (j+1)*i)];
+			for (j = 0; j < 2*bch->t; j++)
+				bch->syn[j] ^= bch->a_pow[mod(bch, (j+1)*i)];
 			}
 			*ecc >>= 1;
 			i++;
@@ -150,7 +150,7 @@ static int build_error_location_poly(struct bch_code *bch)
 				}
 			}
 			tmp = bch->n + bch->a_log[d] - bch->a_log[dp];
-			      
+
 			for (j = 0; j <= buf_deg; j++) {
 				if (bch->buf[j]) {
 					bch->elp[j+k] ^= bch->a_pow[mod(bch, tmp + bch->a_log[bch->buf[j]])];
@@ -186,7 +186,7 @@ static int chien_search(struct bch_code *bch, int deg)
 	unsigned int syn, syn0;
 	int *rep  = (int*) bch->buf;
 	int *root = (int*) bch->buf2;
-  
+
 	k = bch->n - bch->a_log[bch->elp[deg]];
 	for (i = 0; i < deg; i++) {
 		rep[i] = bch->elp[i] ? mod(bch, bch->a_log[ bch->elp[i] ] + k) : -1;
@@ -206,7 +206,7 @@ static int chien_search(struct bch_code *bch, int deg)
 				return nroot;
 			}
 		}
-  	}
+	}
   return 0;
 }
 
@@ -222,7 +222,7 @@ int bch_decode(struct bch_code *bch, unsigned char *data, unsigned int *ecc)
 		bch->ecc[i] ^= ecc[i];
 		err |= bch->ecc[i];
 	}
-	if (!err) 
+	if (!err)
 		return 0;
 
 	build_syndrome(bch);
@@ -230,7 +230,7 @@ int bch_decode(struct bch_code *bch, unsigned char *data, unsigned int *ecc)
 	if (err <= 0) {
 		return -1;
 	}
-	
+
 	nroot = chien_search(bch, err);
 	if (err != nroot) {
 		return -1;
@@ -252,7 +252,7 @@ static void build_gf_table(struct bch_code *bch)
 	unsigned int prim_poly[5] = {0x11d, 0x211, 0x409, 0x805, 0x1053};
 
 	poly = prim_poly[bch->m - 8];
-	msb = 1 << bch->m;  
+	msb = 1 << bch->m;
 	bch->a_pow[0] = 1;
 	bch->a_log[1] = 0;
 	x = 2;
@@ -325,16 +325,16 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 		free(g);
 		free(x);
 		bch_free(bch);
-  		return NULL;
+		return NULL;
 	}
-	
+
 	bch->ecc_bits = 0;
 	x[0] = 1;
 	for (t = 0; t < bch->t; t++) {
 		for (m = 0, i = 2 * t + 1; m < bch->m; m++) {
 			x[bch->ecc_bits + 1] = 1;
 			for (j = bch->ecc_bits; j > 0; j--) {
-				if (x[j]) { 
+				if (x[j]) {
 					x[j] = bch->a_pow[mod(bch, bch->a_log[x[j]] + i)] ^ x[j - 1];
 				} else {
 					x[j] = x[j-1];
@@ -349,7 +349,7 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 
 	i = 0;
 	memset(g, 0, (bch->ecc_words + 1) * sizeof(*g));
-	
+
 	for (k = bch->ecc_bits + 1; k > 0; k = k - n) {
 		n = (k > 32) ? 32 : k;
 		for (j = 0; j < n; j++) {
@@ -381,7 +381,7 @@ struct bch_code *bch_init(int m, int t)
 
 	bch = (struct bch_code *)k_malloc(sizeof(struct bch_code));
 
-	if (bch == NULL) { 
+	if (bch == NULL) {
 		return NULL;
 	}
 
