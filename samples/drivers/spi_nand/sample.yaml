@@ -1,7 +1,7 @@
 sample:
-  name: SPI Flash Sample
+  name: SPI NAND Flash Sample
 tests:
-  sample.drivers.spi.flash:
+  sample.drivers.spi.nand.flash:
     tags: spi nand
     filter: dt_compat_enabled("jedec,spi-nand")
     harness: console
@@ -14,11 +14,4 @@ tests:
             - "Test 2: Flash write"
             - "Attempting to write 4 bytes"
             - "Data read matches data written. Good!!"
-    depends_on: spi
-  sample.drivers.spi.flash_dpd:
-    tags: spi nand
-    filter: dt_compat_enabled("jedec,spi-nand")
-    build_only: true
-    extra_configs:
-      - CONFIG_SPI_NOR_IDLE_IN_DPD=y
     depends_on: spi

@@ -154,6 +154,7 @@ static int spi_nand_access(const struct device *const dev,
 	bool is_addressed = (access & NAND_ACCESS_ADDRESSED) != 0U;
 	bool is_write = (access & NAND_ACCESS_WRITE) != 0U;
 	uint8_t buf[5] = { 0 };
+	uint8_t address_len = 0;
 	struct spi_buf spi_buf[2] = {
 		{
 			.buf = buf,
@@ -175,18 +176,16 @@ static int spi_nand_access(const struct device *const dev,
 		};
 
 		if (access & NAND_ACCESS_32BIT_ADDR) {
-			memcpy(&buf[1], &addr32.u8[0], 4);
-			spi_buf[0].len += 4;
+			address_len = 4;
 		} else if (access & NAND_ACCESS_24BIT_ADDR){
-			memcpy(&buf[1], &addr32.u8[1], 3);
-			spi_buf[0].len += 3;
+			address_len = 3;
 		} else if (access & NAND_ACCESS_16BIT_ADDR){
-			memcpy(&buf[1], &addr32.u8[2], 2);
-			spi_buf[0].len += 2;
+			address_len = 2;
 		} else if (access & NAND_ACCESS_8BIT_ADDR){
-			memcpy(&buf[1], &addr32.u8[3], 1);
-			spi_buf[0].len += 1;
+			address_len = 1;
 		}
+		memcpy(&buf[1], &addr32.u8[3], address_len);
+		spi_buf[0].len += address_len;
 	};
 
 	if (access & NAND_ACCESS_DUMMY) {
