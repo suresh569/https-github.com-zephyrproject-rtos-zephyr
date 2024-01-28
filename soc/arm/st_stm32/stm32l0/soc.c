@@ -23,11 +23,8 @@
  * @brief Perform basic hardware initialization at boot.
  *
  * This needs to be run from the very beginning.
- * So the init priority has to be 0 (zero).
- *
- * @return 0
  */
-static int stm32l0_init(void)
+void platform_early_initialize(void)
 {
 	/* Update CMSIS SystemCoreClock variable (HCLK) */
 	/* At reset, system core clock is set to 2.1 MHz from MSI */
@@ -49,7 +46,5 @@ static int stm32l0_init(void)
 	 */
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
-	return 0;
+	return;
 }
-
-SYS_INIT(stm32l0_init, PRE_KERNEL_1, 0);
