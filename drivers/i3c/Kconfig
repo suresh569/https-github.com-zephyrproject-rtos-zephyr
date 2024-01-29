@@ -1,6 +1,6 @@
 # I3C configuration options
 #
-# Copyright (c) 2022 Intel Corporation
+# Copyright (c) 2022-2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -101,5 +101,6 @@ comment "Device Drivers"
 rsource "Kconfig.nxp"
 rsource "Kconfig.cdns"
 rsource "Kconfig.test"
+rsource "Kconfig.dw"
 
 endif # I3C
