@@ -1,0 +1,24 @@
+description: ESP32 I2S
+
+compatible: "espressif,esp32-i2s"
+
+include: [i2s-controller.yaml, pinctrl-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  interrupts:
+    required: true
+
+  mclk-enabled:
+    type: boolean
+    description: |
+      Master Clock Output function.
+      An mck pin must be listed within pinctrl-0 when enabling this property.

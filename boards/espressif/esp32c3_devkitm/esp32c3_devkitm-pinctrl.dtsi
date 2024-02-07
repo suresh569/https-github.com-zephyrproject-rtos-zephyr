@@ -43,6 +43,21 @@
 		};
 	};
 
+	i2s1_default: i2s0_default {
+		group1 {
+			pinmux = <I2S1_O_BCK_GPIO19>,
+				 <I2S1_O_WS_GPIO18>,
+				 <I2S1_O_SD_GPIO4>,
+				 <I2S1_I_BCK_GPIO5>,
+				 <I2S1_I_WS_GPIO6>;
+			output-enable;
+		};
+		group2 {
+			pinmux = <I2S1_I_SD_GPIO7>;
+			input-enable;
+		};
+	};
+
 	twai_default: twai_default {
 		group1 {
 			pinmux = <TWAI_TX_GPIO4>,
