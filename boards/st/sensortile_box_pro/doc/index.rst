@@ -41,6 +41,9 @@ sensors on board)
 Hardware
 ********
 
+The following is a summary of the main board features. More info can be find on `UM3133`_
+and the `schematic`_.
+
 The STM32U585xx devices are an ultra-low-power microcontrollers family (STM32U5
 Series) based on the high-performance Arm|reg| Cortex|reg|-M33 32-bit RISC core.
 They operate at a frequency of up to 160 MHz.
@@ -214,6 +217,13 @@ The final application may use it to declare SensorTile.box PRO device as belongi
 certain standard or vendor class, e.g. a CDC, a mass storage or a composite device with both
 functions.
 
+BlueNRG-LP chip
+===============
+
+The board is equipped with an ST Microelectronics `BlueNRG-LP`_ chip. Before using this
+functionality on Zephyr, a firmware upgrade of the chip may be necessary. Please follow the information
+on :zephyr:code-sample:`sensortile_box_pro_sample_ble_fwupg` sample.
+
 Console
 =======
 
@@ -352,11 +362,20 @@ References
 .. _SensorTile.box PRO website:
    https://www.st.com/en/evaluation-tools/steval-mkboxpro.html
 
+.. _UM3133:
+   https://www.st.com/resource/en/user_manual/um3133-getting-started-with-sensortilebox-pro-multisensors-and-wireless-connectivity-development-kit-for-any-intelligent-iot-node-stmicroelectronics.pdf
+
+.. _schematic:
+   https://www.st.com/resource/en/schematic_pack/steval-mkboxpro-schematic.pdf
+
 .. _STM32U585 on www.st.com:
    https://www.st.com/en/microcontrollers-microprocessors/stm32u575-585.html
 
 .. _STM32U585 reference manual:
    https://www.st.com/resource/en/reference_manual/rm0456-stm32u575585-armbased-32bit-mcus-stmicroelectronics.pdf
+
+.. _BlueNRG-LP:
+   https://www.st.com/en/wireless-connectivity/bluenrg-lp.html
 
 .. _lsm6dsv16x datasheet:
    https://www.st.com/en/mems-and-sensors/lsm6dsv16x.html
