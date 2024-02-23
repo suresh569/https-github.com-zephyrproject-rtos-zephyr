@@ -212,6 +212,8 @@ Boards & SoC Support
 * Added support for these Xtensa boards:
 
 * Made these changes for ARM boards:
+  * sam_e70_xplained: Fixed CAN DMA Base Address for CAN0, CAN1
+  * sam_v71_xult: Fixed CAN DMA Base Address for CAN0, CAN1
 
 * Made these changes for RISC-V boards:
 
