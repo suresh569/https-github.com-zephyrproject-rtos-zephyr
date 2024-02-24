@@ -113,6 +113,11 @@ function(zephyr_link_libraries)
   target_link_libraries(zephyr_interface INTERFACE ${ARGV})
 endfunction()
 
+# https://cmake.org/cmake/help/latest/command/target_link_options.html
+function(zephyr_link_options)
+  target_link_options(zephyr_interface INTERFACE ${ARGV})
+endfunction()
+
 function(zephyr_libc_link_libraries)
   set_property(TARGET zephyr_interface APPEND PROPERTY LIBC_LINK_LIBRARIES ${ARGV})
 endfunction()
@@ -126,6 +131,10 @@ endfunction()
 
 function(zephyr_cc_option_fallback option1 option2)
     target_cc_option_fallback(zephyr_interface INTERFACE ${option1} ${option2})
+endfunction()
+
+function(zephyr_ld_libraries)
+    target_ld_libraries(zephyr_interface INTERFACE ${ARGV})
 endfunction()
 
 function(zephyr_ld_options)
@@ -1830,6 +1839,12 @@ function(target_link_libraries_ifdef feature_toggle target item)
   endif()
 endfunction()
 
+function(target_link_options_ifdef feature_toggle target item)
+  if(${${feature_toggle}})
+    target_link_options(${target} ${item} ${ARGN})
+  endif()
+endfunction()
+
 function(add_compile_option_ifdef feature_toggle option)
   if(${${feature_toggle}})
     add_compile_options(${option})
@@ -1875,6 +1890,12 @@ endfunction()
 function(zephyr_link_libraries_ifdef feature_toggle)
   if(${${feature_toggle}})
     zephyr_link_libraries(${ARGN})
+  endif()
+endfunction()
+
+function(zephyr_link_options_ifdef feature_toggle)
+  if(${${feature_toggle}})
+    zephyr_link_options(${ARGN})
   endif()
 endfunction()
 
@@ -2030,6 +2051,12 @@ function(zephyr_link_libraries_ifndef feature_toggle)
   endif()
 endfunction()
 
+function(zephyr_link_options_ifndef feature_toggle)
+  if(NOT ${feature_toggle})
+    zephyr_link_options(${ARGN})
+  endif()
+endfunction()
+
 function(zephyr_compile_options_ifndef feature_toggle)
   if(NOT ${feature_toggle})
     zephyr_compile_options(${ARGN})
@@ -2173,6 +2200,15 @@ function(target_cc_option_fallback target scope option1 option2)
   endif()
 endfunction()
 
+function(target_ld_libraries target scope)
+  # Ensure that this function can only be used with libraries by
+  # prepending each argument with "-l"
+  foreach(libname ${ARGN})
+    string(JOIN "" option "-l" ${libname})
+    target_link_libraries(${target} ${scope} ${option})
+  endforeach()
+endfunction()
+
 function(target_ld_options target scope)
   zephyr_get_parse_args(args ${ARGN})
   list(REMOVE_ITEM ARGN NO_SPLIT)
@@ -2189,7 +2225,7 @@ function(target_ld_options target scope)
     zephyr_check_compiler_flag(C "" ${check})
     set(CMAKE_REQUIRED_FLAGS ${SAVED_CMAKE_REQUIRED_FLAGS})
 
-    target_link_libraries_ifdef(${check} ${target} ${scope} ${option})
+    target_link_options_ifdef(${check} ${target} ${scope} ${option})
 
     if(args_NO_SPLIT)
       break()
