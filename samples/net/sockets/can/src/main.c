@@ -17,6 +17,7 @@ LOG_MODULE_REGISTER(net_socket_can_sample, LOG_LEVEL_DBG);
 #define PRIORITY  k_thread_priority_get(k_current_get())
 #define STACKSIZE 1024
 #define SLEEP_PERIOD K_SECONDS(1)
+#define SOCKETCAN_NODE_0 DT_INST(0, net_canbus)
 
 static k_tid_t tx_tid;
 static K_THREAD_STACK_DEFINE(tx_stack, STACKSIZE);
@@ -177,7 +178,7 @@ static int setup_socket(void)
 
 	socketcan_from_can_filter(&zfilter, &sock_filter);
 
-	iface = net_if_get_first_by_type(&NET_L2_GET_NAME(CANBUS_RAW));
+	iface = net_if_lookup_by_dev(DEVICE_DT_GET(SOCKETCAN_NODE_0));
 	if (!iface) {
 		LOG_ERR("No CANBUS network interface found!");
 		return -ENOENT;
@@ -262,7 +263,7 @@ cleanup:
 
 int main(void)
 {
-	const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
+	const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus0));
 	int ret;
 	int fd;
 
