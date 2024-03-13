@@ -9,7 +9,12 @@ toolchain:
 ram: 128
 flash: 192
 supported:
+  - tfm-ns
   - i2c
   - pwm
   - watchdog
 vendor: sparkfun
+testing:
+  ignore_tags:
+    - kernel
+    - userspace

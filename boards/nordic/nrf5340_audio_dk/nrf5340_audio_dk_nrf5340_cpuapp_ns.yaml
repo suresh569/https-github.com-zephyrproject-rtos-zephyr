@@ -9,6 +9,7 @@ toolchain:
 ram: 192
 flash: 192
 supported:
+  - tfm-ns
   - i2c
   - i2s
   - spi
@@ -17,3 +18,7 @@ supported:
   - usb_cdc
   - usb_device
 vendor: nordic
+testing:
+  ignore_tags:
+    - kernel
+    - userspace

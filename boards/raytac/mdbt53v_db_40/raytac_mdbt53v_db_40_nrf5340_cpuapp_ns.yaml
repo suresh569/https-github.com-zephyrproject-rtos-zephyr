@@ -9,8 +9,13 @@ toolchain:
 ram: 192
 flash: 192
 supported:
+  - tfm-ns
   - i2c
   - pwm
   - watchdog
   - netif:openthread
   - gpio
+testing:
+  ignore_tags:
+    - kernel
+    - userspace

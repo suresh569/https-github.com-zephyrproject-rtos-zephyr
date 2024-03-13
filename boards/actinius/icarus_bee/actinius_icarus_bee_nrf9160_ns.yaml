@@ -9,6 +9,7 @@ toolchain:
 ram: 128
 flash: 192
 supported:
+  - tfm-ns
   - gpio
   - i2c
   - pwm
@@ -16,3 +17,7 @@ supported:
   - watchdog
   - counter
 vendor: actinius
+testing:
+  ignore_tags:
+    - kernel
+    - userspace

@@ -6,8 +6,13 @@ toolchain:
   - zephyr
   - gnuarmemb
 supported:
+  - tfm-ns
   - gpio
   - dac
 ram: 192
 flash: 328
 vendor: st
+testing:
+  ignore_tags:
+    - kernel
+    - userspace
