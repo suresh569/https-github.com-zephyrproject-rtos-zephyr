@@ -27,15 +27,14 @@
  */
 enum hawkbit_response {
 	HAWKBIT_NO_RESPONSE,
+	HAWKBIT_UPDATE_INSTALLED,
+	HAWKBIT_NO_UPDATE,
 	HAWKBIT_NETWORKING_ERROR,
 	HAWKBIT_UNCONFIRMED_IMAGE,
 	HAWKBIT_PERMISSION_ERROR,
 	HAWKBIT_METADATA_ERROR,
 	HAWKBIT_DOWNLOAD_ERROR,
-	HAWKBIT_OK,
-	HAWKBIT_UPDATE_INSTALLED,
-	HAWKBIT_NO_UPDATE,
-	HAWKBIT_CANCEL_UPDATE,
+	HAWKBIT_ALLOC_ERROR,
 	HAWKBIT_NOT_INITIALIZED,
 	HAWKBIT_PROBE_IN_PROGRESS,
 };
@@ -107,16 +106,14 @@ void hawkbit_autohandler(bool auto_reschedule);
  * @param timeout Waiting period for the desired set of events or one of the
  *                special values ::K_NO_WAIT and ::K_FOREVER.
  *
- * @retval HAWKBIT_OK if success.
  * @retval HAWKBIT_NO_RESPONSE if matching events were not received within the specified time
+ * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
+ * @retval HAWKBIT_NO_UPDATE if no update was available.
  * @retval HAWKBIT_NETWORKING_ERROR fail to connect to the hawkBit server.
  * @retval HAWKBIT_UNCONFIRMED_IMAGE image is unconfirmed.
  * @retval HAWKBIT_PERMISSION_ERROR fail to get the permission to access the hawkBit server.
  * @retval HAWKBIT_METADATA_ERROR fail to parse or to encode the metadata.
  * @retval HAWKBIT_DOWNLOAD_ERROR fail while downloading the update package.
- * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
- * @retval HAWKBIT_NO_UPDATE if no update was available.
- * @retval HAWKBIT_CANCEL_UPDATE update was cancelled.
  * @retval HAWKBIT_NOT_INITIALIZED if hawkBit is not initialized.
  * @retval HAWKBIT_PROBE_IN_PROGRESS if probe is currently running.
  */
@@ -147,15 +144,13 @@ int hawkbit_autohandler_set_delay(k_timeout_t timeout, bool if_bigger);
 /**
  * @brief The hawkBit probe verify if there is some update to be performed.
  *
+ * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
+ * @retval HAWKBIT_NO_UPDATE if no update was available.
  * @retval HAWKBIT_NETWORKING_ERROR fail to connect to the hawkBit server.
  * @retval HAWKBIT_UNCONFIRMED_IMAGE image is unconfirmed.
  * @retval HAWKBIT_PERMISSION_ERROR fail to get the permission to access the hawkBit server.
  * @retval HAWKBIT_METADATA_ERROR fail to parse or to encode the metadata.
  * @retval HAWKBIT_DOWNLOAD_ERROR fail while downloading the update package.
- * @retval HAWKBIT_OK if the image was already updated.
- * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
- * @retval HAWKBIT_NO_UPDATE if no update was available.
- * @retval HAWKBIT_CANCEL_UPDATE if the update was cancelled by the server.
  * @retval HAWKBIT_NOT_INITIALIZED if hawkBit is not initialized.
  * @retval HAWKBIT_PROBE_IN_PROGRESS if probe is currently running.
  */
