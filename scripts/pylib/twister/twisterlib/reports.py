@@ -456,16 +456,11 @@ class Reporting:
                         f"{example_instance.testsuite.source_dir_rel} -T {example_instance.testsuite.id}")
             logger.info("-+" * 40)
 
-    def summary(self, results, unrecognized_sections, duration):
+    def summary(self, results, duration):
         failed = 0
         run = 0
         for instance in self.instances.values():
             if instance.status == "failed":
-                failed += 1
-            elif instance.metrics.get("unrecognized") and not unrecognized_sections:
-                logger.error("%sFAILED%s: %s has unrecognized binary sections: %s" %
-                             (Fore.RED, Fore.RESET, instance.name,
-                              str(instance.metrics.get("unrecognized", []))))
                 failed += 1
 
             # FIXME: need a better way to identify executed tests

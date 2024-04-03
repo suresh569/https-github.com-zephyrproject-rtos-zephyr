@@ -197,7 +197,7 @@ def main(options):
     if VERBOSE > 1:
         runner.results.summary()
 
-    report.summary(runner.results, options.disable_unrecognized_section_test, duration)
+    report.summary(runner.results, duration)
 
     coverage_completed = True
     if options.coverage:
