@@ -25,8 +25,8 @@ static void lvgl_pointer_process_event(const struct device *dev, struct input_ev
 {
 	const struct lvgl_pointer_input_config *cfg = dev->config;
 	struct lvgl_common_input_data *data = dev->data;
-	lv_disp_t *disp = lv_disp_get_default();
-	struct lvgl_disp_data *disp_data = disp->driver->user_data;
+	lv_display_t *disp = lv_display_get_default();
+	struct lvgl_disp_data *disp_data = (struct lvgl_disp_data *)lv_display_get_user_data(disp);
 	struct display_capabilities *cap = &disp_data->cap;
 	lv_point_t *point = &data->pending_event.point;
 
@@ -38,7 +38,8 @@ static void lvgl_pointer_process_event(const struct device *dev, struct input_ev
 		point->y = evt->value;
 		break;
 	case INPUT_BTN_TOUCH:
-		data->pending_event.state = evt->value ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
+		data->pending_event.state =
+			evt->value ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
 		break;
 	}
 
@@ -48,7 +49,7 @@ static void lvgl_pointer_process_event(const struct device *dev, struct input_ev
 
 	/* adjust coordinates */
 	if (cfg->swap_xy) {
-		lv_coord_t tmp;
+		int32_t tmp;
 
 		tmp = point->x;
 		point->x = point->y;
@@ -75,7 +76,7 @@ static void lvgl_pointer_process_event(const struct device *dev, struct input_ev
 
 	/* rotate touch point to match display rotation */
 	if (cap->current_orientation == DISPLAY_ORIENTATION_ROTATED_90) {
-		lv_coord_t tmp;
+		int32_t tmp;
 
 		tmp = point->x;
 		point->x = point->y;
@@ -84,7 +85,7 @@ static void lvgl_pointer_process_event(const struct device *dev, struct input_ev
 		point->x = cap->x_resolution - point->x;
 		point->y = cap->y_resolution - point->y;
 	} else if (cap->current_orientation == DISPLAY_ORIENTATION_ROTATED_270) {
-		lv_coord_t tmp;
+		int32_t tmp;
 
 		tmp = point->x;
 		point->x = cap->x_resolution - point->y;
