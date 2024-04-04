@@ -1,0 +1,11 @@
+/*
+ * Copyright (c) 2024 TOKITA Hiroshi <tokita.hiroshi@fujitsu.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#define RA_SOC_PINS 64
+#define RA_SOC_HAS_MSTPCRE 1
+#define RA_SOC_MSTPD5_CHANNELS 1
+
+#include <renesas/ra/r7fa2a1xxxxxx.dtsi>
