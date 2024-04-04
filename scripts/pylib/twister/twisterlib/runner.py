@@ -663,7 +663,21 @@ class ProjectBuilder(FilterBuilder):
 
         elif op == "gather_metrics":
             self.gather_metrics(self.instance)
-            if self.instance.run and self.instance.handler.ready:
+            if self.instance.metrics.get("unrecognized") and \
+             not self.options.disable_unrecognized_section_test:
+                logger.error(f"{Fore.RED}FAILED{Fore.RESET}:"
+                             f" {self.instance.name} has unrecognized binary sections:"
+                             f" {self.instance.metrics.get('unrecognized')}")
+                self.instance.status = "failed"
+                self.instance.reason = f"Unrecognized binary sections:" \
+                                       f" {self.instance.metrics.get('unrecognized')}"
+                pipeline.put({
+                    "op": "report",
+                    "test": self.instance,
+                    "status": self.instance.status,
+                    "reason": self.instance.reason
+                })
+            elif self.instance.run and self.instance.handler.ready:
                 pipeline.put({"op": "run", "test": self.instance})
             else:
                 pipeline.put({"op": "report", "test": self.instance})
@@ -1235,7 +1249,7 @@ class TwisterRunner:
                 else:
                     inst.metrics.update(self.instances[inst.name].metrics)
                     inst.metrics["handler_time"] = inst.execution_time
-                    inst.metrics["unrecognized"] = []
+                    inst.metrics.setdefault("unrecognized", [])
                     self.instances[inst.name] = inst
 
             print("")
