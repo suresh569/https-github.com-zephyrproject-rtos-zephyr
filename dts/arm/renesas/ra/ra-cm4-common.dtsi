@@ -169,10 +169,9 @@
 			interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ0>,
 				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ1>,
 				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ2>,
-				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ3>,
-				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ9>;
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ3>;
 			interrupt-names = "port-irq0", "port-irq1", "port-irq2",
-					  "port-irq3", "port-irq9";
+					  "port-irq3";
 			port-irq0-pins = <6>;
 			port-irq1-pins = <5>;
 			port-irq2-pins = <13>;
@@ -299,6 +298,39 @@
 				compatible = "renesas,ra-uart-sci";
 				status = "disabled";
 			};
+		};
+
+		i2c0: i2c@40053000 {
+			compatible = "renesas,ra-i2c";
+			reg = <0x40053000 0x100>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC0_RXI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC0_TXI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC0_TEI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC0_EEI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC0_WUI>;
+			interrupt-names = "rxi", "txi", "tei", "eei", "wui";
+
+			clocks = <&cgc RA_CLOCK_IIC(0)>;
+			#clock-cells = <1>;
+			status = "disabled";
+		};
+
+		i2c1: i2c@40053100 {
+			compatible = "renesas,ra-i2c";
+			reg = <0x40053100 0x100>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC1_RXI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC1_TXI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC1_TEI>,
+				     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_IIC1_EEI>;
+			interrupt-names = "rxi", "txi", "tei", "eei";
+
+			clocks = <&cgc RA_CLOCK_IIC(1)>;
+			#clock-cells = <1>;
+			status = "disabled";
 		};
 	};
 };
