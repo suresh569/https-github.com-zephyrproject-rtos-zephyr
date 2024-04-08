@@ -14,6 +14,9 @@
 #include "tls_internal.h"
 #include "tls_credentials_digest_raw.h"
 
+/* This lets check which MbedTLS features are enabled */
+#include "tls_credentials_mbedtls_config.h"
+
 LOG_MODULE_REGISTER(tls_credentials_trusted,
 		    CONFIG_TLS_CREDENTIALS_LOG_LEVEL);
 
@@ -323,6 +326,13 @@ void credentials_unlock(void)
 	k_mutex_unlock(&credential_lock);
 }
 
+/* Double check that security tag and credential type are allowed */
+static bool tag_type_valid(sec_tag_t tag, enum tls_credential_type type)
+{
+	/* tag 0xffffffff type 0xffff are reserved */
+	return !(tag == 0xffffffff && type == 0xffff);
+}
+
 int tls_credential_add(sec_tag_t tag, enum tls_credential_type type,
 		       const void *cred, size_t credlen)
 {
@@ -332,8 +342,7 @@ int tls_credential_add(sec_tag_t tag, enum tls_credential_type type,
 	unsigned int slot;
 	int ret = 0;
 
-	/* tag 0xffffffff type 0xffff are reserved */
-	if (tag == 0xffffffff && type == 0xffff) {
+	if (!tag_type_valid(tag, type)) {
 		ret = -EINVAL;
 		goto cleanup;
 	}
@@ -376,8 +385,7 @@ int tls_credential_get(sec_tag_t tag, enum tls_credential_type type,
 	unsigned int slot;
 	int ret = 0;
 
-	/* tag 0xffffffff type 0xffff are reserved */
-	if (tag == 0xffffffff && type == 0xffff) {
+	if (!tag_type_valid(tag, type)) {
 		ret = -EINVAL;
 		goto cleanup;
 	}
@@ -423,8 +431,7 @@ int tls_credential_delete(sec_tag_t tag, enum tls_credential_type type)
 	unsigned int slot;
 	int ret = 0;
 
-	/* tag 0xffffffff type 0xffff are reserved */
-	if (tag == 0xffffffff && type == 0xffff) {
+	if (!tag_type_valid(tag, type)) {
 		ret = -EINVAL;
 		goto cleanup;
 	}
@@ -456,3 +463,238 @@ cleanup:
 
 	return ret;
 }
+
+
+#if defined(CONFIG_TLS_CREDENTIAL_CSR)
+/* We need MBEDTLS_USE_PSA_CRYPTO because this implementation uses mbedtls_pk_setup_opaque */
+#if defined(CONFIG_MBEDTLS) && defined(MBEDTLS_USE_PSA_CRYPTO) && defined(MBEDTLS_X509_CSR_WRITE_C)
+
+#include <psa/crypto.h>
+#include "mbedtls/pk.h"
+#include "mbedtls/x509_csr.h"
+
+/**
+ * @brief PSA Random number generator wrapper for Mbed TLS
+ */
+static int psa_rng_for_mbedtls(void *p_rng, unsigned char *output, size_t output_len)
+{
+	ARG_UNUSED(p_rng);
+
+	return psa_generate_random(output, output_len);
+}
+
+/* For this backend, the private-key will be stored in DER format.
+ * Use `cred get <tag> PK bin` to retrieve (the non-terminated base64 encoding of) the key using
+ * the credential shell.
+ */
+int tls_credential_csr(sec_tag_t tag, char *dn, void *csr, size_t *csr_len)
+{
+	int ret = 0;
+
+	int cred_status;
+	psa_status_t psa_status;
+	int mbed_status;
+
+	bool key_created = false;
+	bool key_stored = false;
+
+	/* Credential Storage */
+	psa_storage_uid_t uid = tls_credential_get_uid(tag, TLS_CREDENTIAL_PRIVATE_KEY);
+
+	/* Keygen */
+	psa_key_attributes_t key_attributes = PSA_KEY_ATTRIBUTES_INIT;
+	psa_key_id_t key_id = PSA_KEY_ID_NULL;
+	psa_key_usage_t key_usage;
+
+	/* CSR and key export */
+	mbedtls_pk_context pk_ctx;
+	mbedtls_x509write_csr writer;
+	void* cred_start = 0;
+	size_t csr_max = *csr_len;
+
+	/* We haven't written anything yet... */
+	*csr_len = 0;
+
+	if (!tag_type_valid(tag, TLS_CREDENTIAL_PRIVATE_KEY)) {
+		return -EINVAL;
+	}
+
+	k_mutex_lock(&credential_lock, K_FOREVER);
+
+	/* Create temporary contexts */
+	mbedtls_pk_init(&pk_ctx);
+	mbedtls_x509write_csr_init(&writer);
+
+	/* Verify sectag not already taken */
+	if (tls_credential_toc_find_slot(uid) != CRED_MAX_SLOTS) {
+		ret = -EEXIST;
+		goto cleanup;
+	}
+
+	/* Before attempting keygen, check that an empty slot is available */
+	if (tls_credential_toc_find_slot(0) == CRED_MAX_SLOTS) {
+		ret = -ENOMEM;
+		goto cleanup;
+	}
+
+	/* Use PSA to generate a volatile SECP256R1 private/public key-pair
+         *
+	 * It is possible (and better) to mark the private key as persistent, and store it directly
+	 * in Trusted Internal Storage. This would be more secure, but until opaque key support is
+	 * added, keys will still need to be exported into non-secure memory, largely defeating
+	 * the security benefits.
+	 *
+	 * Accordingly, for now, we simply generate a volatile key and transfer it into
+	 * protected storage.
+	 */
+
+	key_usage = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH;
+	psa_set_key_usage_flags(&key_attributes, key_usage);
+
+	psa_set_key_lifetime(&key_attributes, PSA_KEY_LIFETIME_VOLATILE);
+	psa_set_key_algorithm(&key_attributes, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+	psa_set_key_type(&key_attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+	psa_set_key_bits(&key_attributes, 256);
+
+	psa_status = psa_crypto_init();
+
+	if (psa_status != PSA_SUCCESS) {
+		LOG_ERR("Failed to initialize crypto. Status: %d", psa_status);
+		ret = -EFAULT;
+		goto cleanup;
+	}
+
+	psa_status = psa_generate_key(&key_attributes, &key_id);
+
+	if (psa_status != PSA_SUCCESS) {
+		LOG_ERR("Failed to generate private key for CSR. Status: %d", psa_status);
+		ret = -EFAULT;
+		goto cleanup;
+	}
+
+	/* If PSA key was successfully created, we must later destroy it. */
+	key_created = true;
+
+	/* Hand key off to MbedTLS for immediate use (CSR and formatted export). */
+	mbed_status = mbedtls_pk_setup_opaque(&pk_ctx, key_id);
+	if (mbed_status) {
+		LOG_ERR("Failed to set up opaque private key. Status: %d", mbed_status);
+		ret = -EFAULT;
+		mbedtls_pk_free(&pk_ctx);
+		goto cleanup;
+	}
+
+	/* Export private key material in the same RFC5915/SEC1 DER format that
+	 * MbedTLS will later expect when loading the private key material from storage.
+	 *
+	 * We will temporarily use the CSR buffer to hold on to the formatted data.
+	 */
+	mbed_status = mbedtls_pk_write_key_der(&pk_ctx, csr, csr_max);
+	if (mbed_status == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL) {
+		LOG_ERR("Failed to format private key material. CSR buffer too small.");
+		ret = -EFBIG;
+		goto cleanup;
+	}
+	if (mbed_status < 0) {
+		LOG_ERR("Failed to format private key material. Status: %d", mbed_status);
+		ret = -EFAULT;
+		goto cleanup;
+	}
+
+	/* Place the formatted private key in credentials storage.
+	 * Note that mbedtls_pk_write_key_der writes the key to the end of the csr buffer,
+	 * hence the need for cred_head.
+	 */
+	cred_start = (char*)csr + csr_max - mbed_status;
+	cred_status = tls_credential_add(tag, TLS_CREDENTIAL_PRIVATE_KEY, cred_start, mbed_status);
+	if (cred_status != 0) {
+		LOG_ERR("Error storing CSR private key: %d", cred_status);
+		ret = -EFAULT;
+		goto cleanup;
+	}
+
+	/* Clear CSR buffer afterwards to prevent accidental private key leak */
+	memset(csr, 0, csr_max);
+	*csr_len = 0;
+
+	/* If key private data was successfully stored, we may need to delete it in the event of an
+	 * error during CSR writing.
+	 */
+	key_stored = true;
+
+	/* Configure CSR writer */
+	mbedtls_x509write_csr_set_md_alg(&writer, MBEDTLS_MD_SHA256);
+	mbedtls_x509write_csr_set_key(&writer, &pk_ctx);
+	mbed_status = mbedtls_x509write_csr_set_subject_name(&writer, dn);
+	if (mbed_status) {
+		LOG_ERR("Could not set distinguished name for CSR, error %d", mbed_status);
+		ret = -EINVAL;
+		goto cleanup;
+	}
+
+	/* Write CSR to output buffer. */
+	mbed_status = mbedtls_x509write_csr_der(&writer, csr, csr_max, psa_rng_for_mbedtls, NULL);
+
+	if (mbed_status == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL) {
+		LOG_ERR("Failed to write CSR. Provided buffer too small.");
+		ret = -EFBIG;
+		goto cleanup;
+	}
+	if (mbed_status < 0) {
+		LOG_ERR("Failed to write CSR. Status: %d", mbed_status);
+		ret = -EFAULT;
+		goto cleanup;
+	}
+
+	/* On success, mbed_status contains the number of bytes written. */
+	*csr_len = mbed_status;
+
+	/* mbedtls_x509write_csr_der writes its data to the end of the csr buffer.
+	 * Shift this data to the beginning of the csr buffer for convenient use by the caller.
+	 */
+	cred_start = (char*)csr + csr_max - mbed_status;
+	memmove(csr, cred_start, mbed_status);
+
+cleanup:
+	/* Destroy temporary contexts */
+	mbedtls_x509write_csr_free(&writer);
+	mbedtls_pk_free(&pk_ctx);
+
+	/* Unstore private key if an error occurred after it was stored */
+	if (ret && key_stored) {
+		cred_status = tls_credential_delete(tag, TLS_CREDENTIAL_PRIVATE_KEY);
+		if (cred_status) {
+			LOG_ERR("Failed to unstore CSR private key: %d ", cred_status);
+		}
+	}
+
+	/* If an error occurred, the CSR buffer is not valid. Wipe it.*/
+	if (ret) {
+		memset(csr, 0, csr_max);
+		*csr_len = 0;
+	}
+
+	/* Destroy temporary PSA key if it was created */
+	if (key_created) {
+		psa_status = psa_destroy_key(key_id);
+		if (psa_status != PSA_SUCCESS) {
+			// Reviewers: Should this trigger a panic?
+			LOG_ERR("Failed to destroy keypair after CSR generation: %d", psa_status);
+		}
+	}
+
+	k_mutex_unlock(&credential_lock);
+
+	return ret;
+}
+
+#else /* CONFIG_MBEDTLS */
+
+int tls_credential_csr(sec_tag_t tag, char *dn, void *csr, size_t *csr_len)
+{
+	/* Mbed-TLS is required for CSR generation. */
+	return -ENOTSUP;
+}
+
+#endif /* CONFIG_MBEDTLS */
+#endif /* defined(CONFIG_TLS_CREDENTIAL_CSR) */

@@ -197,3 +197,11 @@ exit:
 
 	return ret;
 }
+
+#if defined(CONFIG_TLS_CREDENTIAL_CSR)
+int tls_credential_csr(sec_tag_t tag, char *dn, void *csr, size_t *csr_len)
+{
+	/* The volatile backend does not support CSR generation. */
+	return -ENOTSUP;
+}
+#endif /* defined(CONFIG_TLS_CREDENTIAL_CSR) */
