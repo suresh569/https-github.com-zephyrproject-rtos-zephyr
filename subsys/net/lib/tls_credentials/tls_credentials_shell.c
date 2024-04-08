@@ -821,6 +821,90 @@ cleanup:
 	return 0;
 }
 
+/* Generates a private/public keypair, stores the private key in the credential store, and
+ * outputs a PKCS#10 CSR in base-64-encoded DER format.
+ *
+ * The storage format for the private key depends on the TLS Credentials back-end in use.
+ * For some back-ends, CSR may be unsupported, or the stored private key may not be retrievable.
+ * See the tls_credential_csr implementation of the back-end of interest for specifics.
+ */
+static int tls_cred_cmd_csr(const struct shell *sh, size_t argc, char *argv[])
+{
+	int err = 0;
+	sec_tag_t sectag;
+	size_t cred_len = sizeof(cred_buf);
+	char* dname;
+
+	/* Lock credentials so that we can interact with them directly.
+	 * Mainly this is required by credential_get.
+	 */
+
+	credentials_lock();
+
+	err = shell_parse_cred_sectag(sh, argv[1], &sectag, false);
+	if (err) {
+		goto cleanup;
+	}
+
+	err = shell_parse_cred_backend(sh, argv[2]);
+	if (err) {
+		goto cleanup;
+	}
+
+	/* Nothing to parse, we'll just pass what was provided directly to the csr writer.
+	 * But this should be an RFC 4514 Distinguished Name, for example:
+	 * "C=US,ST=CA,O=Linux Foundation,CN=Zephyr RTOS Device 1"
+	 */
+	dname = argv[3];
+
+	/* Check whether the sectag already has a private key. */
+	if (credential_get(sectag, TLS_CREDENTIAL_PRIVATE_KEY)) {
+		shell_fprintf(sh, SHELL_ERROR, "TLS sectag %d already has a private key.\n",
+					       sectag);
+		err = -EEXIST;
+		goto cleanup;
+	}
+
+	/* Clear the credential buffer before use. */
+	shell_clear_cred_buf(sh);
+
+	/* Perform keygen and CSR generation, store result in credential buffer. */
+	err = tls_credential_csr(sectag, dname, cred_buf, &cred_len);
+	if (err == -EFBIG) {
+		shell_fprintf(sh, SHELL_ERROR, "Not enough room in the credential buffer for CSR. "
+					       "Increase "
+					       "CONFIG_TLS_CREDENTIALS_SHELL_CRED_BUF_SIZE. "
+					       "Generated private key will not be stored.\n");
+		err = -ENOMEM;
+		goto cleanup;
+	} else if (err) {
+		shell_fprintf(sh, SHELL_ERROR, "Error generating CSR for sectag %d: %d.\n",
+						sectag, err);
+		goto cleanup;
+	}
+
+	/* If successful, update cred_written appropriately */
+	cred_written = cred_len;
+
+	shell_fprintf(sh, SHELL_NORMAL, "CSR generated\n");
+
+	/* Dump the generated CSR */
+	err = shell_dump_cred_buf(sh, false, CRED_STORAGE_FMT_BINARY);
+	if (err) {
+		shell_fprintf(sh, SHELL_WARNING, "Unexpected error dumping CSR: %d", err);
+		err = 0;
+	}
+
+cleanup:
+	/* Unlock credentials since we are done interacting with internal state. */
+	credentials_unlock();
+
+	/* We are also done with the credentials buffer, so clear it for good measure. */
+	shell_clear_cred_buf(sh);
+
+	return err;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(tls_cred_cmds,
 	SHELL_CMD_ARG(buf, NULL, "Buffer in credential data so it can be added.",
 		      tls_cred_cmd_buf, 2, 0),
@@ -830,6 +914,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(tls_cred_cmds,
 		      tls_cred_cmd_del, 3, 0),
 	SHELL_CMD_ARG(get, NULL, "Retrieve the contents of a TLS credential",
 		      tls_cred_cmd_get, 4, 0),
+	SHELL_CMD_ARG(csr, NULL, "Generate private/public keypair, generate CSR",
+		      tls_cred_cmd_csr, 4, 0),
 	SHELL_CMD_ARG(list, NULL, "List stored TLS credentials, optionally filtering by type "
 				  "or sectag.",
 		      tls_cred_cmd_list, 1, 2),
