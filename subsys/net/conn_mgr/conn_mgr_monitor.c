@@ -116,6 +116,7 @@ static void conn_mgr_mon_handle_update(void)
 	k_mutex_lock(&conn_mgr_mon_lock, K_FOREVER);
 
 	original_ready_count = ready_count;
+
 	for (idx = 0; idx < ARRAY_SIZE(iface_states); idx++) {
 		if (iface_states[idx] == 0) {
 			/* This interface is not used */
@@ -156,7 +157,10 @@ static void conn_mgr_mon_handle_update(void)
 		} else if (original_ready_count == 0) {
 			/* We just gained connectivity */
 			net_mgmt_event_notify(NET_EVENT_L4_CONNECTED, last_iface_up);
+		}
 
+		if (ready_count > 0) {
+			/* Trigger online check to be done for each ready interface */
 			conn_mgr_trigger_online_connectivity_check();
 		}
 	}
