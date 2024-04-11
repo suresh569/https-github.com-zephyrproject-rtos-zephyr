@@ -24,6 +24,7 @@ from typing import List
 ZEPHYR_BASE = os.getenv("ZEPHYR_BASE")
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/pylib/twister"))
 
+from twisterlib.statuses import TestCaseStatus, TestInstanceStatus
 from twisterlib.error import BuildError
 from twisterlib.harness import Pytest
 
@@ -252,15 +253,15 @@ TESTDATA_1_1 = [
 ]
 TESTDATA_1_2 = [
     (0, False, 'dummy out',
-     True, True, 'passed', None, False, True),
+     True, True, TestInstanceStatus.PASS, None, False, True),
     (0, True, '',
-     False, False, 'passed', None, False, False),
+     False, False, TestInstanceStatus.PASS, None, False, False),
     (1, True, 'ERROR: region `FLASH\' overflowed by 123 MB',
-     True,  True, 'skipped', 'FLASH overflow', True, False),
+     True,  True, TestInstanceStatus.SKIP, 'FLASH overflow', True, False),
     (1, True, 'Error: Image size (99 B) + trailer (1 B) exceeds requested size',
-     True, True, 'skipped', 'imgtool overflow', True, False),
+     True, True, TestInstanceStatus.SKIP, 'imgtool overflow', True, False),
     (1, True, 'mock.ANY',
-     True, True, 'error', 'Build failure', False, False)
+     True, True, TestInstanceStatus.ERROR, 'Build failure', False, False)
 ]
 
 @pytest.mark.parametrize(
@@ -305,7 +306,7 @@ def test_cmake_run_build(
     instance_mock = mock.Mock(add_missing_case_status=mock.Mock())
     instance_mock.build_time = 0
     instance_mock.run = is_instance_run
-    instance_mock.status = None
+    instance_mock.status = TestInstanceStatus.NONE
     instance_mock.reason = None
 
     cmake = CMake(testsuite_mock, platform_mock, source_dir, build_dir,
@@ -353,7 +354,7 @@ def test_cmake_run_build(
 
     if expected_add_missing:
         cmake.instance.add_missing_case_status.assert_called_once_with(
-            'skipped', 'Test was built only'
+            TestInstanceStatus.SKIP, 'Test was built only'
         )
 
 
@@ -365,7 +366,7 @@ TESTDATA_2_2 = [
     (True, ['dummy_stage_1', 'ds2'],
      0, False, '',
      True, True, False,
-     None, None,
+     TestInstanceStatus.NONE, None,
      [os.path.join('dummy', 'cmake'),
       '-B' + os.path.join('build', 'dir'), '-DTC_RUNID=1',
       '-DSB_CONFIG_COMPILER_WARNINGS_AS_ERRORS=y',
@@ -379,7 +380,7 @@ TESTDATA_2_2 = [
     (False, [],
      1, True, 'ERROR: region `FLASH\' overflowed by 123 MB',
      True, False, True,
-     'error', 'Cmake build failure',
+     TestInstanceStatus.ERROR, 'Cmake build failure',
      [os.path.join('dummy', 'cmake'),
       '-B' + os.path.join('build', 'dir'), '-DTC_RUNID=1',
       '-DSB_CONFIG_COMPILER_WARNINGS_AS_ERRORS=n',
@@ -437,13 +438,13 @@ def test_cmake_run_cmake(
     instance_mock.run = is_instance_run
     instance_mock.run_id = 1
     instance_mock.build_time = 0
-    instance_mock.status = None
+    instance_mock.status = TestInstanceStatus.NONE
     instance_mock.reason = None
     instance_mock.testsuite = mock.Mock()
     instance_mock.testsuite.required_snippets = ['dummy snippet 1', 'ds2']
     instance_mock.testcases = [mock.Mock(), mock.Mock()]
-    instance_mock.testcases[0].status = None
-    instance_mock.testcases[1].status = None
+    instance_mock.testcases[0].status = TestCaseStatus.NONE
+    instance_mock.testcases[1].status = TestCaseStatus.NONE
 
     cmake = CMake(testsuite_mock, platform_mock, source_dir, build_dir,
                   jobserver_mock)
@@ -858,7 +859,7 @@ def test_projectbuilder_log_info_file(
 TESTDATA_6 = [
     (
         {'op': 'filter'},
-        'failed',
+        TestInstanceStatus.FAIL,
         'Failed',
         mock.ANY,
         mock.ANY,
@@ -873,14 +874,14 @@ TESTDATA_6 = [
         mock.ANY,
         [],
         {'op': 'report', 'test': mock.ANY},
-        'failed',
+        TestInstanceStatus.FAIL,
         'Failed',
         0,
         None
     ),
     (
         {'op': 'filter'},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -895,14 +896,14 @@ TESTDATA_6 = [
         mock.ANY,
         ['filtering dummy instance name'],
         {'op': 'report', 'test': mock.ANY},
-        'filtered',
+        TestInstanceStatus.FILTER,
         'runtime filter',
         1,
-        ('skipped',)
+        (TestCaseStatus.SKIP,)
     ),
     (
         {'op': 'filter'},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -917,14 +918,14 @@ TESTDATA_6 = [
         mock.ANY,
         [],
         {'op': 'cmake', 'test': mock.ANY},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         0,
         None
     ),
     (
         {'op': 'cmake'},
-        'error',
+        TestInstanceStatus.ERROR,
         'dummy error',
         mock.ANY,
         mock.ANY,
@@ -939,14 +940,14 @@ TESTDATA_6 = [
         mock.ANY,
         [],
         {'op': 'report', 'test': mock.ANY},
-        'error',
+        TestInstanceStatus.ERROR,
         'dummy error',
         0,
         None
     ),
     (
         {'op': 'cmake'},
-        None,
+        TestInstanceStatus.NONE,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -961,7 +962,7 @@ TESTDATA_6 = [
         mock.ANY,
         [],
         {'op': 'report', 'test': mock.ANY},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         0,
         None
@@ -1005,10 +1006,10 @@ TESTDATA_6 = [
         mock.ANY,
         ['filtering dummy instance name'],
         {'op': 'report', 'test': mock.ANY},
-        'filtered',
+        TestInstanceStatus.FILTER,
         'runtime filter',
         1,
-        ('skipped',)
+        (TestCaseStatus.SKIP,)
     ),
     (
         {'op': 'cmake'},
@@ -1049,14 +1050,14 @@ TESTDATA_6 = [
         mock.ANY,
         ['build test: dummy instance name'],
         {'op': 'report', 'test': mock.ANY},
-        'error',
+        TestInstanceStatus.ERROR,
         'Build Failure',
         0,
         None
     ),
     (
         {'op': 'build'},
-        'skipped',
+        TestInstanceStatus.SKIP,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -1075,11 +1076,11 @@ TESTDATA_6 = [
         mock.ANY,
         mock.ANY,
         1,
-        ('skipped', mock.ANY)
+        (TestCaseStatus.SKIP, mock.ANY)
     ),
     (
         {'op': 'build'},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -1094,10 +1095,10 @@ TESTDATA_6 = [
         mock.ANY,
         ['build test: dummy instance name'],
         {'op': 'report', 'test': mock.ANY},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         0,
-        ('blocked', mock.ANY)
+        (TestCaseStatus.BLOCK, mock.ANY)
     ),
     (
         {'op': 'build'},
@@ -1140,7 +1141,7 @@ TESTDATA_6 = [
         ['build test: dummy instance name',
          'Determine test cases for test instance: dummy instance name'],
         {'op': 'report', 'test': mock.ANY},
-        'error',
+        TestInstanceStatus.ERROR,
         'Determine Testcases Error!',
         0,
         None
@@ -1236,7 +1237,7 @@ TESTDATA_6 = [
     ),
     (
         {'op': 'run'},
-        'failed',
+        TestInstanceStatus.FAIL,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -1253,7 +1254,7 @@ TESTDATA_6 = [
          'run status: dummy instance name failed',
          'RuntimeError: Pipeline Error!'],
         None,
-        'failed',
+        TestInstanceStatus.FAIL,
         mock.ANY,
         0,
         None
@@ -1282,7 +1283,7 @@ TESTDATA_6 = [
     ),
     (
         {'op': 'report'},
-        'passed',
+        TestInstanceStatus.PASS,
         mock.ANY,
         mock.ANY,
         mock.ANY,
@@ -1926,14 +1927,14 @@ def test_projectbuilder_sanitize_zephyr_base_from_files(
 
 TESTDATA_13 = [
     (
-        'error', True, True, False,
+        TestInstanceStatus.ERROR, True, True, False,
         ['INFO      20/25 dummy platform' \
          '            dummy.testsuite.name' \
          '                                ERROR dummy reason (cmake)'],
         None
     ),
     (
-        'failed', False, False, False,
+        TestInstanceStatus.FAIL, False, False, False,
         ['ERROR     dummy platform' \
          '            dummy.testsuite.name' \
          '                                FAILED : dummy reason'],
@@ -1941,20 +1942,20 @@ TESTDATA_13 = [
         ' failed:    3, error:    1'
     ),
     (
-        'skipped', True, False, False,
+        TestInstanceStatus.SKIP, True, False, False,
         ['INFO      20/25 dummy platform' \
          '            dummy.testsuite.name' \
          '                               SKIPPED (dummy reason)'],
         None
     ),
     (
-        'filtered', False, False, False,
+        TestInstanceStatus.FILTER, False, False, False,
         [],
         'INFO    - Total complete:   20/  25  80%  skipped:    4,' \
         ' failed:    2, error:    1'
     ),
     (
-        'passed', True, False, True,
+        TestInstanceStatus.PASS, True, False, True,
         ['INFO      20/25 dummy platform' \
          '            dummy.testsuite.name' \
          '                               PASSED' \
@@ -1962,7 +1963,7 @@ TESTDATA_13 = [
         None
     ),
     (
-        'passed', True, False, False,
+        TestInstanceStatus.PASS, True, False, False,
         ['INFO      20/25 dummy platform' \
          '            dummy.testsuite.name' \
          '                               PASSED (build)'],
@@ -1975,7 +1976,7 @@ TESTDATA_13 = [
         ' failed:    2, error:    1\r'
     ),
     (
-        'timeout', True, False, True,
+        TestInstanceStatus.TIMEOUT, True, False, True,
         ['INFO      20/25 dummy platform' \
          '            dummy.testsuite.name' \
          '                               UNKNOWN' \
@@ -2015,7 +2016,7 @@ def test_projectbuilder_report_out(
     instance_mock.testsuite.name = 'dummy.testsuite.name'
     instance_mock.testsuite.testcases = [mock.Mock() for _ in range(25)]
     instance_mock.testcases = [mock.Mock() for _ in range(24)] + \
-                              [mock.Mock(status='skipped')]
+                              [mock.Mock(status=TestCaseStatus.SKIP)]
     env_mock = mock.Mock()
 
     pb = ProjectBuilder(instance_mock, env_mock, mocked_jobserver)
@@ -2307,14 +2308,14 @@ def test_projectbuilder_gather_metrics(
 
 
 TESTDATA_16 = [
-    ('error', mock.ANY, False, False, False),
-    ('failed', mock.ANY, False, False, False),
-    ('skipped', mock.ANY, False, False, False),
-    ('filtered', 'native', False, False, True),
-    ('passed', 'qemu', False, False, True),
-    ('filtered', 'unit', False, False, True),
-    ('filtered', 'mcu', True, True, False),
-    ('passed', 'frdm_k64f', False, True, False),
+    (TestInstanceStatus.ERROR, mock.ANY, False, False, False),
+    (TestInstanceStatus.FAIL, mock.ANY, False, False, False),
+    (TestInstanceStatus.SKIP, mock.ANY, False, False, False),
+    (TestInstanceStatus.FILTER, 'native', False, False, True),
+    (TestInstanceStatus.PASS, 'qemu', False, False, True),
+    (TestInstanceStatus.FILTER, 'unit', False, False, True),
+    (TestInstanceStatus.FILTER, 'mcu', True, True, False),
+    (TestInstanceStatus.PASS, 'frdm_k64f', False, True, False),
 ]
 
 @pytest.mark.parametrize(
@@ -2472,35 +2473,35 @@ def test_twisterrunner_run(
 def test_twisterrunner_update_counting_before_pipeline():
     instances = {
         'dummy1': mock.Mock(
-            status='filtered',
+            status=TestInstanceStatus.FILTER,
             reason='runtime filter',
             testsuite=mock.Mock(
                 testcases=[mock.Mock()]
             )
         ),
         'dummy2': mock.Mock(
-            status='filtered',
+            status=TestInstanceStatus.FILTER,
             reason='static filter',
             testsuite=mock.Mock(
                 testcases=[mock.Mock(), mock.Mock(), mock.Mock(), mock.Mock()]
             )
         ),
         'dummy3': mock.Mock(
-            status='error',
+            status=TestInstanceStatus.ERROR,
             reason='error',
             testsuite=mock.Mock(
                 testcases=[mock.Mock()]
             )
         ),
         'dummy4': mock.Mock(
-            status='passed',
+            status=TestInstanceStatus.PASS,
             reason='OK',
             testsuite=mock.Mock(
                 testcases=[mock.Mock()]
             )
         ),
         'dummy5': mock.Mock(
-            status='skipped',
+            status=TestInstanceStatus.SKIP,
             reason=None,
             testsuite=mock.Mock(
                 testcases=[mock.Mock()]
@@ -2587,11 +2588,11 @@ def test_twisterrunner_add_tasks_to_queue(
         return [filter]
 
     instances = {
-        'dummy1': mock.Mock(run=True, retries=0, status='passed', build_dir="/tmp"),
-        'dummy2': mock.Mock(run=True, retries=0, status='skipped', build_dir="/tmp"),
-        'dummy3': mock.Mock(run=True, retries=0, status='filtered', build_dir="/tmp"),
-        'dummy4': mock.Mock(run=True, retries=0, status='error', build_dir="/tmp"),
-        'dummy5': mock.Mock(run=True, retries=0, status='failed', build_dir="/tmp")
+        'dummy1': mock.Mock(run=True, retries=0, status=TestInstanceStatus.PASS, build_dir="/tmp"),
+        'dummy2': mock.Mock(run=True, retries=0, status=TestInstanceStatus.SKIP, build_dir="/tmp"),
+        'dummy3': mock.Mock(run=True, retries=0, status=TestInstanceStatus.FILTER, build_dir="/tmp"),
+        'dummy4': mock.Mock(run=True, retries=0, status=TestInstanceStatus.ERROR, build_dir="/tmp"),
+        'dummy5': mock.Mock(run=True, retries=0, status=TestInstanceStatus.FAIL, build_dir="/tmp")
     }
     instances['dummy4'].testsuite.filter = 'some'
     instances['dummy5'].testsuite.filter = 'full'
