@@ -1,0 +1,9 @@
+sample:
+  name: USB host support shell sample
+tests:
+  sample.usbh.shell:
+    platform_allow:
+      - nucleo_h723zg
+    depends_on: usb_host
+    harness: keyboard
+    tags: usb
