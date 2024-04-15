@@ -61,6 +61,8 @@ struct fs_mount_t;
  * The object needs to be initialized with fs_file_t_init().
  */
 struct fs_file_t {
+	/** Name of the file */
+	char file_name[MAX_FILE_NAME];
 	/** Pointer to file object structure */
 	void *filep;
 	/** Pointer to mount point structure */
