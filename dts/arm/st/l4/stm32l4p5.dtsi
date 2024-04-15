@@ -308,6 +308,7 @@
 			interrupts = <67 0>;
 			interrupt-names = "otgfs";
 			num-bidir-endpoints = <6>;
+			num-host-channels = <12>;
 			ram-size = <1280>;
 			maximum-speed = "full-speed";
 			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00001000>,
