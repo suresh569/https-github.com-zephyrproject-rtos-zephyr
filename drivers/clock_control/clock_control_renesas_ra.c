@@ -111,6 +111,11 @@ static const uint32_t PRCR_CLOCKS = 0x1U;
 static const uint32_t PRCR_LOW_POWER = 0x2U;
 
 enum {
+	FCACHEE_OFFSET = 0x100,
+	FCACHEIV_OFFSET = 0x104,
+};
+
+enum {
 #if DT_INST_REG_SIZE_BY_NAME(0, mstp) == 16
 	MSTPCRA_OFFSET = -0x4,
 #else
@@ -157,6 +162,20 @@ static const int clock_freqs[] = {
 		     DT_PROP(DT_PATH(clocks, pll), clock_div)),
 		    (0)),
 };
+
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+
+static uint16_t FCACHE_read16(size_t offset)
+{
+	return sys_read16(DT_REG_ADDR_BY_NAME(DT_NODELABEL(fcu), fcache) + offset);
+}
+
+static void FCACHE_write16(size_t offset, uint16_t value)
+{
+	sys_write16(value, DT_REG_ADDR_BY_NAME(DT_NODELABEL(fcu), fcache) + offset);
+}
+
+#endif
 
 static uint32_t MSTP_read(size_t offset)
 {
@@ -264,6 +283,10 @@ static int clock_control_ra_init(const struct device *dev)
 
 	SYSTEM_write16(PRCR_OFFSET, PRCR_KEY | PRCR_CLOCKS | PRCR_LOW_POWER);
 
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+	FCACHE_write16(FCACHEE_OFFSET, 0);
+#endif
+
 	if (clock_freqs[SCRSCK_hoco] == 64000000) {
 		SYSTEM_write8(HOCOWTCR_OFFSET, HOCOWTCR_INIT_VALUE);
 	}
@@ -291,6 +314,8 @@ static int clock_control_ra_init(const struct device *dev)
 		}
 	}
 
+	SYSTEM_write8(MEMWAIT_OFFSET, 1);
+
 	SYSTEM_write32(SCKDIVCR_OFFSET, SCKDIVCR_INIT_VALUE);
 	SYSTEM_write8(SCKSCR_OFFSET, SCKSCR_INIT_VALUE);
 
@@ -303,7 +328,16 @@ static int clock_control_ra_init(const struct device *dev)
 		;
 	}
 
-	SYSTEM_write8(MEMWAIT_OFFSET, 1);
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+	FCACHE_write16(FCACHEIV_OFFSET, 1);
+
+	while (FCACHE_read16(FCACHEIV_OFFSET)) {
+		;
+	}
+
+	FCACHE_write16(FCACHEE_OFFSET, 1);
+#endif
+
 	SYSTEM_write16(PRCR_OFFSET, PRCR_KEY);
 
 	return 0;
