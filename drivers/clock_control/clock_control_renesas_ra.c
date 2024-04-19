@@ -53,7 +53,8 @@
 	(SCKDIVCR_BITS(iclk) | SCKDIVCR_BITS(pclka) | SCKDIVCR_BITS(pclkb) |                       \
 	 SCKDIVCR_BITS(pclkc) | SCKDIVCR_BITS(pclkd) | SCKDIVCR_BITS(bclk) | SCKDIVCR_BITS(fclk))
 
-#define HOCOWTCR_INIT_VALUE (6)
+#define HOCOWTCR_INIT_VALUE                                                                        \
+	((DT_PROP_OR(DT_PATH(clocks, hoco), clock_frequency, 0) >= 64000000) ? 6 : 5)
 
 /*
  * Required cycles for sub-clokc stabilizing.
@@ -287,7 +288,7 @@ static int clock_control_ra_init(const struct device *dev)
 	FCACHE_write16(FCACHEE_OFFSET, 0);
 #endif
 
-	if (clock_freqs[SCRSCK_hoco] == 64000000) {
+	if (IS_CLKSRC_ENABLED(hoco)) {
 		SYSTEM_write8(HOCOWTCR_OFFSET, HOCOWTCR_INIT_VALUE);
 	}
 
