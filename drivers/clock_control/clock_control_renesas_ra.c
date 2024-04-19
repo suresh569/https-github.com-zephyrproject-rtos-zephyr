@@ -238,9 +238,14 @@ static void crude_busy_loop_impl(uint32_t cycles)
 {
 	__asm__ volatile(".align 8\n"
 			 "busy_loop:\n"
-			 "	sub	r0, r0, #1\n"
-			 "	cmp	r0, #0\n"
-			 "	bne.n	busy_loop\n");
+			 "	sub	%[cycles], %[cycles], #1\n"
+			 "	cmp	%[cycles], #0\n"
+#if IS_ENABLED(CONFIG_CPU_CORTEX_M23)
+			 "	bne	busy_loop\n"
+#else
+			 "	bne.n	busy_loop\n"
+#endif
+			 : [cycles] "+r"(cycles));
 }
 
 static inline void crude_busy_loop(uint32_t wait_us)
