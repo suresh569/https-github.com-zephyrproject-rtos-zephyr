@@ -53,6 +53,15 @@
 	(SCKDIVCR_BITS(iclk) | SCKDIVCR_BITS(pclka) | SCKDIVCR_BITS(pclkb) |                       \
 	 SCKDIVCR_BITS(pclkc) | SCKDIVCR_BITS(pclkd) | SCKDIVCR_BITS(bclk) | SCKDIVCR_BITS(fclk))
 
+#define MOMCR_INIT_VALUE                                                                           \
+	((DT_INST_PROP(0, mosc_external) << 6) |                                                   \
+	 (!!(DT_PROP_OR(DT_PATH(clocks, mosc), clock_frequency, 0) < 10000000) << 3))
+
+#define MOSCWTCR_INIT_VALUE                                                                        \
+	(DT_INST_PROP(0, mosc_wait) == 2                                                           \
+		 ? 0                                                                               \
+		 : u32_count_trailing_zeros(DT_INST_PROP(0, mosc_wait) >> 9))
+
 #define HOCOWTCR_INIT_VALUE                                                                        \
 	((DT_PROP_OR(DT_PATH(clocks, hoco), clock_frequency, 0) >= 64000000) ? 6 : 5)
 
@@ -137,8 +146,10 @@ enum {
 	OSCSF_OFFSET = 0x03C,
 	CKOCR_OFFSET = 0x03E,
 	OPCCR_OFFSET = 0x0A0,
+	MOSCWTCR_OFFSET = 0x0A2,
 	HOCOWTCR_OFFSET = 0x0A5,
 	PRCR_OFFSET = 0x3FE,
+	MOMCR_OFFSET = 0x413,
 	SOSCCR_OFFSET = 0x480,
 };
 
@@ -287,6 +298,11 @@ static int clock_control_ra_init(const struct device *dev)
 #if DT_NODE_EXISTS(DT_NODELABEL(fcu))
 	FCACHE_write16(FCACHEE_OFFSET, 0);
 #endif
+
+	if (IS_CLKSRC_ENABLED(mosc)) {
+		SYSTEM_write8(MOMCR_OFFSET, MOMCR_INIT_VALUE);
+		SYSTEM_write8(MOSCWTCR_OFFSET, MOSCWTCR_INIT_VALUE);
+	}
 
 	if (IS_CLKSRC_ENABLED(hoco)) {
 		SYSTEM_write8(HOCOWTCR_OFFSET, HOCOWTCR_INIT_VALUE);

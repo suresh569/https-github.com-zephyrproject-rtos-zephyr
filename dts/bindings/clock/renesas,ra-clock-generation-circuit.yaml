@@ -39,6 +39,28 @@ properties:
     type: phandle
     description: System clock source
 
+  mosc-external:
+    type: boolean
+    description: |
+      Indicate using the external clock to drive the main oscillator
+
+  mosc-wait:
+    type: int
+    default: 16384
+    enum:
+      - 2
+      - 1024
+      - 2048
+      - 4096
+      - 8192
+      - 16384
+      - 32768
+      - 65536
+      - 131072
+      - 262144
+    description: |
+      Set a wait time for stabilizing the main oscillator in milliseconds
+
   "#clock-cells":
     const: 1
 
