@@ -15,8 +15,6 @@
 
 #include <zephyr/net/tls_credentials.h>
 
-#define HAWKBIT_JSON_URL "/default/controller/v1"
-
 /**
  * @brief Response message from hawkBit.
  *
