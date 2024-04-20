@@ -61,6 +61,17 @@ properties:
     description: |
       Set a wait time for stabilizing the main oscillator in milliseconds
 
+  sosc-drive-mode:
+    type: string
+    default: "normal"
+    enum:
+      - "normal"
+      - "low-power-0"
+      - "low-power-1"
+      - "low-power-2"
+    description: |
+      Set sub-oscillator drive mode
+
   "#clock-cells":
     const: 1
 

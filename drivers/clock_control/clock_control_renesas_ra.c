@@ -53,6 +53,8 @@
 	(SCKDIVCR_BITS(iclk) | SCKDIVCR_BITS(pclka) | SCKDIVCR_BITS(pclkb) |                       \
 	 SCKDIVCR_BITS(pclkc) | SCKDIVCR_BITS(pclkd) | SCKDIVCR_BITS(bclk) | SCKDIVCR_BITS(fclk))
 
+#define SOMCR_INIT_VALUE DT_INST_ENUM_IDX(0, sosc_drive_mode)
+
 #define MOMCR_INIT_VALUE                                                                           \
 	((DT_INST_PROP(0, mosc_external) << 6) |                                                   \
 	 (!!(DT_PROP_OR(DT_PATH(clocks, mosc), clock_frequency, 0) < 10000000) << 3))
@@ -151,6 +153,7 @@ enum {
 	PRCR_OFFSET = 0x3FE,
 	MOMCR_OFFSET = 0x413,
 	SOSCCR_OFFSET = 0x480,
+	SOMCR_OFFSET = 0x481,
 };
 
 enum {
@@ -298,6 +301,10 @@ static int clock_control_ra_init(const struct device *dev)
 #if DT_NODE_EXISTS(DT_NODELABEL(fcu))
 	FCACHE_write16(FCACHEE_OFFSET, 0);
 #endif
+
+	if (IS_CLKSRC_ENABLED(sosc)) {
+		SYSTEM_write8(SOMCR_OFFSET, SOMCR_INIT_VALUE);
+	}
 
 	if (IS_CLKSRC_ENABLED(mosc)) {
 		SYSTEM_write8(MOMCR_OFFSET, MOMCR_INIT_VALUE);
