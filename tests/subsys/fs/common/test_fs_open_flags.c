@@ -133,7 +133,7 @@ void test_fs_open_flags(void)
 {
 	struct test_state ts = {
 		*&test_fs_open_flags_file_path,
-		{ 0 },
+		{{ 0 }},
 		something,
 		RDWR_SIZE,
 		buffer,

@@ -431,3 +431,19 @@ int ftruncate(int fd, off_t length)
 
 	return fs_truncate(&ptr->file, length);
 }
+
+/**
+ * @brief Get status of file from fd.
+ *
+ * See IEEE 1003.1
+ */
+int fstat(int fd, struct stat *buf)
+{
+	struct posix_fs_desc *ptr = NULL;
+
+	ptr = z_get_fd_obj(fd, NULL, EBADF);
+	if (!ptr)
+		return -1;
+
+	return stat(&ptr->file.file_name[0], buf);
+}

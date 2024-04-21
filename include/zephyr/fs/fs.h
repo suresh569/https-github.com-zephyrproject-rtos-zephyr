@@ -8,6 +8,7 @@
 #ifndef ZEPHYR_INCLUDE_FS_FS_H_
 #define ZEPHYR_INCLUDE_FS_FS_H_
 
+#include <string.h>
 #include <sys/types.h>
 
 #include <zephyr/sys/dlist.h>
@@ -236,6 +237,7 @@ static inline void fs_file_t_init(struct fs_file_t *zfp)
 	zfp->filep = NULL;
 	zfp->mp = NULL;
 	zfp->flags = 0;
+	memset(zfp->file_name, 0, MAX_FILE_NAME);
 }
 
 /**

@@ -406,6 +406,41 @@ POSIX_TIMERS
     timer_getoverrun(),yes
     timer_settime(),yes
 
+.. _posix_option_group_file_system:
+
+POSIX_FILE_SYSTEM
+=================
+
+.. csv-table:: POSIX_FILE_SYSTEM
+   :header: API, Supported
+   :widths: 50,10
+
+    access(),
+    chdir(),
+    closedir(),yes
+    creat(),
+    fchdir(),
+    fpathconf(),
+    fstat(),yes
+    fstatvfs(),
+    getcwd(),
+    link(),
+    mkdir(),yes
+    mkstemp(),
+    opendir(),yes
+    pathconf(),
+    readdir(),yes
+    remove(),
+    rename(),yes
+    rewinddir(),
+    rmdir(),
+    stat(),yes
+    statvfs(),
+    tmpfile(),
+    tmpname(),
+    truncate(),
+    unlink(),yes
+    utime(),
 
 .. _posix_options:
 
