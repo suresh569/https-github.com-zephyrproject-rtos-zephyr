@@ -4,14 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <string.h>
-
 #define DT_DRV_COMPAT renesas_ra_clock_generation_circuit
 
 #include <zephyr/drivers/clock_control.h>
-#include <zephyr/kernel.h>
-#include <soc.h>
 #include <zephyr/dt-bindings/clock/renesas-ra-cgc.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/math_extras.h>
 
 #if DT_SAME_NODE(DT_INST_PROP(0, clock_source), DT_PATH(clocks, pll))
 #define SYSCLK_SRC pll
@@ -253,7 +251,11 @@ static int clock_control_ra_get_rate(const struct device *dev, clock_control_sub
 
 	switch (clkid & 0xFFFFFF00) {
 	case RA_CLOCK_SCI(0):
+#if IS_ENABLED(CONFIG_CPU_CORTEX_M23)
+		*rate = FREQ_pclkb;
+#else
 		*rate = FREQ_pclka;
+#endif
 		break;
 	default:
 		return -EINVAL;
