@@ -1,0 +1,172 @@
+/*
+ * Copyright (c) 2023 TOKITA Hiroshi <tokita.hiroshi@fujitsu.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <arm/armv7-m.dtsi>
+#include <zephyr/dt-bindings/clock/r7fa4m1xxxxxx-clock.h>
+#include <zephyr/dt-bindings/interrupt-controller/r7fa4m1xxxxxx-events.h>
+#include <renesas/ra/ra-cm4-common.dtsi>
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m4";
+			reg = <0>;
+		};
+	};
+};
+
+&sram0 {
+	reg = <0x20000000 DT_SIZE_K(32)>;
+};
+
+&flash0 {
+	reg = <0x00000000 DT_SIZE_K(256)>;
+};
+
+&flash1 {
+	reg = <0x40100000 DT_SIZE_K(8)>;
+};
+
+&ioport0 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ2>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ3>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ6>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ7>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ10>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ15>;
+	interrupt-names = "port-irq2", "port-irq3", "port-irq6",
+			  "port-irq7", "port-irq10", "port-irq15";
+	port-irq2-pins = <2>;
+	port-irq3-pins = <4>;
+	port-irq6-pins = <0>;
+	port-irq7-pins = <1 15>;
+	port-irq10-pins = <5>;
+	port-irq15-pins = <11>;
+};
+
+&ioport1 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ0>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ1>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ2>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ3>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ4>;
+	interrupt-names = "port-irq0", "port-irq1", "port-irq2",
+			  "port-irq3", "port-irq4";
+	port-irq0-pins = <5>;
+	port-irq1-pins = <1>;
+	port-irq2-pins = <0>;
+	port-irq3-pins = <10>;
+	port-irq4-pins = <11>;
+};
+
+&ioport2 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ0>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ1>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ2>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ3>;
+	interrupt-names = "port-irq0", "port-irq1", "port-irq2",
+			  "port-irq3";
+	port-irq0-pins = <6>;
+	port-irq1-pins = <5>;
+	port-irq2-pins = <13>;
+	port-irq3-pins = <12>;
+};
+
+&ioport3 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ5>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ6>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ8>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ9>;
+	interrupt-names = "port-irq5", "port-irq6", "port-irq8", "port-irq9";
+	port-irq5-pins = <2>;
+	port-irq6-pins = <1>;
+	port-irq8-pins = <5>;
+	port-irq9-pins = <4>;
+};
+
+&ioport4 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ0>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ4>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ5>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ6>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ7>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ8>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ9>;
+	interrupt-names = "port-irq0", "port-irq4", "port-irq5", "port-irq6",
+			  "port-irq7", "port-irq8", "port-irq9";
+	port-irq0-pins = <0>;
+	port-irq4-pins = <2 11>;
+	port-irq5-pins = <1 10>;
+	port-irq6-pins = <9>;
+	port-irq7-pins = <8>;
+	port-irq8-pins = <15>;
+	port-irq9-pins = <14>;
+};
+
+&ioport5 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ11>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ12>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_PORT_IRQ14>;
+	interrupt-names = "port-irq11", "port-irq12", "port-irq14";
+	port-irq11-pins = <1>;
+	port-irq12-pins = <2>;
+	port-irq14-pins = <5>;
+};
+
+/delete-node/ &ioporta;
+/delete-node/ &ioportb;
+
+&sci0 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_RXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_TXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_TEI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_ERI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_AM>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI0_RXI_OR_ERI>;
+	interrupt-names = "rxi", "txi", "tei", "eri", "am", "rxi-or-eri";
+	clocks = <&cgc RA_CLOCK_SCI(0)>;
+};
+
+&sci1 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI1_RXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI1_TXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI1_TEI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI1_ERI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI1_AM>;
+	interrupt-names = "rxi", "txi", "tei", "eri", "am";
+	clocks = <&cgc RA_CLOCK_SCI(1)>;
+};
+
+&sci2 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI2_RXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI2_TXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI2_TEI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI2_ERI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI2_AM>;
+	interrupt-names = "rxi", "txi", "tei", "eri", "am";
+	clocks = <&cgc RA_CLOCK_SCI(2)>;
+};
+
+/delete-node/ &sci3;
+/delete-node/ &sci4;
+/delete-node/ &sci5;
+/delete-node/ &sci6;
+/delete-node/ &sci7;
+/delete-node/ &sci8;
+
+&sci9 {
+	interrupts = <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI9_RXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI9_TXI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI9_TEI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI9_ERI>,
+		     <RA_ICU_IRQ_UNSPECIFIED 0 RA_ICU_SCI9_AM>;
+	interrupt-names = "rxi", "txi", "tei", "eri", "am";
+	clocks = <&cgc RA_CLOCK_SCI(9)>;
+};
