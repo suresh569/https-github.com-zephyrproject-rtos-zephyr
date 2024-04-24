@@ -16,7 +16,7 @@ from contextlib import nullcontext
 ZEPHYR_BASE = os.getenv("ZEPHYR_BASE")
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/pylib/twister"))
 
-from twisterlib.statuses import TestInstanceStatus
+from twisterlib.statuses import TestCaseStatus, TestInstanceStatus
 from twisterlib.testplan import TestPlan, change_skip_to_error_if_integration
 from twisterlib.testinstance import TestInstance
 from twisterlib.testsuite import TestSuite
@@ -1568,7 +1568,7 @@ def test_testplan_load_from_file(caplog, device_testing, expected_tfilter):
             'retries': 0,
             'testcases': {
                 'TS1.tc1': {
-                    'status': TestInstanceStatus.PASS,
+                    'status': TestCaseStatus.PASS,
                     'reason': None,
                     'duration': 60.0,
                     'output': ''
@@ -1597,13 +1597,13 @@ def test_testplan_load_from_file(caplog, device_testing, expected_tfilter):
             'retries': 1,
             'testcases': {
                     'TS3.tc1': {
-                        'status': TestInstanceStatus.ERROR,
+                        'status': TestCaseStatus.ERROR,
                         'reason': None,
                         'duration': 360.0,
                         'output': '[ERROR]: File \'dummy.yaml\' not found!\nClosing...'
                     },
                     'TS3.tc2': {
-                        'status': TestInstanceStatus.NONE,
+                        'status': TestCaseStatus.NONE,
                         'reason': None,
                         'duration': 0,
                         'output': ''
@@ -1621,7 +1621,7 @@ def test_testplan_load_from_file(caplog, device_testing, expected_tfilter):
             'retries': 0,
             'testcases': {
                 'TS4.tc1': {
-                    'status': TestInstanceStatus.SKIP,
+                    'status': TestCaseStatus.SKIP,
                     'reason': 'Not in requested test list.',
                     'duration': 360.0,
                     'output': '[INFO] Parsing...'

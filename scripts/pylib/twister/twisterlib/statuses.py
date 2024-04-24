@@ -9,10 +9,21 @@ Status classes to be used instead of str statuses.
 from enum import Enum
 
 
+# Status Assignment tree:
+#   parent <- child <=> parent is assigned to child in code.
+#
+#   HarnessStatus
+#   └ QEMUOutputStatus
+#     └ TestInstanceStatus
+#       ├ TestSuiteStatus
+#       └ TestCaseStatus
+
+
 class TestInstanceStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    # Values assigned directly
     NONE = None  # to preserve old functionality
     ERROR = 'error'
     FAIL = 'failed'
@@ -21,24 +32,26 @@ class TestInstanceStatus(str, Enum):
     SKIP = 'skipped'
 
 
-# Possible direct assignments:
-#   * TestSuiteStatus <- TestInstanceStatus
 class TestSuiteStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    # Values assigned directly
     NONE = None  # to preserve old functionality
     FILTER = 'filtered'
     PASS = 'passed'
     SKIP = 'skipped'
 
+    # Values assigned via TestInstanceStatus
+    ERROR = 'error'
+    FAIL = 'failed'
 
-# Possible direct assignments:
-#    * TestCaseStatus <- TestInstanceStatus
+
 class TestCaseStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    # Values assigned directly
     NONE = None  # to preserve old functionality
     BLOCK = 'blocked'
     ERROR = 'error'
@@ -49,36 +62,30 @@ class TestCaseStatus(str, Enum):
     STARTED = 'started'
 
 
-# Possible direct assignments:
-#   * OutputStatus <- HarnessStatus
-class OutputStatus(str, Enum):
+class QEMUOutputStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    # Values assigned directly
     NONE = None  # to preserve old functionality
     BYTE = 'unexpected byte'
     EOF = 'unexpected eof'
     FAIL = 'failed'
     TIMEOUT = 'timeout'
 
-
-# Possible direct assignments:
-#   * TestInstanceStatus <- HarnessStatus
-class HarnessStatus(str, Enum):
-    def __str__(self):
-        return str(self.value)
-
-    NONE = None  # to preserve old functionality
+    # Values assigned via HarnessStatus
     ERROR = 'error'
-    FAIL = 'failed'
     PASS = 'passed'
     SKIP = 'skipped'
 
 
-class ReportStatus(str, Enum):
+class HarnessStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
+    # Values assigned directly
+    NONE = None  # to preserve old functionality
     ERROR = 'error'
-    FAIL = 'failure'  # Note the difference!
+    FAIL = 'failed'
+    PASS = 'passed'
     SKIP = 'skipped'

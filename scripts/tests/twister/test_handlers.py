@@ -25,7 +25,7 @@ import twisterlib.harness
 ZEPHYR_BASE = os.getenv("ZEPHYR_BASE")
 
 from twisterlib.error import TwisterException
-from twisterlib.statuses import HarnessStatus, OutputStatus, TestCaseStatus, TestInstanceStatus
+from twisterlib.statuses import HarnessStatus, QEMUOutputStatus, TestCaseStatus, TestInstanceStatus
 from twisterlib.handlers import (
     Handler,
     BinaryHandler,
@@ -128,7 +128,7 @@ def test_handler_final_handle_actions(mocked_instance):
     handler.suite_name_check = True
 
     harness = twisterlib.harness.Test()
-    harness.state = mock.Mock()
+    harness.status = mock.Mock()
     harness.detected_suite_names = mock.Mock()
     harness.matched_run_id = False
     harness.run_id_exists = True
@@ -295,7 +295,7 @@ def test_binaryhandler_try_kill_process_by_pid(mocked_instance):
 TESTDATA_3 = [
     (
         [b'This\\r\\n', b'is\r', b'a short', b'file.'],
-        mock.Mock(state=HarnessStatus.NONE, capture_coverage=False),
+        mock.Mock(status=HarnessStatus.NONE, capture_coverage=False),
         [
             mock.call('This\\r\\n'),
             mock.call('is\r'),
@@ -313,7 +313,7 @@ TESTDATA_3 = [
     ),
     (
         [b'Too much.'] * 120,  # Should be more than the timeout
-        mock.Mock(state=HarnessStatus.PASS, capture_coverage=False),
+        mock.Mock(status=HarnessStatus.PASS, capture_coverage=False),
         None,
         None,
         True,
@@ -321,7 +321,7 @@ TESTDATA_3 = [
     ),
     (
         [b'Too much.'] * 120,  # Should be more than the timeout
-        mock.Mock(state=HarnessStatus.PASS, capture_coverage=False),
+        mock.Mock(status=HarnessStatus.PASS, capture_coverage=False),
         None,
         None,
         True,
@@ -329,7 +329,7 @@ TESTDATA_3 = [
     ),
     (
         [b'Too much.'] * 120,  # Should be more than the timeout
-        mock.Mock(state=HarnessStatus.PASS, capture_coverage=True),
+        mock.Mock(status=HarnessStatus.PASS, capture_coverage=True),
         None,
         None,
         False,
@@ -709,7 +709,7 @@ def test_devicehandler_monitor_serial(
         return_value=False
     )
     harness = mock.Mock(capture_coverage=False)
-    type(harness).state=mock.PropertyMock(side_effect=state_iter)
+    type(harness).status=mock.PropertyMock(side_effect=state_iter)
 
     handler = DeviceHandler(mocked_instance, 'build')
     handler.options = mock.Mock(enable_coverage=not end_by_state)
@@ -1729,11 +1729,11 @@ def test_qemuhandler_thread_close_files(is_pid, is_lookup_error):
 
 
 TESTDATA_24 = [
-    (OutputStatus.TIMEOUT, TestInstanceStatus.FAIL, 'Timeout'),
-    (OutputStatus.FAIL, TestInstanceStatus.FAIL, 'Failed'),
-    (OutputStatus.EOF, TestInstanceStatus.FAIL, 'unexpected eof'),
-    (OutputStatus.BYTE, TestInstanceStatus.FAIL, 'unexpected byte'),
-    (OutputStatus.NONE, TestInstanceStatus.NONE, 'Unknown'),
+    (QEMUOutputStatus.TIMEOUT, TestInstanceStatus.FAIL, 'Timeout'),
+    (QEMUOutputStatus.FAIL, TestInstanceStatus.FAIL, 'Failed'),
+    (QEMUOutputStatus.EOF, TestInstanceStatus.FAIL, 'unexpected eof'),
+    (QEMUOutputStatus.BYTE, TestInstanceStatus.FAIL, 'unexpected byte'),
+    (QEMUOutputStatus.NONE, TestInstanceStatus.NONE, 'Unknown'),
 ]
 
 @pytest.mark.parametrize(
@@ -1763,70 +1763,70 @@ TESTDATA_25 = [
         ('1\n' * 60).encode('utf-8'),
         60,
         1,
-        [HarnessStatus.NONE] * 60 + ['success'] * 6,
+        [HarnessStatus.NONE] * 60 + [HarnessStatus.PASS] * 6,
         1000,
         False,
-        OutputStatus.TIMEOUT,
+        QEMUOutputStatus.TIMEOUT,
         [mock.call('1\n'), mock.call('1\n')]
     ),
     (
         ('1\n' * 60).encode('utf-8'),
         60,
         -1,
-        [HarnessStatus.NONE] * 60 + ['success'] * 30,
+        [HarnessStatus.NONE] * 60 + [HarnessStatus.PASS] * 30,
         100,
         False,
-        OutputStatus.FAIL,
+        QEMUOutputStatus.FAIL,
         [mock.call('1\n'), mock.call('1\n')]
     ),
     (
         b'',
         60,
         1,
-        ['success'] * 3,
+        [HarnessStatus.PASS] * 3,
         100,
         False,
-        OutputStatus.EOF,
+        QEMUOutputStatus.EOF,
         []
     ),
     (
         b'\x81',
         60,
         1,
-        ['success'] * 3,
+        [HarnessStatus.PASS] * 3,
         100,
         False,
-        OutputStatus.BYTE,
+        QEMUOutputStatus.BYTE,
         []
     ),
     (
         '1\n2\n3\n4\n5\n'.encode('utf-8'),
         600,
         1,
-        [HarnessStatus.NONE] * 3 + ['success'] * 7,
+        [HarnessStatus.NONE] * 3 + [HarnessStatus.PASS] * 7,
         100,
         False,
-        'success',
+        HarnessStatus.PASS,
         [mock.call('1\n'), mock.call('2\n'), mock.call('3\n'), mock.call('4\n')]
     ),
     (
         '1\n2\n3\n4\n5\n'.encode('utf-8'),
         600,
         0,
-        [HarnessStatus.NONE] * 3 + ['success'] * 7,
+        [HarnessStatus.NONE] * 3 + [HarnessStatus.PASS] * 7,
         100,
         False,
-        OutputStatus.TIMEOUT,
+        QEMUOutputStatus.TIMEOUT,
         [mock.call('1\n'), mock.call('2\n')]
     ),
     (
         '1\n2\n3\n4\n5\n'.encode('utf-8'),
         60,
         1,
-        [HarnessStatus.NONE] * 3 + ['success'] * 7,
+        [HarnessStatus.NONE] * 3 + [HarnessStatus.PASS] * 7,
         (n for n in [100, 100, 10000]),
         True,
-        'success',
+        HarnessStatus.PASS,
         [mock.call('1\n'), mock.call('2\n'), mock.call('3\n'), mock.call('4\n')]
     ),
 ]
@@ -1883,7 +1883,7 @@ def test_qemuhandler_thread(
         return file_object
 
     harness = mock.Mock(capture_coverage=capture_coverage, handle=print)
-    type(harness).state = mock.PropertyMock(side_effect=harness_states)
+    type(harness).status = mock.PropertyMock(side_effect=harness_states)
 
     p = mock.Mock()
     p.poll = mock.Mock(
@@ -1992,7 +1992,7 @@ def test_qemuhandler_handle(
         handler.pid_fn = os.path.join(sysbuild_build_dir, 'qemu.pid')
         handler.log_fn = os.path.join('dummy', 'log')
 
-    harness = mock.Mock(state=harness_state)
+    harness = mock.Mock(status=harness_state)
     handler_options_west_flash = []
 
     domain_build_dir = os.path.join('sysbuild', 'dummydir')

@@ -93,7 +93,7 @@ def test_harness_process_test(line, fault, fail_on_fault, cap_cov, exp_stat, exp
     #Arrange
     harness = Harness()
     harness.run_id = 12345
-    harness.state = HarnessStatus.NONE
+    harness.status = HarnessStatus.NONE
     harness.fault = fault
     harness.fail_on_fault = fail_on_fault
     mock.patch.object(Harness, 'parse_record', return_value=None)
@@ -103,7 +103,7 @@ def test_harness_process_test(line, fault, fail_on_fault, cap_cov, exp_stat, exp
 
     #Assert
     assert harness.matched_run_id == exp_id
-    assert harness.state == exp_stat
+    assert harness.status == exp_stat
     assert harness.capture_coverage == cap_cov
     assert harness.recording == []
 
@@ -161,7 +161,7 @@ def test_robot_handle(tmp_path):
     tc = instance.get_case_or_create('test_case_1')
 
     #Assert
-    assert instance.state == TestInstanceStatus.PASS
+    assert instance.status == TestInstanceStatus.PASS
     assert tc.status == TestCaseStatus.PASS
 
 
@@ -293,7 +293,7 @@ def test_console_handle(tmp_path, line_type, ordered_val, exp_state, line, exp_f
     console.patterns = [re.compile("pattern1"), re.compile("pattern2")]
     console.pattern = re.compile("pattern")
     console.patterns_expected = 0
-    console.state = HarnessStatus.NONE
+    console.status = HarnessStatus.NONE
     console.fail_on_fault = True
     console.FAULT = "ERROR"
     console.GCOV_START = "COVERAGE_START"
@@ -316,7 +316,7 @@ def test_console_handle(tmp_path, line_type, ordered_val, exp_state, line, exp_f
     line2 = "pattern2"
     console.handle(line1)
     console.handle(line2)
-    assert console.state == exp_state
+    assert console.status == exp_state
     with pytest.raises(Exception):
         console.handle(line)
         assert logger.error.called
@@ -447,7 +447,7 @@ def test_pytest_run(tmp_path, caplog):
     # Act
     test_obj.pytest_run(timeout)
     # Assert
-    assert test_obj.state == HarnessStatus.FAIL
+    assert test_obj.status == HarnessStatus.FAIL
     assert exp_out in caplog.text
 
 
@@ -501,7 +501,7 @@ def test_test_handle(tmp_path, caplog, exp_out, line, exp_suite_name, exp_status
     test_obj.configure(instance)
     test_obj.id = "test_id"
     test_obj.ztest = ztest
-    test_obj.state = state
+    test_obj.status = state
     test_obj.id = 'test_id'
     #Act
     test_obj.handle(line)
@@ -539,7 +539,7 @@ def gtest(tmp_path):
 def test_gtest_start_test_no_suites_detected(gtest):
     process_logs(gtest, [SAMPLE_GTEST_START])
     assert len(gtest.detected_suite_names) == 0
-    assert gtest.state == HarnessStatus.NONE
+    assert gtest.status == HarnessStatus.NONE
 
 
 def test_gtest_start_test(gtest):
@@ -552,7 +552,7 @@ def test_gtest_start_test(gtest):
             ),
         ],
     )
-    assert gtest.state == HarnessStatus.NONE
+    assert gtest.status == HarnessStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") is not None
@@ -574,7 +574,7 @@ def test_gtest_pass(gtest):
             ),
         ],
     )
-    assert gtest.state == HarnessStatus.NONE
+    assert gtest.status == HarnessStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
@@ -594,7 +594,7 @@ def test_gtest_failed(gtest):
             ),
         ],
     )
-    assert gtest.state == HarnessStatus.NONE
+    assert gtest.status == HarnessStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
@@ -614,7 +614,7 @@ def test_gtest_skipped(gtest):
             ),
         ],
     )
-    assert gtest.state == HarnessStatus.NONE
+    assert gtest.status == HarnessStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
@@ -635,7 +635,7 @@ def test_gtest_all_pass(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.state == HarnessStatus.PASS
+    assert gtest.status == HarnessStatus.PASS
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
@@ -662,7 +662,7 @@ def test_gtest_one_skipped(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.state == HarnessStatus.PASS
+    assert gtest.status == HarnessStatus.PASS
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
@@ -691,7 +691,7 @@ def test_gtest_one_fail(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.state == HarnessStatus.FAIL
+    assert gtest.status == HarnessStatus.FAIL
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test0") != TestCaseStatus.NONE

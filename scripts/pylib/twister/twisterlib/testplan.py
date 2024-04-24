@@ -17,7 +17,6 @@ import copy
 import shutil
 import random
 import snippets
-from colorama import Fore
 from pathlib import Path
 from argparse import Namespace
 
@@ -616,9 +615,10 @@ class TestPlan:
                     instance.metrics['available_ram'] = ts.get('available_ram', 0)
                     instance.metrics['available_rom'] = ts.get('available_rom', 0)
 
-                    status = ts.get('status', TestSuiteStatus.NONE)
+                    status = ts.get('status')
+                    status = TestSuiteStatus(status) if status else TestSuiteStatus.NONE
                     reason = ts.get("reason", "Unknown")
-                    if status in [TestInstanceStatus.ERROR, TestInstanceStatus.FAIL]:
+                    if status in [TestSuiteStatus.ERROR, TestSuiteStatus.FAIL]:
                         if self.options.report_summary is not None:
                             instance.status = status
                             instance.reason = reason
@@ -629,7 +629,7 @@ class TestPlan:
                             instance.retries += 1
                     # test marked as passed (built only) but can run when
                     # --test-only is used. Reset status to capture new results.
-                    elif status == TestInstanceStatus.PASS and instance.run and self.options.test_only:
+                    elif status == TestSuiteStatus.PASS and instance.run and self.options.test_only:
                         instance.status = TestInstanceStatus.NONE
                         instance.reason = None
                     else:
@@ -640,7 +640,8 @@ class TestPlan:
 
                     for tc in ts.get('testcases', []):
                         identifier = tc['identifier']
-                        tc_status = tc.get('status', TestCaseStatus.NONE)
+                        tc_status = tc.get('status')
+                        tc_status = TestCaseStatus(tc_status) if tc_status else TestCaseStatus.NONE
                         tc_reason = None
                         # we set reason only if status is valid, it might have been
                         # reset above...

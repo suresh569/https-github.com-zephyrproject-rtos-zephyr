@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 from asyncio.log import logger
+from enum import Enum
 import platform
 import re
 import os
@@ -14,10 +15,11 @@ import threading
 import time
 import shutil
 
+from twisterlib.reports import ReportStatus
 from twisterlib.error import ConfigurationError
 from twisterlib.environment import ZEPHYR_BASE, PYTEST_PLUGIN_INSTALLED
 from twisterlib.handlers import Handler, terminate_process, SUPPORTED_SIMS_IN_PYTEST
-from twisterlib.statuses import HarnessStatus, ReportStatus, TestCaseStatus, TestInstanceStatus
+from twisterlib.statuses import HarnessStatus, TestCaseStatus, TestInstanceStatus
 from twisterlib.testinstance import TestInstance
 
 
@@ -45,7 +47,7 @@ class Harness:
         }
 
     def __init__(self):
-        self.state = HarnessStatus.NONE
+        self._status = HarnessStatus.NONE
         self.type = None
         self.regex = []
         self.matches = OrderedDict()
@@ -66,6 +68,28 @@ class Harness:
         self.instance: TestInstance | None = None
         self.testcase_output = ""
         self._match = False
+
+    @property
+    def status(self) -> HarnessStatus:
+        return self._status
+
+    @status.setter
+    def status(self, value : HarnessStatus) -> None:
+        # Check for illegal assignments by type
+        allowed_types = [HarnessStatus]
+        if not any([isinstance(value, t) for t in allowed_types]):
+            logger.warning(f'Harness assigned status "{value}" of type {type(value)}'
+                           f' instead of any of allowed types: {allowed_types}.')
+
+        # Check for illegal assignments by value
+        try:
+            # We warn against str assignments, but we should handle them correctly
+            key = value.name if isinstance(value, Enum) else value
+            self._status = HarnessStatus[key]
+        except KeyError:
+            logger.warning(f'Harness assigned status "{value}"'
+                           f' without an equivalent in HarnessStatus.'
+                           f' Assignment was ignored.')
 
     def configure(self, instance):
         self.instance = instance
@@ -114,12 +138,12 @@ class Harness:
 
         if self.RUN_PASSED in line:
             if self.fault:
-                self.state = HarnessStatus.FAIL
+                self.status = HarnessStatus.FAIL
             else:
-                self.state = HarnessStatus.PASS
+                self.status = HarnessStatus.PASS
 
         if self.RUN_FAILED in line:
-            self.state = HarnessStatus.FAIL
+            self.status = HarnessStatus.FAIL
 
         if self.fail_on_fault:
             if self.FAULT == line:
@@ -148,7 +172,7 @@ class Robot(Harness):
             handle is trying to give a PASS or FAIL to avoid timeout, nothing
             is writen into handler.log
         '''
-        self.instance.state = TestInstanceStatus.PASS
+        self.instance.status = TestInstanceStatus.PASS
         tc = self.instance.get_case_or_create(self.id)
         tc.status = TestCaseStatus.PASS
 
@@ -198,7 +222,7 @@ class Console(Harness):
     def configure(self, instance):
         super(Console, self).configure(instance)
         if self.regex is None or len(self.regex) == 0:
-            self.state = HarnessStatus.FAIL
+            self.status = HarnessStatus.FAIL
             tc = self.instance.set_case_status_by_name(
                 self.get_testcase_name(),
                 TestCaseStatus.FAIL,
@@ -214,7 +238,7 @@ class Console(Harness):
                 self.patterns.append(re.compile(r))
             self.patterns_expected = len(self.patterns)
         else:
-            self.state = HarnessStatus.FAIL
+            self.status = HarnessStatus.FAIL
             tc = self.instance.set_case_status_by_name(
                 self.get_testcase_name(),
                 TestCaseStatus.FAIL,
@@ -229,7 +253,7 @@ class Console(Harness):
                 logger.debug(f"HARNESS:{self.__class__.__name__}:EXPECTED:"
                              f"'{self.pattern.pattern}'")
                 self.next_pattern += 1
-                self.state = HarnessStatus.PASS
+                self.status = HarnessStatus.PASS
         elif self.type == "multi_line" and self.ordered:
             if (self.next_pattern < len(self.patterns) and
                 self.patterns[self.next_pattern].search(line)):
@@ -238,7 +262,7 @@ class Console(Harness):
                              f"'{self.patterns[self.next_pattern].pattern}'")
                 self.next_pattern += 1
                 if self.next_pattern >= len(self.patterns):
-                    self.state = HarnessStatus.PASS
+                    self.status = HarnessStatus.PASS
         elif self.type == "multi_line" and not self.ordered:
             for i, pattern in enumerate(self.patterns):
                 r = self.regex[i]
@@ -248,7 +272,7 @@ class Console(Harness):
                                  f"{len(self.matches)}/{self.patterns_expected}):"
                                  f"'{pattern.pattern}'")
             if len(self.matches) == len(self.regex):
-                self.state = HarnessStatus.PASS
+                self.status = HarnessStatus.PASS
         else:
             logger.error("Unknown harness_config type")
 
@@ -269,23 +293,23 @@ class Console(Harness):
         # test image was executed.
         # TODO: Introduce explicit match policy type to reject
         # unexpected console output, allow missing patterns, deny duplicates.
-        if self.state == HarnessStatus.PASS and \
+        if self.status == HarnessStatus.PASS and \
            self.ordered and \
            self.next_pattern < self.patterns_expected:
             logger.error(f"HARNESS:{self.__class__.__name__}: failed with"
                          f" {self.next_pattern} of {self.patterns_expected}"
                          f" expected ordered patterns.")
-            self.state = HarnessStatus.FAIL
-        if self.state == HarnessStatus.PASS and \
+            self.status = HarnessStatus.FAIL
+        if self.status == HarnessStatus.PASS and \
            not self.ordered and \
            len(self.matches) < self.patterns_expected:
             logger.error(f"HARNESS:{self.__class__.__name__}: failed with"
                          f" {len(self.matches)} of {self.patterns_expected}"
                          f" expected unordered patterns.")
-            self.state = HarnessStatus.FAIL
+            self.status = HarnessStatus.FAIL
 
         tc = self.instance.get_case_or_create(self.get_testcase_name())
-        if self.state == HarnessStatus.PASS:
+        if self.status == HarnessStatus.PASS:
             tc.status = TestCaseStatus.PASS
         else:
             tc.status = TestCaseStatus.FAIL
@@ -311,7 +335,7 @@ class Pytest(Harness):
             self.run_command(cmd, timeout)
         except PytestHarnessException as pytest_exception:
             logger.error(str(pytest_exception))
-            self.state = HarnessStatus.FAIL
+            self.status = HarnessStatus.FAIL
             self.instance.reason = str(pytest_exception)
         finally:
             if self.reserved_serial:
@@ -434,10 +458,10 @@ class Pytest(Harness):
                     logger.warning('Timeout has occurred. Can be extended in testspec file. '
                                    f'Currently set to {timeout} seconds.')
                     self.instance.reason = 'Pytest timeout'
-                    self.state = HarnessStatus.FAIL
+                    self.status = HarnessStatus.FAIL
                 proc.wait(timeout)
             except subprocess.TimeoutExpired:
-                self.state = HarnessStatus.FAIL
+                self.status = HarnessStatus.FAIL
                 proc.kill()
 
     @staticmethod
@@ -473,18 +497,18 @@ class Pytest(Harness):
         proc.communicate()
 
     def _update_test_status(self):
-        if self.state == HarnessStatus.NONE:
+        if self.status == HarnessStatus.NONE:
             self.instance.testcases = []
             try:
                 self._parse_report_file(self.report_file)
             except Exception as e:
                 logger.error(f'Error when parsing file {self.report_file}: {e}')
-                self.state = HarnessStatus.FAIL
+                self.status = HarnessStatus.FAIL
             finally:
                 if not self.instance.testcases:
                     self.instance.init_cases()
 
-        self.instance.status = self.state if self.state != HarnessStatus.NONE else \
+        self.instance.status = self.status if self.status != HarnessStatus.NONE else \
                                TestInstanceStatus.FAIL
         if self.instance.status in [TestInstanceStatus.ERROR, TestInstanceStatus.FAIL]:
             self.instance.reason = self.instance.reason or 'Pytest failed'
@@ -495,15 +519,15 @@ class Pytest(Harness):
         root = tree.getroot()
         if elem_ts := root.find('testsuite'):
             if elem_ts.get('failures') != '0':
-                self.state = HarnessStatus.FAIL
+                self.status = HarnessStatus.FAIL
                 self.instance.reason = f"{elem_ts.get('failures')}/{elem_ts.get('tests')} pytest scenario(s) failed"
             elif elem_ts.get('errors') != '0':
-                self.state = HarnessStatus.ERROR
+                self.status = HarnessStatus.ERROR
                 self.instance.reason = 'Error during pytest execution'
             elif elem_ts.get('skipped') == elem_ts.get('tests'):
-                self.state = HarnessStatus.SKIP
+                self.status = HarnessStatus.SKIP
             else:
-                self.state = HarnessStatus.PASS
+                self.status = HarnessStatus.PASS
             self.instance.execution_time = float(elem_ts.get('time'))
 
             for elem_tc in elem_ts.findall('testcase'):
@@ -522,7 +546,7 @@ class Pytest(Harness):
                     tc.reason = elem.get('message')
                     tc.output = elem.text
         else:
-            self.state = HarnessStatus.SKIP
+            self.status = HarnessStatus.SKIP
             self.instance.reason = 'No tests collected'
 
 
@@ -543,7 +567,7 @@ class Gtest(Harness):
         # Strip the ANSI characters, they mess up the patterns
         non_ansi_line = self.ANSI_ESCAPE.sub('', line)
 
-        if self.state != HarnessStatus.NONE:
+        if self.status != HarnessStatus.NONE:
             return
 
         # Check if we started running a new test
@@ -578,10 +602,10 @@ class Gtest(Harness):
         if finished_match:
             tc = self.instance.get_case_or_create(self.id)
             if self.has_failures or self.tc is not None:
-                self.state = HarnessStatus.FAIL
+                self.status = HarnessStatus.FAIL
                 tc.status = TestCaseStatus.FAIL
             else:
-                self.state = HarnessStatus.PASS
+                self.status = HarnessStatus.PASS
                 tc.status = TestCaseStatus.PASS
             return
 
@@ -696,10 +720,10 @@ class Test(Harness):
 
         self.process_test(line)
 
-        if not self.ztest and self.state != HarnessStatus.NONE:
+        if not self.ztest and self.status != HarnessStatus.NONE:
             logger.debug(f"not a ztest and no state for  {self.id}")
             tc = self.instance.get_case_or_create(self.id)
-            if self.state == HarnessStatus.PASS:
+            if self.status == HarnessStatus.PASS:
                 tc.status = TestCaseStatus.PASS
             else:
                 tc.status = TestCaseStatus.FAIL

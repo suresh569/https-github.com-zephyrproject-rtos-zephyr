@@ -5,9 +5,11 @@
 # Copyright 2022 NXP
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 import logging
 import math
 import os
+from typing import Union
 import psutil
 import re
 import select
@@ -22,7 +24,7 @@ from queue import Queue, Empty
 from twisterlib.environment import ZEPHYR_BASE, strip_ansi_sequences
 from twisterlib.error import TwisterException
 from twisterlib.platform import Platform
-from twisterlib.statuses import HarnessStatus, OutputStatus, TestCaseStatus, TestInstanceStatus
+from twisterlib.statuses import HarnessStatus, QEMUOutputStatus, TestCaseStatus, TestInstanceStatus
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/pylib/build_helpers"))
 from domains import Domains
 
@@ -141,7 +143,7 @@ class Handler:
         # only for Ztest tests:
         harness_class_name = type(harness).__name__
         if self.suite_name_check and harness_class_name == "Test":
-            self._verify_ztest_suite_name(harness.state, harness.detected_suite_names, handler_time)
+            self._verify_ztest_suite_name(harness.status, harness.detected_suite_names, handler_time)
             if self.instance.status == TestInstanceStatus.FAIL:
                 return
             if not harness.matched_run_id and harness.run_id_exists:
@@ -215,7 +217,7 @@ class BinaryHandler(Handler):
                     log_out_fp.write(strip_ansi_sequences(line_decoded))
                     log_out_fp.flush()
                     harness.handle(stripped_line)
-                    if harness.state != HarnessStatus.NONE:
+                    if harness.status != HarnessStatus.NONE:
                         if not timeout_extended or harness.capture_coverage:
                             timeout_extended = True
                             if harness.capture_coverage:
@@ -347,7 +349,7 @@ class BinaryHandler(Handler):
         if sys.stdout.isatty():
             subprocess.call(["stty", "sane"], stdin=sys.stdout)
 
-        self._update_instance_info(harness.state, handler_time)
+        self._update_instance_info(harness.status, handler_time)
 
         self._final_handle_actions(harness, handler_time)
 
@@ -444,7 +446,7 @@ class DeviceHandler(Handler):
                 log_out_fp.flush()
                 harness.handle(sl.rstrip())
 
-            if harness.state != HarnessStatus.NONE:
+            if harness.status != HarnessStatus.NONE:
                 if not harness.capture_coverage:
                     ser.close()
                     break
@@ -761,7 +763,7 @@ class DeviceHandler(Handler):
 
         handler_time = time.time() - start_time
 
-        self._update_instance_info(harness.state, handler_time, flash_error)
+        self._update_instance_info(harness.status, handler_time, flash_error)
 
         self._final_handle_actions(harness, handler_time)
 
@@ -772,6 +774,33 @@ class DeviceHandler(Handler):
             self.make_device_available(serial_pty)
         else:
             self.make_device_available(serial_device)
+
+
+class QEMUOutput:
+    def __init__(self):
+        self._status = QEMUOutputStatus.NONE
+
+    @property
+    def status(self) -> QEMUOutputStatus:
+        return self._status
+
+    @status.setter
+    def status(self, value : Union[QEMUOutputStatus, HarnessStatus]) -> None:
+        # Check for illegal assignments by type
+        allowed_types = [QEMUOutputStatus, HarnessStatus]
+        if not any([isinstance(value, t) for t in allowed_types]):
+            logger.warning(f'QEMUOutput assigned status "{value}" of type {type(value)}'
+                           f' instead of any of allowed types: {allowed_types}.')
+
+        # Check for illegal assignments by value
+        try:
+            # We warn against str assignments, but we should handle them correctly
+            key = value.name if isinstance(value, Enum) else value
+            self._status = QEMUOutputStatus[key]
+        except KeyError:
+            logger.warning(f'QEMUOutput assigned status "{value}"'
+                           f' without an equivalent in QEMUOutputStatus.'
+                           f' Assignment was ignored.')
 
 
 class QEMUHandler(Handler):
@@ -859,13 +888,13 @@ class QEMUHandler(Handler):
     @staticmethod
     def _thread_update_instance_info(handler, handler_time, out_state):
         handler.instance.execution_time = handler_time
-        if out_state == OutputStatus.TIMEOUT:
+        if out_state == QEMUOutputStatus.TIMEOUT:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = "Timeout"
-        elif out_state == OutputStatus.FAIL:
+        elif out_state == QEMUOutputStatus.FAIL:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = "Failed"
-        elif out_state in [OutputStatus.EOF, OutputStatus.BYTE]:
+        elif out_state in [QEMUOutputStatus.EOF, QEMUOutputStatus.BYTE]:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = out_state
         else:
@@ -887,7 +916,8 @@ class QEMUHandler(Handler):
         timeout_time = start_time + timeout
         p = select.poll()
         p.register(in_fp, select.POLLIN)
-        out_state = OutputStatus.NONE
+        out = QEMUOutput()
+        out.status = QEMUOutputStatus.NONE
 
         line = ""
         timeout_extended = False
@@ -908,17 +938,17 @@ class QEMUHandler(Handler):
                         # of not enough CPU time scheduled by host for
                         # QEMU process during p.poll(this_timeout)
                         cpu_time = QEMUHandler._get_cpu_time(pid)
-                        if cpu_time < timeout and out_state == OutputStatus.NONE:
+                        if cpu_time < timeout and out.status == QEMUOutputStatus.NONE:
                             timeout_time = time.time() + (timeout - cpu_time)
                             continue
                 except psutil.NoSuchProcess:
                     pass
                 except ProcessLookupError:
-                    out_state = OutputStatus.FAIL
+                    out.status = QEMUOutputStatus.FAIL
                     break
 
-                if out_state == OutputStatus.NONE:
-                    out_state = OutputStatus.TIMEOUT
+                if out.status == QEMUOutputStatus.NONE:
+                    out.status = QEMUOutputStatus.TIMEOUT
                 break
 
             if pid == 0 and os.path.exists(pid_fn):
@@ -928,13 +958,13 @@ class QEMUHandler(Handler):
                 c = in_fp.read(1).decode("utf-8")
             except UnicodeDecodeError:
                 # Test is writing something weird, fail
-                out_state = OutputStatus.BYTE
+                out.status = QEMUOutputStatus.BYTE
                 break
 
             if c == "":
                 # EOF, this shouldn't happen unless QEMU crashes
                 if not ignore_unexpected_eof:
-                    out_state = OutputStatus.EOF
+                    out.status = QEMUOutputStatus.EOF
                 break
             line = line + c
             if c != "\n":
@@ -947,12 +977,12 @@ class QEMUHandler(Handler):
             logger.debug(f"QEMU ({pid}): {line}")
 
             harness.handle(line)
-            if harness.state != HarnessStatus.NONE:
+            if harness.status != HarnessStatus.NONE:
                 # if we have registered a fail make sure the state is not
                 # overridden by a false success message coming from the
                 # testsuite
-                if out_state not in [OutputStatus.FAIL, OutputStatus.EOF, OutputStatus.BYTE]:
-                    out_state = harness.state
+                if out.status not in [QEMUOutputStatus.FAIL, QEMUOutputStatus.EOF, QEMUOutputStatus.BYTE]:
+                    out.status = harness.status
 
                 # if we get some state, that means test is doing well, we reset
                 # the timeout and wait for 2 more seconds to catch anything
@@ -968,9 +998,9 @@ class QEMUHandler(Handler):
             line = ""
 
         handler_time = time.time() - start_time
-        logger.debug(f"QEMU ({pid}) complete ({out_state}) after {handler_time} seconds")
+        logger.debug(f"QEMU ({pid}) complete ({out.status}) after {handler_time} seconds")
 
-        QEMUHandler._thread_update_instance_info(handler, handler_time, out_state)
+        QEMUHandler._thread_update_instance_info(handler, handler_time, out.status)
 
         QEMUHandler._thread_close_files(fifo_in, fifo_out, pid, out_fp, in_fp, log_out_fp)
 
@@ -1042,7 +1072,7 @@ class QEMUHandler(Handler):
 
                 is_timeout = True
                 self.terminate(proc)
-                if harness.state == HarnessStatus.PASS:
+                if harness.status == HarnessStatus.PASS:
                     self.returncode = 0
                 else:
                     self.returncode = proc.returncode
@@ -1064,7 +1094,7 @@ class QEMUHandler(Handler):
 
         logger.debug(f"return code from QEMU ({qemu_pid}): {self.returncode}")
 
-        self._update_instance_info(harness.state, is_timeout)
+        self._update_instance_info(harness.status, is_timeout)
 
         self._final_handle_actions(harness, 0)
 
@@ -1137,13 +1167,13 @@ class QEMUWinHandler(Handler):
     @staticmethod
     def _monitor_update_instance_info(handler, handler_time, out_state):
         handler.instance.execution_time = handler_time
-        if out_state == OutputStatus.TIMEOUT:
+        if out_state == QEMUOutputStatus.TIMEOUT:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = "Timeout"
-        elif out_state == OutputStatus.FAIL:
+        elif out_state == QEMUOutputStatus.FAIL:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = "Failed"
-        elif out_state in [OutputStatus.EOF, OutputStatus.BYTE]:
+        elif out_state in [QEMUOutputStatus.EOF, QEMUOutputStatus.BYTE]:
             handler.instance.status = TestInstanceStatus.FAIL
             handler.instance.reason = out_state
         else:
@@ -1196,7 +1226,8 @@ class QEMUWinHandler(Handler):
     def _monitor_output(self, queue, timeout, logfile, pid_fn, harness, ignore_unexpected_eof=False):
         start_time = time.time()
         timeout_time = start_time + timeout
-        out_state = OutputStatus.NONE
+        out = QEMUOutput()
+        out.status = QEMUOutputStatus.NONE
         line = ""
         timeout_extended = False
         self.pid = 0
@@ -1212,17 +1243,17 @@ class QEMUWinHandler(Handler):
                         # of not enough CPU time scheduled by host for
                         # QEMU process during p.poll(this_timeout)
                         cpu_time = self._get_cpu_time(self.pid)
-                        if cpu_time < timeout and out_state == OutputStatus.NONE:
+                        if cpu_time < timeout and out.status == QEMUOutputStatus.NONE:
                             timeout_time = time.time() + (timeout - cpu_time)
                             continue
                 except psutil.NoSuchProcess:
                     pass
                 except ProcessLookupError:
-                    out_state = OutputStatus.FAIL
+                    out.status = QEMUOutputStatus.FAIL
                     break
 
-                if out_state == OutputStatus.NONE:
-                    out_state = OutputStatus.TIMEOUT
+                if out.status == QEMUOutputStatus.NONE:
+                    out.status = QEMUOutputStatus.TIMEOUT
                 break
 
             if self.pid == 0 and os.path.exists(pid_fn):
@@ -1240,13 +1271,13 @@ class QEMUWinHandler(Handler):
                 c = c.decode("utf-8")
             except UnicodeDecodeError:
                 # Test is writing something weird, fail
-                out_state = OutputStatus.BYTE
+                out.status = QEMUOutputStatus.BYTE
                 break
 
             if c == "":
                 # EOF, this shouldn't happen unless QEMU crashes
                 if not ignore_unexpected_eof:
-                    out_state = OutputStatus.EOF
+                    out.status = QEMUOutputStatus.EOF
                 break
             line = line + c
             if c != "\n":
@@ -1259,12 +1290,12 @@ class QEMUWinHandler(Handler):
             logger.debug(f"QEMU ({self.pid}): {line}")
 
             harness.handle(line)
-            if harness.state != HarnessStatus.NONE:
+            if harness.status != HarnessStatus.NONE:
                 # if we have registered a fail make sure the state is not
                 # overridden by a false success message coming from the
                 # testsuite
-                if out_state not in [OutputStatus.FAIL, OutputStatus.EOF, OutputStatus.BYTE]:
-                    out_state = harness.state
+                if out.status not in [QEMUOutputStatus.FAIL, QEMUOutputStatus.EOF, QEMUOutputStatus.BYTE]:
+                    out.status = harness.status
 
                 # if we get some state, that means test is doing well, we reset
                 # the timeout and wait for 2 more seconds to catch anything
@@ -1282,8 +1313,8 @@ class QEMUWinHandler(Handler):
         self.stop_thread = True
 
         handler_time = time.time() - start_time
-        logger.debug(f"QEMU ({self.pid}) complete ({out_state}) after {handler_time} seconds")
-        self._monitor_update_instance_info(self, handler_time, out_state)
+        logger.debug(f"QEMU ({self.pid}) complete ({out.status}) after {handler_time} seconds")
+        self._monitor_update_instance_info(self, handler_time, out.status)
         self._close_log_file(log_out_fp)
         self._stop_qemu_process(self.pid)
 
@@ -1319,7 +1350,7 @@ class QEMUWinHandler(Handler):
                 time.sleep(0.5)
                 proc.kill()
 
-            if harness.state == HarnessStatus.PASS:
+            if harness.status == HarnessStatus.PASS:
                 self.returncode = 0
             else:
                 self.returncode = proc.returncode
@@ -1332,7 +1363,7 @@ class QEMUWinHandler(Handler):
         os.close(self.pipe_handle)
         self.pipe_handle = None
 
-        self._update_instance_info(harness.state, is_timeout)
+        self._update_instance_info(harness.status, is_timeout)
 
         self._final_handle_actions(harness, 0)
 

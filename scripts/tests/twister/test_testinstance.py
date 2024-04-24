@@ -356,7 +356,7 @@ def test_testinstance_dunders(all_testsuites_dict, class_testplan, platforms_lis
 @pytest.mark.parametrize('testinstance', [{'testsuite_kind': 'tests'}], indirect=True)
 def test_testinstance_set_case_status_by_name(testinstance):
     name = 'test_a.check_1.2a'
-    status = 'dummy status'
+    status = TestInstanceStatus.PASS
     reason = 'dummy reason'
 
     tc = testinstance.set_case_status_by_name(name, status, reason)

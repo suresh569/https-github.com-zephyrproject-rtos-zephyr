@@ -4,6 +4,7 @@
 # Copyright (c) 2018 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 import os
 import json
 import logging
@@ -13,10 +14,20 @@ import string
 from datetime import datetime
 from pathlib import PosixPath
 
-from twisterlib.statuses import ReportStatus, TestCaseStatus, TestInstanceStatus, TestSuiteStatus
+from twisterlib.statuses import TestCaseStatus, TestInstanceStatus, TestSuiteStatus
 
 logger = logging.getLogger('twister')
 logger.setLevel(logging.DEBUG)
+
+
+class ReportStatus(str, Enum):
+    def __str__(self):
+        return str(self.value)
+
+    ERROR = 'error'
+    FAIL = 'failure'
+    SKIP = 'skipped'
+
 
 class Reporting:
 
