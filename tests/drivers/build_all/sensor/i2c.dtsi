@@ -1060,3 +1060,8 @@ test_i2c_lsm9ds1: lsm9ds1@8f {
 	compatible = "st,lsm9ds1";
 	reg = <0x8e>;
 };
+
+test_i2c_lsm9ds1_mag: lsm9ds1_mag@9a {
+	compatible = "st,lsm9ds1_mag";
+	reg = <0x8c>;
+};
