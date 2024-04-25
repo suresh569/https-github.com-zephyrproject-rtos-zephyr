@@ -21,6 +21,7 @@ menuconfig HAWKBIT
 	select MPU_ALLOW_FLASH_WRITE
 	select IMG_ENABLE_IMAGE_CHECK
 	select IMG_ERASE_PROGRESSIVELY
+	imply STREAM_FLASH_PROGRESS
 	help
 	  hawkBit is a domain independent back-end framework for polling out
 	  software updates to constrained edge devices as well as more powerful
@@ -158,6 +159,13 @@ config HAWKBIT_EVENT_CALLBACKS
 	bool "Set hawkBit event callbacks"
 	help
 	  Be able to set event callbacks for hawkBit.
+
+config HAWKBIT_SAVE_PROGRESS
+	bool "Save the hawkBit update download progress"
+	depends on STREAM_FLASH_PROGRESS
+	default y
+	help
+	  Save the hawkBit update download progress.
 
 module = HAWKBIT
 module-str = Log Level for hawkbit
