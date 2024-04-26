@@ -5,16 +5,22 @@
  */
 #include <zephyr/kernel.h>
 
-#if MHZ(24) == CONFIG_SOC_OPTION_SETTING_HOCO_FREQ
+#define HOCO_FREQ DT_PROP(DT_PATH(clocks, hoco), clock_frequency)
+
+#if DT_NODE_HAS_STATUS(DT_PATH(clocks, hoco), okay)
+#if HOCO_FREQ == 24000000
 #define OFS1_HOCO_FREQ		0
-#elif MHZ(32) == CONFIG_SOC_OPTION_SETTING_HOCO_FREQ
+#elif HOCO_FREQ == 32000000
 #define OFS1_HOCO_FREQ		2
-#elif MHZ(48) == CONFIG_SOC_OPTION_SETTING_HOCO_FREQ
+#elif HOCO_FREQ == 48000000
 #define OFS1_HOCO_FREQ		4
-#elif MHZ(64) == CONFIG_SOC_OPTION_SETTING_HOCO_FREQ
+#elif HOCO_FREQ == 64000000
 #define OFS1_HOCO_FREQ		5
 #else
 #error "Unsupported HOCO frequency"
+#endif
+#else
+#define OFS1_HOCO_FREQ		0
 #endif
 
 #if 3840 == CONFIG_SOC_OPTION_SETTING_VDSEL
@@ -119,7 +125,7 @@ const struct opt_set_mem ops __attribute__((section(".opt_set_mem"))) = {
 		.LVDAS = IS_ENABLED(CONFIG_SOC_OPTION_SETTING_LVDAS_DISABLE),
 		.VDSEL1 = OFS1_VDSEL,
 		.RSVD2 = 0x3,
-		.HOCOEN = IS_ENABLED(CONFIG_SOC_OPTION_SETTING_HOCO_DISABLE),
+		.HOCOEN = !DT_NODE_HAS_STATUS(DT_PATH(clocks, hoco), okay),
 		.RSVD3 = 0x7,
 		.HOCOFRQ1 = OFS1_HOCO_FREQ,
 		.RSVD4 = 0x1ffff,
