@@ -1,0 +1,22 @@
+config SOC_OPTION_SETTING_MEMORY
+        bool "Option Setting Memory"
+        default y
+
+config SOC_OPTION_SETTING_LVDAS_DISABLE
+        bool "Disable voltage monitor 0 after reset"
+        default y
+        depends on SOC_OPTION_SETTING_MEMORY
+
+config SOC_OPTION_SETTING_HOCO_DISABLE
+        bool "Disable HOCO oscillator after reset"
+        depends on SOC_OPTION_SETTING_MEMORY
+
+config SOC_OPTION_SETTING_HOCO_FREQ
+        int "HOCO oscillator frequency"
+        default $(dt_node_int_prop_int,/clocks/hoco,clock-frequency)
+        depends on SOC_OPTION_SETTING_MEMORY
+
+config SOC_OPTION_SETTING_VDSEL
+        int "Voltage Detection 0 Level Select"
+        default 1900
+        depends on SOC_OPTION_SETTING_MEMORY
