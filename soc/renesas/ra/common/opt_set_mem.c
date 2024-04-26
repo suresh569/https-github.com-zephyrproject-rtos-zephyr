@@ -23,20 +23,6 @@
 #define OFS1_HOCO_FREQ		0
 #endif
 
-#if 3840 == CONFIG_SOC_OPTION_SETTING_VDSEL
-#define OFS1_VDSEL			0
-#elif 2820 == CONFIG_SOC_OPTION_SETTING_VDSEL
-#define OFS1_VDSEL			1
-#elif 2510 == CONFIG_SOC_OPTION_SETTING_VDSEL
-#define OFS1_VDSEL			2
-#elif 1900 == CONFIG_SOC_OPTION_SETTING_VDSEL
-#define OFS1_VDSEL			3
-#elif 1700 == CONFIG_SOC_OPTION_SETTING_VDSEL
-#define OFS1_VDSEL			4
-#else
-#error "Unsupported voltage detection level"
-#endif
-
 struct ofs0_reg {
 	uint32_t RSVD1: 1;
 	uint32_t IWDTSTRT: 1;
@@ -122,8 +108,8 @@ const struct opt_set_mem ops __attribute__((section(".opt_set_mem"))) = {
 	},
 	.ofs1 = {
 		.RSVD1 = 0x3,
-		.LVDAS = IS_ENABLED(CONFIG_SOC_OPTION_SETTING_LVDAS_DISABLE),
-		.VDSEL1 = OFS1_VDSEL,
+		.LVDAS = 0x1, /* Disable Low-Voltage detection */
+		.VDSEL1 = 0x0,
 		.RSVD2 = 0x3,
 		.HOCOEN = !DT_NODE_HAS_STATUS(DT_PATH(clocks, hoco), okay),
 		.RSVD3 = 0x7,
