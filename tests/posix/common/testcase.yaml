@@ -103,3 +103,13 @@ tests:
     extra_configs:
       - CONFIG_DYNAMIC_THREAD=n
       - CONFIG_THREAD_STACK_INFO=n
+  portability.posix.common.userspace:
+    filter: CONFIG_ARCH_HAS_USERSPACE
+    tags:
+      - userspace
+    integration_platforms:
+      - qemu_x86
+      - qemu_riscv64
+      - qemu_cortex_a53
+    extra_configs:
+      - CONFIG_USERSPACE=y
