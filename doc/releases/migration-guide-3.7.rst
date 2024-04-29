@@ -570,6 +570,9 @@ hawkBit
   :kconfig:option:`CONFIG_SETTINGS` needs to be enabled to use hawkBit, as it now uses the
   settings subsystem to store the hawkBit configuration. (:github:`68806`)
 
+* :c:func:`hawkbit_autohandler` now takes one argument. This argument has to be set to
+  ``true`` for the same behavior as before the change. (:github:`71037`)
+
 LoRaWAN
 =======
 
