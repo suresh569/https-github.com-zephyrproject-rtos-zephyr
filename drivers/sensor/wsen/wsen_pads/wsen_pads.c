@@ -110,7 +110,7 @@ static int pads_attr_set(const struct device *dev, enum sensor_channel chan,
 	}
 }
 
-static const struct sensor_driver_api pads_driver_api = {
+static DEVICE_API(sensor, pads_driver_api) = {
 	.attr_set = pads_attr_set,
 #if CONFIG_WSEN_PADS_TRIGGER
 	.trigger_set = pads_trigger_set,

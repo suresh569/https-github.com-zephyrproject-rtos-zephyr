@@ -124,7 +124,7 @@ static int hids_attr_set(const struct device *dev, enum sensor_channel chan,
 	}
 }
 
-static const struct sensor_driver_api hids_driver_api = {
+static DEVICE_API(sensor, hids_driver_api) = {
 	.attr_set = hids_attr_set,
 #if CONFIG_WSEN_HIDS_TRIGGER
 	.trigger_set = hids_trigger_set,

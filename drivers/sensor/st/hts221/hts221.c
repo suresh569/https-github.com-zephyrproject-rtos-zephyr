@@ -115,7 +115,7 @@ static int hts221_read_conversion_data(const struct device *dev)
 	return 0;
 }
 
-static const struct sensor_driver_api hts221_driver_api = {
+static DEVICE_API(sensor, hts221_driver_api) = {
 #ifdef CONFIG_HTS221_TRIGGER
 	.trigger_set = hts221_trigger_set,
 #endif

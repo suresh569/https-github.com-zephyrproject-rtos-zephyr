@@ -28,6 +28,7 @@
 #include <zephyr/drivers/sensor_data_types.h>
 #include <zephyr/dsp/types.h>
 #include <zephyr/rtio/rtio.h>
+#include <zephyr/sys/check.h>
 #include <zephyr/sys/iterable_sections.h>
 #include <zephyr/types.h>
 
@@ -693,14 +694,15 @@ static inline int z_impl_sensor_attr_set(const struct device *dev,
 					 enum sensor_attribute attr,
 					 const struct sensor_value *val)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	if (api->attr_set == NULL) {
+	if (DEVICE_API_GET(sensor, dev)->attr_set == NULL) {
 		return -ENOSYS;
 	}
 
-	return api->attr_set(dev, chan, attr, val);
+	return DEVICE_API_GET(sensor, dev)->attr_set(dev, chan, attr, val);
 }
 
 /**
@@ -725,14 +727,15 @@ static inline int z_impl_sensor_attr_get(const struct device *dev,
 					 enum sensor_attribute attr,
 					 struct sensor_value *val)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	if (api->attr_get == NULL) {
+	if (DEVICE_API_GET(sensor, dev)->attr_get == NULL) {
 		return -ENOSYS;
 	}
 
-	return api->attr_get(dev, chan, attr, val);
+	return DEVICE_API_GET(sensor, dev)->attr_get(dev, chan, attr, val);
 }
 
 /**
@@ -761,14 +764,15 @@ static inline int sensor_trigger_set(const struct device *dev,
 				     const struct sensor_trigger *trig,
 				     sensor_trigger_handler_t handler)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	if (api->trigger_set == NULL) {
+	if (DEVICE_API_GET(sensor, dev)->trigger_set == NULL) {
 		return -ENOSYS;
 	}
 
-	return api->trigger_set(dev, trig, handler);
+	return DEVICE_API_GET(sensor, dev)->trigger_set(dev, trig, handler);
 }
 
 /**
@@ -793,10 +797,11 @@ __syscall int sensor_sample_fetch(const struct device *dev);
 
 static inline int z_impl_sensor_sample_fetch(const struct device *dev)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	return api->sample_fetch(dev, SENSOR_CHAN_ALL);
+	return DEVICE_API_GET(sensor, dev)->sample_fetch(dev, SENSOR_CHAN_ALL);
 }
 
 /**
@@ -826,10 +831,11 @@ __syscall int sensor_sample_fetch_chan(const struct device *dev,
 static inline int z_impl_sensor_sample_fetch_chan(const struct device *dev,
 						  enum sensor_channel type)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	return api->sample_fetch(dev, type);
+	return DEVICE_API_GET(sensor, dev)->sample_fetch(dev, type);
 }
 
 /**
@@ -861,10 +867,11 @@ static inline int z_impl_sensor_channel_get(const struct device *dev,
 					    enum sensor_channel chan,
 					    struct sensor_value *val)
 {
-	const struct sensor_driver_api *api =
-		(const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	return api->channel_get(dev, chan, val);
+	return DEVICE_API_GET(sensor, dev)->channel_get(dev, chan, val);
 }
 
 #if defined(CONFIG_SENSOR_ASYNC_API) || defined(__DOXYGEN__)
@@ -918,16 +925,16 @@ __syscall int sensor_get_decoder(const struct device *dev,
 static inline int z_impl_sensor_get_decoder(const struct device *dev,
 					    const struct sensor_decoder_api **decoder)
 {
-	const struct sensor_driver_api *api = (const struct sensor_driver_api *)dev->api;
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		return -ENODEV;
+	}
 
-	__ASSERT_NO_MSG(api != NULL);
-
-	if (api->get_decoder == NULL) {
+	if (DEVICE_API_GET(sensor, dev)->get_decoder == NULL) {
 		*decoder = &__sensor_default_decoder;
 		return 0;
 	}
 
-	return api->get_decoder(dev, decoder);
+	return DEVICE_API_GET(sensor, dev)->get_decoder(dev, decoder);
 }
 
 /**

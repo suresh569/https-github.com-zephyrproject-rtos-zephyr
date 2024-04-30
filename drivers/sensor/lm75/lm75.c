@@ -102,7 +102,7 @@ static int lm75_channel_get(const struct device *dev,
 	}
 }
 
-static const struct sensor_driver_api lm75_driver_api = {
+static DEVICE_API(sensor, lm75_driver_api) = {
 	.sample_fetch = lm75_sample_fetch,
 	.channel_get = lm75_channel_get,
 };

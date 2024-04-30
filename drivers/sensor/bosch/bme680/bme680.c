@@ -434,7 +434,7 @@ static int bme680_init(const struct device *dev)
 	return err;
 }
 
-static const struct sensor_driver_api bme680_api_funcs = {
+static DEVICE_API(sensor, bme680_api_funcs) = {
 	.sample_fetch = bme680_sample_fetch,
 	.channel_get = bme680_channel_get,
 };

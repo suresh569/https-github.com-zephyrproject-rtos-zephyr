@@ -92,7 +92,7 @@ static int hinge_submit(const struct device *dev,
 	return 0;
 }
 
-static const struct sensor_driver_api hinge_api = {
+static DEVICE_API(sensor, hinge_api) = {
 	.attr_set = hinge_attr_set,
 	.submit = hinge_submit,
 };

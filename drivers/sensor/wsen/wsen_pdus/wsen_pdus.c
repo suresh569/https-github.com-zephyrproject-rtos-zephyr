@@ -57,8 +57,10 @@ static int pdus_channel_get(const struct device *dev, enum sensor_channel chan,
 	return 0;
 }
 
-static const struct sensor_driver_api pdus_driver_api = { .sample_fetch = pdus_sample_fetch,
-							  .channel_get = pdus_channel_get };
+static DEVICE_API(sensor, pdus_driver_api) = {
+	.sample_fetch = pdus_sample_fetch,
+	.channel_get = pdus_channel_get,
+};
 
 static int pdus_init(const struct device *dev)
 {

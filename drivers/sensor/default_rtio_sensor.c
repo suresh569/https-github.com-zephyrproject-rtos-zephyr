@@ -24,10 +24,14 @@ static void sensor_iodev_submit(struct rtio_iodev_sqe *iodev_sqe)
 {
 	const struct sensor_read_config *cfg = iodev_sqe->sqe.iodev->data;
 	const struct device *dev = cfg->sensor;
-	const struct sensor_driver_api *api = dev->api;
 
-	if (api->submit != NULL) {
-		api->submit(dev, iodev_sqe);
+	CHECKIF(!DEVICE_API_IS(sensor, dev)) {
+		rtio_iodev_sqe_err(iodev_sqe, -ENODEV);
+		return;
+	}
+
+	if (DEVICE_API_GET(sensor, dev)->submit != NULL) {
+		DEVICE_API_GET(sensor, dev)->submit(dev, iodev_sqe);
 	} else if (!cfg->is_streaming) {
 		sensor_submit_fallback(dev, iodev_sqe);
 	} else {
