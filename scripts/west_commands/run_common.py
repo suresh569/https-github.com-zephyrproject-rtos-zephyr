@@ -511,9 +511,7 @@ def rebuild(command, build_dir, args):
 def runners_yaml_path(build_dir, board):
     ret = Path(build_dir) / 'zephyr' / 'runners.yaml'
     if not ret.is_file():
-        log.die(f'either a pristine build is needed, or board {board} '
-                "doesn't support west flash/debug "
-                '(no ZEPHYR_RUNNERS_YAML in CMake cache)')
+        log.die(f'no runners.yaml found in {build_dir}/zephyr. A pristine build might be needed')
     return ret
 
 def load_runners_yaml(path):
