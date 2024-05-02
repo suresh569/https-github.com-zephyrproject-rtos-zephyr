@@ -20,6 +20,9 @@ int main(void)
 	struct video_buffer *buffers[2], *vbuf;
 	struct video_format fmt;
 	struct video_caps caps;
+	struct video_frmival frmival;
+	struct video_frmival_enum fie;
+
 	const struct device *video;
 	unsigned int frame = 0;
 	size_t bsize;
@@ -77,6 +80,28 @@ int main(void)
 	       (char)(fmt.pixelformat >> 16),
 	       (char)(fmt.pixelformat >> 24),
 	       fmt.width, fmt.height);
+
+	if (!video_get_frmival(video, VIDEO_EP_OUT, &frmival)) {
+		printk("- Default frame rate : %f fps\n",
+		       1.0 * frmival.denominator / frmival.numerator);
+	}
+
+	printk("- Supported frame intervals for the default format:\n");
+	memset(&fie, 0, sizeof(fie));
+	fie.pixelformat = fmt.pixelformat;
+	fie.width = fmt.width;
+	fie.height = fmt.height;
+	while (video_enum_frmival(video, VIDEO_EP_OUT, &fie) == 0) {
+		if (fie.type == VIDEO_FRMIVAL_TYPE_DISCRETE) {
+			printk("   %u/%u ", fie.discrete.numerator, fie.discrete.denominator);
+		} else {
+			printk("   [min = %u/%u; max = %u/%u; step = %u/%u]\n",
+			       fie.stepwise.min.numerator, fie.stepwise.min.denominator,
+			       fie.stepwise.max.numerator, fie.stepwise.max.denominator,
+			       fie.stepwise.step.numerator, fie.stepwise.step.denominator);
+		}
+		fie.index++;
+	}
 
 	/* Size to allocate for each buffer */
 	bsize = fmt.pitch * fmt.height;
