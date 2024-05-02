@@ -125,14 +125,8 @@ def kobject_to_enum(kobj):
 
     return "K_OBJ_%s" % name.upper()
 
-subsystems = [
-    # Editing the list is deprecated, add the __subsystem sentinel to your driver
-    # api declaration instead. e.x.
-    #
-    # __subsystem struct my_driver_api {
-    #    ....
-    #};
-]
+# Names of all structs tagged with __subsystem or DEVICE_API, found by parse_syscalls.py
+subsystems = [ ]
 
 # Names of all structs tagged with __net_socket, found by parse_syscalls.py
 net_sockets = [ ]
@@ -981,6 +975,7 @@ def parse_subsystems_list_file(path):
     with open(path, "r") as fp:
         subsys_list = json.load(fp)
     subsystems.extend(subsys_list["__subsystem"])
+    subsystems.extend(subsys_list["DEVICE_API"])
     net_sockets.extend(subsys_list["__net_socket"])
 
 def parse_args():
