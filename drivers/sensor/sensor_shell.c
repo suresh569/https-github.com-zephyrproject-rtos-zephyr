@@ -153,6 +153,11 @@ static int find_sensor_trigger_device(const struct device *sensor)
 	return -1;
 }
 
+static bool sensor_device_check(const struct device *dev)
+{
+	return DEVICE_API_IS(sensor, dev);
+}
+
 /* Forward declaration */
 static void data_ready_trigger_handler(const struct device *sensor,
 				       const struct sensor_trigger *trigger);
@@ -514,8 +519,8 @@ static int cmd_get_sensor(const struct shell *sh, size_t argc, char *argv[])
 	}
 
 	dev = device_get_binding(argv[1]);
-	if (dev == NULL) {
-		shell_error(sh, "Device unknown (%s)", argv[1]);
+	if (dev == NULL || !sensor_device_check(dev)) {
+		shell_error(sh, "Sensor device unknown (%s)", argv[1]);
 		k_mutex_unlock(&cmd_get_mutex);
 		return -ENODEV;
 	}
@@ -577,8 +582,8 @@ static int cmd_sensor_attr_set(const struct shell *shell_ptr, size_t argc, char 
 	int rc;
 
 	dev = device_get_binding(argv[1]);
-	if (dev == NULL) {
-		shell_error(shell_ptr, "Device unknown (%s)", argv[1]);
+	if (dev == NULL || !sensor_device_check(dev)) {
+		shell_error(shell_ptr, "Sensor device unknown (%s)", argv[1]);
 		return -ENODEV;
 	}
 
@@ -655,8 +660,8 @@ static int cmd_sensor_attr_get(const struct shell *shell_ptr, size_t argc, char 
 	const struct device *dev;
 
 	dev = device_get_binding(argv[1]);
-	if (dev == NULL) {
-		shell_error(shell_ptr, "Device unknown (%s)", argv[1]);
+	if (dev == NULL || !sensor_device_check(dev)) {
+		shell_error(shell_ptr, "Sensor device unknown (%s)", argv[1]);
 		return -ENODEV;
 	}
 
@@ -800,7 +805,7 @@ SHELL_DYNAMIC_CMD_CREATE(dsub_device_name, device_name_get);
 
 static void device_name_get(size_t idx, struct shell_static_entry *entry)
 {
-	const struct device *dev = shell_device_lookup(idx, NULL);
+	const struct device *dev = shell_device_filter(idx, sensor_device_check);
 
 	current_cmd_ctx = CTX_GET;
 	entry->syntax = (dev != NULL) ? dev->name : NULL;
@@ -999,8 +1004,8 @@ static int cmd_trig_sensor(const struct shell *sh, size_t argc, char **argv)
 
 	/* Parse device name */
 	dev = device_get_binding(argv[1]);
-	if (dev == NULL) {
-		shell_error(sh, "Device unknown (%s)", argv[1]);
+	if (dev == NULL || !sensor_device_check(dev)) {
+		shell_error(sh, "Sensor device unknown (%s)", argv[1]);
 		return -ENODEV;
 	}
 
