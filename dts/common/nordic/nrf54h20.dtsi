@@ -8,12 +8,18 @@
 #include <nordic/nrf_common.dtsi>
 
 #include <zephyr/dt-bindings/misc/nordic-nrf-ficr-nrf54h20.h>
+#include <zephyr/dt-bindings/reserved-memory/nordic-owned-memory.h>
 
 /* Domain IDs. Can be used to specify channel links in IPCT nodes. */
 #define NRF_DOMAIN_ID_APPLICATION 2
 #define NRF_DOMAIN_ID_RADIOCORE   3
 #define NRF_DOMAIN_ID_GLOBALFAST  12
 #define NRF_DOMAIN_ID_GLOBALSLOW  13
+
+/* Owner IDs. Can be used to specify memory access. */
+#define NRF_OWNER_ID_NONE        0
+#define NRF_OWNER_ID_APPLICATION 2
+#define NRF_OWNER_ID_RADIOCORE   3
 
 /delete-node/ &sw_pwm;
 
