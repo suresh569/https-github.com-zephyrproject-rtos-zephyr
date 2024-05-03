@@ -398,12 +398,7 @@ static int memc_flexspi_pm_action(const struct device *dev, enum pm_device_actio
 #endif
 
 #if defined(CONFIG_XIP) && defined(CONFIG_FLASH_MCUX_FLEXSPI_XIP)
-/* Checks if image flash base address is in the FlexSPI AHB base region */
-#define MEMC_FLEXSPI_CFG_XIP(node_id)						\
-	((CONFIG_FLASH_BASE_ADDRESS) >= DT_REG_ADDR_BY_IDX(node_id, 1)) &&	\
-	((CONFIG_FLASH_BASE_ADDRESS) < (DT_REG_ADDR_BY_IDX(node_id, 1) +	\
-					DT_REG_SIZE_BY_IDX(node_id, 1)))
-
+#define MEMC_FLEXSPI_CFG_XIP(node_id) true
 #else
 #define MEMC_FLEXSPI_CFG_XIP(node_id) false
 #endif
