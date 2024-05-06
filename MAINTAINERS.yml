@@ -449,6 +449,7 @@ Bluetooth Audio:
     - doc/connectivity/bluetooth/api/audio/
     - samples/bluetooth/broadcast_audio*/
     - samples/bluetooth/hap*/
+    - samples/bluetooth/cap*/
     - samples/bluetooth/public_broadcast*/
     - samples/bluetooth/tmap*/
     - samples/bluetooth/unicast_audio*/
