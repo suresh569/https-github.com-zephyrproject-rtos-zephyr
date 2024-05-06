@@ -25,13 +25,21 @@ int main(void)
 
 	LOG_INF("Bluetooth initialized");
 
-	if (IS_ENABLED(CONFIG_BT_CAP_INITIATOR_UNICAST)) {
-		err = cap_initiator_unicast();
-	}
-	/* TODO: Add CAP initiator broadcast support*/
+	/* Broadcast is started first as the unicast part is run as loop */
+	if (IS_ENABLED(CONFIG_SAMPLE_BROADCAST)) {
+		err = cap_initiator_broadcast();
 
-	if (err != 0) {
-		LOG_ERR("Failed to run CAP Initiator: %d", err);
+		if (err != 0) {
+			LOG_ERR("Failed to run CAP Initiator as broadcaster: %d", err);
+		}
+	}
+
+	if (IS_ENABLED(CONFIG_SAMPLE_UNICAST)) {
+		err = cap_initiator_unicast();
+
+		if (err != 0) {
+			LOG_ERR("Failed to run CAP Initiator as unicast: %d", err);
+		}
 	}
 
 	return 0;
