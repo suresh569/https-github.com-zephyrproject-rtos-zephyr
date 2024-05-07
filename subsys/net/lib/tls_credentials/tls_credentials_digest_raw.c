@@ -16,15 +16,8 @@
 #include "tls_internal.h"
 #include "tls_credentials_digest_raw.h"
 
-/* Grab mbedTLS headers if they are available so that we can check whether SHA256 is supported */
-
-#if defined(CONFIG_MBEDTLS)
-#if !defined(CONFIG_MBEDTLS_CFG_FILE)
-#include "mbedtls/config.h"
-#else
-#include CONFIG_MBEDTLS_CFG_FILE
-#endif /* CONFIG_MBEDTLS_CFG_FILE */
-#endif /* CONFIG_MBEDTLS */
+/* This lets check which MbedTLS features are enabled */
+#include "tls_credentials_mbedtls_config.h"
 
 #if defined(CONFIG_TINYCRYPT_SHA256) && defined(CONFIG_BASE64)
 

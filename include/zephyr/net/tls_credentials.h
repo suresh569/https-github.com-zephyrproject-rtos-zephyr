@@ -124,6 +124,37 @@ int tls_credential_get(sec_tag_t tag, enum tls_credential_type type,
  */
 int tls_credential_delete(sec_tag_t tag, enum tls_credential_type type);
 
+/**
+ * @brief Create client private key and certificate signing request (CSR).
+ *
+ * @details This function generates a public/private keypair, and then signs a corresponding PKCS#10
+ * 	    Certificate Signing Request with the private key. The generated private key will
+ *          be installed to the provided security tag. This security tag must not already have
+ *          a private key installed. Some backends do not support this function.
+ *
+ * @param tag    A security tag where the generated private key should be installed.
+ * @param dn     Distinguished Name subject string for the CSR to be generated. Provided string
+ * 		 will be copied. Should contain a comma-separated list of attribute types and
+ * 		 values conformal with RFC 4514. For example:
+ *               "C=US,ST=CA,O=Linux Foundation,CN=Zephyr RTOS Device 1"
+ * @param csr    A buffer where the PKCS#10 CSR will be written (in ASN.1 binary format).
+ * @param csrlen The size of the provided csr buffer. If any data is written to the csr buffer,
+ *               this will be updated to the total amount written in bytes.
+ *
+ * @retval 0 CSR successfully generated.
+ * @retval -EEXIST There is already a private key installed at the requested security tag.
+ * @retval -EFAULT CSR Generation failed.
+ * @retval -EFBIG CSR does not fit in the buffer provided.
+ * @retval -EINVAL Invalid input.
+ * @retval -ENOTSUP The TLS credentials backend doesn't support CSR generation.
+ */
+
+#if defined(CONFIG_TLS_CREDENTIAL_CSR) || defined(__DOXYGEN__)
+int tls_credential_csr(sec_tag_t tag, char *dn, void *csr, size_t *csrlen);
+#else /* defined(CONFIG_TLS_CREDENTIAL_CSR) */
+#define tls_credential_csr(...) (-ENOTSUP)
+#endif /* defined(CONFIG_TLS_CREDENTIAL_CSR) */
+
 #ifdef __cplusplus
 }
 #endif

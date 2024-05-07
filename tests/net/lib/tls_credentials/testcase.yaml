@@ -12,3 +12,11 @@ tests:
       - tls
       - trusted
     depends_on: netif
+  net.tls_credentials.trusted_tfm_csr:
+    filter: CONFIG_BUILD_WITH_TFM
+    extra_args: OVERLAY_CONFIG=./prj_trusted_tfm_csr.conf
+    tags:
+      - net
+      - tls
+      - trusted
+    depends_on: netif
