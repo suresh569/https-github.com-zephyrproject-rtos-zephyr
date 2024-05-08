@@ -53,6 +53,29 @@ int hawkbit_new_config_data_cb(const char *device_id, uint8_t *buffer, const siz
 }
 #endif /* CONFIG_HAWKBIT_CUSTOM_ATTRIBUTES */
 
+#ifdef CONFIG_HAWKBIT_EVENT_CALLBACKS
+void hawkbit_event_cb(struct hawkbit_event_callback *cb, enum hawkbit_event_type event)
+{
+	LOG_INF("hawkBit event: %d", event);
+
+	switch (event) {
+	case HAWKBIT_EVENT_START_RUN:
+		LOG_INF("Run of hawkBit started");
+		break;
+
+	case HAWKBIT_EVENT_END_RUN:
+		LOG_INF("Run of hawkBit ended");
+		break;
+
+	default:
+		break;
+	}
+}
+
+static HAWKBIT_EVENT_CREATE_CALLBACK(hb_event_cb_start, hawkbit_event_cb, HAWKBIT_EVENT_START_RUN);
+static HAWKBIT_EVENT_CREATE_CALLBACK(hb_event_cb_end, hawkbit_event_cb, HAWKBIT_EVENT_END_RUN);
+#endif /* CONFIG_HAWKBIT_EVENT_CALLBACKS */
+
 int main(void)
 {
 	int ret = -1;
@@ -70,6 +93,11 @@ int main(void)
 		LOG_ERR("Failed to set custom data callback");
 	}
 #endif /* CONFIG_HAWKBIT_CUSTOM_ATTRIBUTES */
+
+#ifdef CONFIG_HAWKBIT_EVENT_CALLBACKS
+	hawkbit_event_add_callback(&hb_event_cb_start);
+	hawkbit_event_add_callback(&hb_event_cb_end);
+#endif /* CONFIG_HAWKBIT_EVENT_CALLBACKS */
 
 	ret = hawkbit_init();
 	if (ret < 0) {
