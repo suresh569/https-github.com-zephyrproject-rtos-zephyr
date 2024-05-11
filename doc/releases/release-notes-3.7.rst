@@ -156,6 +156,13 @@ Build system and Infrastructure
     choice to select the C Standard version. Additionally subsystems can select a minimum
     required C Standard version, with for example :kconfig:option:`CONFIG_REQUIRES_STD_C11`.
 
+Documentation
+*************
+
+ * Added two new build commands, ``make html-live`` and ``make html-live-fast``, that automatically locally
+   host the generated documentation. They also automatically rebuild and rehost the documentation when changes
+   to the input ``.rst`` files are detected on the filesystem.
+
 Drivers and Sensors
 *******************
 
