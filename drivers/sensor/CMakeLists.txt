@@ -65,6 +65,10 @@ add_subdirectory_ifdef(CONFIG_VOLTAGE_DIVIDER voltage_divider)
 add_subdirectory_ifdef(CONFIG_TACH_ENE_KB1200 ene_tach_kb1200)
 
 zephyr_syscall_header(${ZEPHYR_BASE}/include/zephyr/drivers/sensor.h)
+zephyr_iterable_section(
+  NAME sensor_driver_api
+  KVMA RAM_REGION GROUP RODATA_REGION
+  SUBALIGN CONFIG_LINKER_ITERABLE_SUBALIGN)
 
 zephyr_library()
 zephyr_library_property(ALLOW_EMPTY TRUE)

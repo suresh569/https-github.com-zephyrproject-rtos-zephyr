@@ -116,7 +116,7 @@ static int tids_attr_set(const struct device *dev, enum sensor_channel chan,
 	}
 }
 
-static const struct sensor_driver_api tids_driver_api = {
+static DEVICE_API(sensor, tids_driver_api) = {
 	.attr_set = tids_attr_set,
 #if CONFIG_WSEN_TIDS_TRIGGER
 	.trigger_set = tids_trigger_set,

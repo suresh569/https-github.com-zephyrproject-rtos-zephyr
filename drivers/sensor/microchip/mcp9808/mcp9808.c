@@ -94,7 +94,7 @@ static int mcp9808_channel_get(const struct device *dev,
 	return 0;
 }
 
-static const struct sensor_driver_api mcp9808_api_funcs = {
+static DEVICE_API(sensor, mcp9808_api_funcs) = {
 	.sample_fetch = mcp9808_sample_fetch,
 	.channel_get = mcp9808_channel_get,
 #ifdef CONFIG_MCP9808_TRIGGER

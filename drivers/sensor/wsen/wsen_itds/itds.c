@@ -380,7 +380,7 @@ static int itds_init(const struct device *dev)
 	return 0;
 }
 
-static const struct sensor_driver_api itds_api = {
+static DEVICE_API(sensor, itds_api) = {
 	.attr_set = itds_attr_set,
 #ifdef CONFIG_ITDS_TRIGGER
 	.trigger_set = itds_trigger_set,
