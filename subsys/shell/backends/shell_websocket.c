@@ -24,6 +24,8 @@ LOG_MODULE_REGISTER(shell_websocket, CONFIG_SHELL_WEBSOCKET_INIT_LOG_LEVEL);
 #define WEBSOCKET_WILL_DO_COMMAND_LEN 3
 
 static void ws_server_cb(struct k_work *work);
+extern int websocket_console_register(int fd);
+extern int websocket_console_unregister(int fd);
 
 NET_SOCKET_SERVICE_SYNC_DEFINE_STATIC(websocket_server, NULL, ws_server_cb,
 				      SHELL_WEBSOCKET_SERVICE_COUNT);
@@ -33,6 +35,8 @@ static void ws_end_client_connection(struct shell_websocket *ws)
 	int ret;
 
 	LOG_DBG("Closing connection to #%d", ws->fds[0].fd);
+
+	(void)websocket_console_unregister(ws->fds[0].fd);
 
 	(void)websocket_unregister(ws->fds[0].fd);
 
@@ -211,6 +215,8 @@ static int shell_ws_init(struct shell_websocket *ctx, int ws_socket)
 		LOG_ERR("Failed to register socket service, %d", ret);
 		goto error;
 	}
+
+	websocket_console_register(ws_socket);
 
 	LOG_INF("Websocket shell backend initialized");
 
