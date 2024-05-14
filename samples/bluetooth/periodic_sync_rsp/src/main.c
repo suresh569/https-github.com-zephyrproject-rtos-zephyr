@@ -226,10 +226,7 @@ int main(void)
 	}
 
 	do {
-		err = bt_le_adv_start(
-			BT_LE_ADV_PARAM(BT_LE_ADV_OPT_ONE_TIME | BT_LE_ADV_OPT_CONNECTABLE,
-					BT_GAP_ADV_FAST_INT_MIN_2, BT_GAP_ADV_FAST_INT_MAX_2, NULL),
-			NULL, 0, sd, ARRAY_SIZE(sd));
+		err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, NULL, 0, sd, ARRAY_SIZE(sd));
 		if (err && err != -EALREADY) {
 			printk("Advertising failed to start (err %d)\n", err);
 
