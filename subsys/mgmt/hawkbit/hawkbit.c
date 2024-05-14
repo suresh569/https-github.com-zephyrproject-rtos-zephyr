@@ -894,7 +894,7 @@ static void response_cb(struct http_response *rsp, enum http_final_call final_da
 			    hb_context->response_buffer_size) {
 				hb_context->response_buffer_size =
 					hb_context->dl.downloaded_size + body_len;
-				rsp_tmp = realloc(hb_context->response_data,
+				rsp_tmp = k_realloc(hb_context->response_data,
 						  hb_context->response_buffer_size);
 				if (rsp_tmp == NULL) {
 					LOG_ERR("Failed to realloc memory");
@@ -1175,7 +1175,7 @@ static void s_http_start(void *o)
 
 	s->hb_context.response_buffer_size = RESPONSE_BUFFER_SIZE;
 
-	s->hb_context.response_data = calloc(s->hb_context.response_buffer_size, sizeof(uint8_t));
+	s->hb_context.response_data = k_calloc(s->hb_context.response_buffer_size, sizeof(uint8_t));
 	if (s->hb_context.response_data == NULL) {
 		cleanup_connection(&s->hb_context.sock);
 		s->hb_context.code_status = HAWKBIT_ALLOC_ERROR;
@@ -1188,7 +1188,7 @@ static void s_http_end(void *o)
 	struct s_object *s = (struct s_object *)o;
 
 	cleanup_connection(&s->hb_context.sock);
-	free(s->hb_context.response_data);
+	k_free(s->hb_context.response_data);
 }
 
 /*
