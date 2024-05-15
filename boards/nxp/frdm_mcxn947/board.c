@@ -237,6 +237,19 @@ static int frdm_mcxn947_init(void)
 	CLOCK_AttachClk(kFRO_HF_to_USDHC);
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(smartdma), okay)
+	CLOCK_EnableClock(kCLOCK_Smartdma);
+	RESET_PeripheralReset(kSMART_DMA_RST_SHIFT_RSTn);
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(video_sdma), okay)
+	/* Drive CLKOUT from PLL0, divided by 27 to yield ~5.5MHz clock
+	 * The camera will use this clock signal to generate
+	 * PCLK, HSYNC, and VSYNC
+	 */
+	SYSCON->CLKOUTSEL = 0x1;
+	SYSCON->CLKOUTDIV = 26;
+#endif
+#endif
+
 #if CONFIG_FLASH_MCUX_FLEXSPI_NOR
 	/* We downclock the FlexSPI to 50MHz, it will be set to the
 	 * optimum speed supported by the Flash device during FLEXSPI
