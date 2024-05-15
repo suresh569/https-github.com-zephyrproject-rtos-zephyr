@@ -26,6 +26,12 @@
 #define MODE_SYS	0x1f
 #define MODE_MASK	0x1f
 
+#if defined(CONFIG_BIG_ENDIAN)
+#define E_BIT   (1 << 9)
+#else
+#define E_BIT   (0 << 9)
+#endif
+
 #define A_BIT	(1 << 8)
 #define I_BIT	(1 << 7)
 #define F_BIT	(1 << 6)
