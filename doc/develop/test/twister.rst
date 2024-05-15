@@ -1125,7 +1125,7 @@ using an external J-Link probe.  The ``probe_id`` keyword overrides the
       serial: null
 
 Additional Scripts
-++++++++++
+++++++++++++++++++
 
 Twister offers users the flexibility to automate the execution of external
 scripts at precise moments. These scripts can be strategically deployed in
@@ -1147,18 +1147,19 @@ details about scripts and purpose of use.
 An example of entries in a scripting list yaml:
 
 .. code-block:: yaml
+
     - scenarios:
-    - sample.basic.helloworld
-    platforms:
-    - frdm_k64f
-    pre_script:
-        <PATH_TO_PRE_SCRIPT>
-    post_flash_script:
-        <PATH_TO_POST_FLASH_SCRIPT>
-    post_script:
-        <PATH_TO_POST_SCRIPT>
-    comment:
-        Testing extra scripts
+        - sample.basic.helloworld
+        platforms:
+        - frdm_k64f
+        pre_script:
+            <PATH_TO_PRE_SCRIPT>
+        post_flash_script:
+            <PATH_TO_POST_FLASH_SCRIPT>
+        post_script:
+            <PATH_TO_POST_SCRIPT>
+        comment:
+            Testing extra scripts
 
 Quarantine
 ++++++++++
