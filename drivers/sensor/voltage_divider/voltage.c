@@ -11,15 +11,15 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/pm/device.h>
+#include <zephyr/pm/device_runtime.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(voltage, CONFIG_SENSOR_LOG_LEVEL);
 
 struct voltage_config {
 	struct voltage_divider_dt_spec voltage;
-#ifdef CONFIG_PM_DEVICE
 	struct gpio_dt_spec gpio_power;
-#endif
+	uint32_t off_on_delay_us;
 };
 
 struct voltage_data {
@@ -37,10 +37,17 @@ static int fetch(const struct device *dev, enum sensor_channel chan)
 		return -ENOTSUP;
 	}
 
+	ret = pm_device_runtime_get(dev);
+	if (ret != 0) {
+		return ret;
+	}
+
 	ret = adc_read(config->voltage.port.dev, &data->sequence);
 	if (ret != 0) {
 		LOG_ERR("adc_read: %d", ret);
 	}
+
+	(void)pm_device_runtime_put(dev);
 
 	return ret;
 }
@@ -70,8 +77,8 @@ static int get(const struct device *dev, enum sensor_channel chan, struct sensor
 	/* Note if full_ohms is not specified then unscaled voltage is returned */
 	(void)voltage_divider_scale_dt(&config->voltage, &v_mv);
 
-	LOG_DBG("%d of %d, %dmV, voltage:%dmV", data->raw,
-		(1 << data->sequence.resolution) - 1, raw_val, v_mv);
+	LOG_DBG("%d of %d, %dmV, voltage:%dmV", data->raw, (1 << data->sequence.resolution) - 1,
+		raw_val, v_mv);
 	val->val1 = v_mv / 1000;
 	val->val2 = (v_mv * 1000) % 1000000;
 
@@ -83,16 +90,21 @@ static const struct sensor_driver_api voltage_api = {
 	.channel_get = get,
 };
 
-#ifdef CONFIG_PM_DEVICE
-static int pm_action(const struct device *dev, enum pm_device_action action)
+static void wait_power_off_on_delay(uint32_t off_on_delay_us)
+{
+	if (off_on_delay_us != 0) {
+		if (k_can_yield()) {
+			k_usleep(off_on_delay_us);
+		} else {
+			k_busy_wait(off_on_delay_us);
+		}
+	}
+}
+
+static int __maybe_unused pm_action(const struct device *dev, enum pm_device_action action)
 {
 	const struct voltage_config *config = dev->config;
 	int ret;
-
-	if (config->gpio_power.port == NULL) {
-		LOG_ERR("PM not supported");
-		return -ENOTSUP;
-	}
 
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
@@ -100,6 +112,7 @@ static int pm_action(const struct device *dev, enum pm_device_action action)
 		if (ret != 0) {
 			LOG_ERR("failed to set GPIO for PM resume");
 		}
+		wait_power_off_on_delay(config->off_on_delay_us);
 		break;
 	case PM_DEVICE_ACTION_SUSPEND:
 		ret = gpio_pin_set_dt(&config->gpio_power, 0);
@@ -113,7 +126,6 @@ static int pm_action(const struct device *dev, enum pm_device_action action)
 
 	return ret;
 }
-#endif
 
 static int voltage_init(const struct device *dev)
 {
@@ -126,19 +138,29 @@ static int voltage_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-#ifdef CONFIG_PM_DEVICE
 	if (config->gpio_power.port != NULL) {
+		int power_gpio_state = GPIO_OUTPUT_ACTIVE;
+
+		if (IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)) {
+			power_gpio_state = GPIO_OUTPUT_INACTIVE;
+		}
+
 		if (!gpio_is_ready_dt(&config->gpio_power)) {
 			LOG_ERR("Power GPIO is not ready");
 			return -ENODEV;
 		}
-
-		ret = gpio_pin_configure_dt(&config->gpio_power, GPIO_OUTPUT_ACTIVE);
+		ret = gpio_pin_configure_dt(&config->gpio_power, power_gpio_state);
 		if (ret != 0) {
-			LOG_ERR("failed to initialize GPIO for reset");
+			LOG_ERR("failed to initialize GPIO for power");
+			return ret;
+		}
+
+		if (IS_ENABLED(CONFIG_PM_DEVICE_RUNTIME)) {
+			pm_device_init_suspended(dev);
+		} else {
+			wait_power_off_on_delay(config->off_on_delay_us);
 		}
 	}
-#endif
 
 	ret = adc_channel_setup_dt(&config->voltage.port);
 	if (ret != 0) {
@@ -155,27 +177,30 @@ static int voltage_init(const struct device *dev)
 	data->sequence.buffer = &data->raw;
 	data->sequence.buffer_size = sizeof(data->raw);
 
+	if (config->gpio_power.port != NULL) {
+		return pm_device_runtime_enable(dev);
+	}
+
 	return 0;
 }
 
-#ifdef CONFIG_PM_DEVICE
-#define POWER_GPIOS(inst) .gpio_power = GPIO_DT_SPEC_INST_GET_OR(inst, power_gpios, {0}),
-#else
-#define POWER_GPIOS(inst)
-#endif
+#define VOLTAGE_HAS_POWER_GPIO(inst) DT_INST_PROP_HAS_IDX(inst, power_gpios, 0)
 
 #define VOLTAGE_INIT(inst)                                                                         \
 	static struct voltage_data voltage_##inst##_data;                                          \
                                                                                                    \
 	static const struct voltage_config voltage_##inst##_config = {                             \
 		.voltage = VOLTAGE_DIVIDER_DT_SPEC_GET(DT_DRV_INST(inst)),                         \
-		POWER_GPIOS(inst)                                                                  \
+		.gpio_power = GPIO_DT_SPEC_INST_GET_OR(inst, power_gpios, {0}),                    \
+		.off_on_delay_us = DT_INST_PROP_OR(inst, off_on_delay_us, 0),                      \
 	};                                                                                         \
                                                                                                    \
-	PM_DEVICE_DT_INST_DEFINE(inst, pm_action);                                                 \
+	IF_ENABLED(VOLTAGE_HAS_POWER_GPIO(inst), (PM_DEVICE_DT_INST_DEFINE(inst, pm_action);))     \
                                                                                                    \
-	SENSOR_DEVICE_DT_INST_DEFINE(inst, &voltage_init, PM_DEVICE_DT_INST_GET(inst),             \
-			      &voltage_##inst##_data, &voltage_##inst##_config, POST_KERNEL,       \
-			      CONFIG_SENSOR_INIT_PRIORITY, &voltage_api);
+	SENSOR_DEVICE_DT_INST_DEFINE(                                                              \
+		inst, &voltage_init,                                                               \
+		COND_CODE_1(VOLTAGE_HAS_POWER_GPIO(inst), (PM_DEVICE_DT_INST_GET(inst)), (NULL)),  \
+		&voltage_##inst##_data, &voltage_##inst##_config, POST_KERNEL,                     \
+		CONFIG_SENSOR_INIT_PRIORITY, &voltage_api);
 
 DT_INST_FOREACH_STATUS_OKAY(VOLTAGE_INIT)
