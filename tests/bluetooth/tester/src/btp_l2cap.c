@@ -229,8 +229,8 @@ extern struct bt_conn *bt_conn_lookup_addr_br(const bt_addr_t *peer);
 
 #endif /* defined(CONFIG_BT_CLASSIC) */
 
-static uint8_t connect(const void *cmd, uint16_t cmd_len,
-		       void *rsp, uint16_t *rsp_len)
+static uint8_t _connect(const void *cmd, uint16_t cmd_len, void *rsp,
+		       uint16_t *rsp_len, bool sec, bt_security_t sec_level)
 {
 	const struct btp_l2cap_connect_cmd *cp = cmd;
 	struct btp_l2cap_connect_rp *rp = rsp;
@@ -275,6 +275,9 @@ static uint8_t connect(const void *cmd, uint16_t cmd_len,
 			}
 			br_chan->br.chan.ops = &l2cap_ops;
 			br_chan->br.rx.mtu = mtu;
+			if (sec) {
+				br_chan->br.required_sec_level = sec_level;
+			}
 			rp->chan_id[i] = br_chan->chan_id;
 			allocated_channels[i] = &br_chan->br.chan;
 			br_chan->hold_credit = cp->options & BTP_L2CAP_CONNECT_OPT_HOLD_CREDIT;
@@ -287,6 +290,11 @@ static uint8_t connect(const void *cmd, uint16_t cmd_len,
 		}
 		chan->le.chan.ops = &l2cap_ops;
 		chan->le.rx.mtu = mtu;
+#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+		if (sec) {
+			chan->le.required_sec_level = sec_level;
+		}
+#endif /* defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) */
 		rp->chan_id[i] = chan->chan_id;
 		allocated_channels[i] = &chan->le.chan;
 
@@ -344,6 +352,22 @@ fail:
 		}
 	}
 	return BTP_STATUS_FAILED;
+}
+
+static uint8_t connect(const void *cmd, uint16_t cmd_len,
+		       void *rsp, uint16_t *rsp_len)
+{
+	return _connect(cmd, cmd_len, rsp, rsp_len, false,
+					(bt_security_t)BTP_L2CAP_CONNECT_SEC_LEVEL_0);
+}
+
+static uint8_t connect_with_sec_level(const void *cmd, uint16_t cmd_len,
+		       void *rsp, uint16_t *rsp_len)
+{
+	const struct btp_l2cap_connect_with_sec_level_cmd *cp = cmd;
+
+	return _connect(&cp->cmd, cmd_len - sizeof(cp->sec_level), rsp, rsp_len, true,
+					(bt_security_t)cp->sec_level);
 }
 
 static uint8_t disconnect(const void *cmd, uint16_t cmd_len,
@@ -842,6 +866,11 @@ static const struct btp_handler handlers[] = {
 		.opcode = BTP_L2CAP_DISCONNECT_EATT_CHANS,
 		.expect_len = sizeof(struct btp_l2cap_disconnect_eatt_chans_cmd),
 		.func = disconnect_eatt_chans,
+	},
+	{
+		.opcode = BTP_L2CAP_CONNECT_WITH_SEC_LEVEL,
+		.expect_len = sizeof(struct btp_l2cap_connect_with_sec_level_cmd),
+		.func = connect_with_sec_level,
 	},
 };
 
