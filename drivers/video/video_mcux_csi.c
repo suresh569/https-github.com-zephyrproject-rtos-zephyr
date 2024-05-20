@@ -121,7 +121,16 @@ static int video_mcux_csi_set_fmt(const struct device *dev, enum video_endpoint_
 	unsigned int bpp = video_pix_fmt_bpp(fmt->pixelformat);
 	status_t ret;
 
-	if (!bpp || ep != VIDEO_EP_ANY_OUT) {
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	if (!bpp) {
 		return -EINVAL;
 	}
 
@@ -156,7 +165,16 @@ static int video_mcux_csi_get_fmt(const struct device *dev, enum video_endpoint_
 {
 	const struct video_mcux_csi_config *config = dev->config;
 
-	if (fmt == NULL || ep != VIDEO_EP_ANY_OUT) {
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	if (fmt == NULL) {
 		return -EINVAL;
 	}
 
@@ -212,6 +230,15 @@ static int video_mcux_csi_flush(const struct device *dev, enum video_endpoint_id
 	uint32_t buffer_addr;
 	status_t ret;
 
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
+		return -EINVAL;
+	}
+
 	if (!cancel) {
 		/* wait for all buffer to be processed */
 		do {
@@ -243,7 +270,12 @@ static int video_mcux_csi_enqueue(const struct device *dev, enum video_endpoint_
 	unsigned int to_read;
 	status_t ret;
 
-	if (ep != VIDEO_EP_ANY_OUT) {
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
 		return -EINVAL;
 	}
 
@@ -266,7 +298,12 @@ static int video_mcux_csi_dequeue(const struct device *dev, enum video_endpoint_
 {
 	struct video_mcux_csi_data *data = dev->data;
 
-	if (ep != VIDEO_EP_ANY_OUT) {
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
 		return -EINVAL;
 	}
 
@@ -310,7 +347,12 @@ static int video_mcux_csi_get_caps(const struct device *dev, enum video_endpoint
 	const struct video_mcux_csi_config *config = dev->config;
 	int err = -ENODEV;
 
-	if (ep != VIDEO_EP_ANY_OUT) {
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
 		return -EINVAL;
 	}
 
@@ -364,6 +406,15 @@ static int video_mcux_csi_set_signal(const struct device *dev, enum video_endpoi
 				     struct k_poll_signal *signal)
 {
 	struct video_mcux_csi_data *data = dev->data;
+
+	switch (ep) {
+	case VIDEO_EP_ANY_OUT:
+	case VIDEO_EP_ANY:
+	case 0x0:
+		break;
+	default:
+		return -EINVAL;
+	}
 
 	if (data->signal && signal != NULL) {
 		return -EALREADY;
