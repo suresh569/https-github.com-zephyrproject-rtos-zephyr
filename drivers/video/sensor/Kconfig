@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# zephyr-keep-sorted-start
+source "drivers/video/sensor/Kconfig.mt9m114"
+source "drivers/video/sensor/Kconfig.ov2640"
+source "drivers/video/sensor/Kconfig.ov5640"
+source "drivers/video/sensor/Kconfig.ov7725"
+# zephyr-keep-sorted-stop
