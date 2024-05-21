@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+
+zephyr_library()
+
+# zephyr-keep-sorted-start
+zephyr_library_sources_ifdef(CONFIG_VIDEO_MT9M114       mt9m114.c)
+zephyr_library_sources_ifdef(CONFIG_VIDEO_OV2640        ov2640.c)
+zephyr_library_sources_ifdef(CONFIG_VIDEO_OV5640        ov5640.c)
+zephyr_library_sources_ifdef(CONFIG_VIDEO_OV7725        ov7725.c)
+# zephyr-keep-sorted-stop
