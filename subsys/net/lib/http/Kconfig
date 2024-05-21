@@ -115,6 +115,12 @@ config HTTP_SERVER_WEBSOCKET
 	  handler that is called after upgrading to handle the Websocket network
 	  traffic.
 
+config WEBSOCKET_CONSOLE
+	bool
+	default y if HTTP_SERVER_WEBSOCKET && SHELL_BACKEND_WEBSOCKET
+	help
+	  Hidden option that is enabled only when all the necessary options
+	  needed by websocket console are set.
 endif
 
 # Hidden option to avoid having multiple individual options that are ORed together

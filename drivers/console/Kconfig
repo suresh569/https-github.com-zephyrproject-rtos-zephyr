@@ -254,6 +254,37 @@ module = UART_CONSOLE
 module-str = UART console
 source "subsys/logging/Kconfig.template.log_config"
 
+config WS_CONSOLE
+	bool "Use Websocket console"
+	depends on WEBSOCKET_CONSOLE
+	default y
+	select CONSOLE_HAS_DRIVER
+
+if WS_CONSOLE
+
+config WS_LINE_LEN
+	int "Length of temporary buffer"
+	default 256
+	help
+	  We want to send data to websocket console a line at a time
+	  because otherwise we would send one byte at a time which is
+	  not optimal. This tells the maximum line length before sending
+	  any data.
+
+config WS_TX_RETRY_CNT
+	int "Number of TX retries"
+	default 2
+	help
+	  Number of TX retries before dropping the full line of data.
+
+config WS_TX_RETRY_DELAY_MS
+	int "Delay between TX retries in milliseconds"
+	default 500
+	help
+	  Sleep period between TX retry attempts.
+
+endif
+
 source "drivers/console/Kconfig.gsm_mux"
 
 config UART_MUX
