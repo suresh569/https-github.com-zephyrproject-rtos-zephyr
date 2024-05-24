@@ -15,8 +15,6 @@
 
 #include <zephyr/net/tls_credentials.h>
 
-#define HAWKBIT_JSON_URL "/default/controller/v1"
-
 /**
  * @brief Response message from hawkBit.
  *
@@ -26,17 +24,54 @@
  *
  */
 enum hawkbit_response {
+	HAWKBIT_NO_RESPONSE,
+	HAWKBIT_UPDATE_INSTALLED,
+	HAWKBIT_NO_UPDATE,
 	HAWKBIT_NETWORKING_ERROR,
 	HAWKBIT_UNCONFIRMED_IMAGE,
 	HAWKBIT_PERMISSION_ERROR,
 	HAWKBIT_METADATA_ERROR,
 	HAWKBIT_DOWNLOAD_ERROR,
-	HAWKBIT_OK,
-	HAWKBIT_UPDATE_INSTALLED,
-	HAWKBIT_NO_UPDATE,
-	HAWKBIT_CANCEL_UPDATE,
+	HAWKBIT_ALLOC_ERROR,
 	HAWKBIT_NOT_INITIALIZED,
 	HAWKBIT_PROBE_IN_PROGRESS,
+};
+
+/**
+ * @brief hawkBit event type.
+ *
+ * @details These events are used to register the callback functions.
+ *
+ */
+enum hawkbit_event_type {
+	/** Event triggered when there was an error */
+	HAWKBIT_EVENT_ERROR,
+	/** Event triggered when there was a networking error */
+	HAWKBIT_EVENT_ERROR_NETWORKING,
+	/** Event triggered when there was a permission error */
+	HAWKBIT_EVENT_ERROR_PERMISSION,
+	/** Event triggered when there was a metadata error */
+	HAWKBIT_EVENT_ERROR_METADATA,
+	/** Event triggered when there was a download error */
+	HAWKBIT_EVENT_ERROR_DOWNLOAD,
+	/** Event triggered when there was an allocation error */
+	HAWKBIT_EVENT_ERROR_ALLOC,
+	/** Event triggered when a new update was downloaded */
+	HAWKBIT_EVENT_UPDATE_DOWNLOADED,
+	/** Event triggered when there is no update available */
+	HAWKBIT_EVENT_NO_UPDATE,
+	/** Event triggered when the update was canceled by the server */
+	HAWKBIT_EVENT_CANCEL_UPDATE,
+	/** Event triggered before the download starts */
+	HAWKBIT_EVENT_START_DOWNLOAD,
+	/** Event triggered after the download ends */
+	HAWKBIT_EVENT_END_DOWNLOAD,
+	/** Event triggered before the hawkBit run starts */
+	HAWKBIT_EVENT_START_RUN,
+	/** Event triggered after the hawkBit run ends */
+	HAWKBIT_EVENT_END_RUN,
+	/** Event triggered before hawkBit does a reboot */
+	HAWKBIT_EVENT_BEFORE_REBOOT,
 };
 
 /**
@@ -92,21 +127,65 @@ int hawkbit_init(void);
  *
  * @details The hawkbit_autohandler handles the whole process
  * in pre-determined time intervals.
+ *
+ * @param auto_reschedule If true, the handler will reschedule itself
  */
-void hawkbit_autohandler(void);
+void hawkbit_autohandler(bool auto_reschedule);
 
 /**
- * @brief The hawkBit probe verify if there is some update to be performed.
+ * @brief Wait for the autohandler to finish.
  *
+ * @param events Set of desired events on which to wait. Set to ::UINT32_MAX to wait for the
+ *               autohandler to finish one run, or BIT() together with a value from
+ *               ::hawkbit_response to wait for a specific event.
+ * @param timeout Waiting period for the desired set of events or one of the
+ *                special values ::K_NO_WAIT and ::K_FOREVER.
+ *
+ * @retval HAWKBIT_NO_RESPONSE if matching events were not received within the specified time
+ * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
+ * @retval HAWKBIT_NO_UPDATE if no update was available.
  * @retval HAWKBIT_NETWORKING_ERROR fail to connect to the hawkBit server.
  * @retval HAWKBIT_UNCONFIRMED_IMAGE image is unconfirmed.
  * @retval HAWKBIT_PERMISSION_ERROR fail to get the permission to access the hawkBit server.
  * @retval HAWKBIT_METADATA_ERROR fail to parse or to encode the metadata.
  * @retval HAWKBIT_DOWNLOAD_ERROR fail while downloading the update package.
- * @retval HAWKBIT_OK if the image was already updated.
+ * @retval HAWKBIT_NOT_INITIALIZED if hawkBit is not initialized.
+ * @retval HAWKBIT_PROBE_IN_PROGRESS if probe is currently running.
+ */
+enum hawkbit_response hawkbit_autohandler_wait(uint32_t events, k_timeout_t timeout);
+
+/**
+ * @brief Cancel the run of the hawkBit autohandler.
+ *
+ * @return a value from k_work_cancel_delayable().
+ */
+int hawkbit_autohandler_cancel(void);
+
+/**
+ * @brief Set the delay for the next run of the autohandler.
+ *
+ * @details This function will only delay the next run of the autohandler. The delay will not
+ * persist after the autohandler runs.
+ *
+ * @param timeout The delay to set.
+ * @param if_bigger If true, the delay will be set only if the new delay is bigger than the current
+ * one.
+ *
+ * @retval 0 if @a if_bigger was true and the current delay was bigger than the new one.
+ * @retval otherwise, a value from k_work_reschedule().
+ */
+int hawkbit_autohandler_set_delay(k_timeout_t timeout, bool if_bigger);
+
+/**
+ * @brief The hawkBit probe verify if there is some update to be performed.
+ *
  * @retval HAWKBIT_UPDATE_INSTALLED if an update was installed. Reboot is required to apply it.
  * @retval HAWKBIT_NO_UPDATE if no update was available.
- * @retval HAWKBIT_CANCEL_UPDATE if the update was cancelled by the server.
+ * @retval HAWKBIT_NETWORKING_ERROR fail to connect to the hawkBit server.
+ * @retval HAWKBIT_UNCONFIRMED_IMAGE image is unconfirmed.
+ * @retval HAWKBIT_PERMISSION_ERROR fail to get the permission to access the hawkBit server.
+ * @retval HAWKBIT_METADATA_ERROR fail to parse or to encode the metadata.
+ * @retval HAWKBIT_DOWNLOAD_ERROR fail while downloading the update package.
  * @retval HAWKBIT_NOT_INITIALIZED if hawkBit is not initialized.
  * @retval HAWKBIT_PROBE_IN_PROGRESS if probe is currently running.
  */
@@ -272,6 +351,101 @@ int32_t hawkbit_get_action_id(void);
  *
  */
 int hawkbit_reset_action_id(void);
+
+struct hawkbit_event_callback;
+
+/**
+ * @typedef hawkbit_event_callback_handler_t
+ * @brief Define the application callback handler function signature
+ *
+ * @param cb Original struct hawkbit_event_callback owning this handler
+ * @param event The event that triggered the callback
+ *
+ * Note: cb pointer can be used to retrieve private data through
+ * CONTAINER_OF() if original struct hawkbit_event_callback is stored in
+ * another private structure.
+ */
+typedef void (*hawkbit_event_callback_handler_t)(struct hawkbit_event_callback *cb,
+						 enum hawkbit_event_type event);
+
+/** @cond INTERNAL_HIDDEN */
+
+/**
+ * @brief hawkBit callback structure
+ *
+ * Used to register a callback in the hawkBit callback list.
+ * As many callbacks as needed can be added as long as each of them
+ * are unique pointers of struct hawkbit_event_callback.
+ * Beware such structure should not be allocated on stack.
+ *
+ * Note: To help setting it, see hawkbit_event_init_callback() below
+ */
+struct hawkbit_event_callback {
+	/** This is meant to be used internally and the user should not
+	 * mess with it.
+	 */
+	sys_snode_t node;
+
+	/** Actual callback function being called when relevant. */
+	hawkbit_event_callback_handler_t handler;
+
+	/** The event type this callback is attached to. */
+	enum hawkbit_event_type event;
+};
+
+/** @endcond */
+
+
+/**
+ * @brief Macro to create and initialize a struct hawkbit_event_callback properly.
+ *
+ * @details This macro can be used instead of hawkbit_event_init_callback().
+ *
+ * @param _callback Name of the  callback structure
+ * @param _handler  A valid handler function pointer.
+ * @param _event    The event of ::hawkbit_event_type that will trigger the callback
+ */
+#define HAWKBIT_EVENT_CREATE_CALLBACK(_callback, _handler, _event)                                 \
+	struct hawkbit_event_callback _callback = {                                                \
+		.handler = _handler,                                                               \
+		.event = _event,                                                                   \
+	}
+
+/**
+ * @brief Helper to initialize a struct hawkbit_event_callback properly
+ *
+ * @param callback A valid Application's callback structure pointer.
+ * @param handler A valid handler function pointer.
+ * @param event The event of ::hawkbit_event_type that will trigger the callback.
+ */
+static inline void hawkbit_event_init_callback(struct hawkbit_event_callback *callback,
+					       hawkbit_event_callback_handler_t handler,
+					       enum hawkbit_event_type event)
+{
+	__ASSERT(callback, "Callback pointer should not be NULL");
+	__ASSERT(handler, "Callback handler pointer should not be NULL");
+
+	callback->handler = handler;
+	callback->event = event;
+}
+
+/**
+ * @brief Add an application callback.
+ *
+ * @param cb A valid application's callback structure pointer.
+ *
+ * @return 0 if successful, negative errno code on failure.
+ */
+int hawkbit_event_add_callback(struct hawkbit_event_callback *cb);
+
+/**
+ * @brief Remove an application callback.
+ *
+ * @param cb A valid application's callback structure pointer.
+ *
+ * @return 0 if successful, negative errno code on failure.
+ */
+int hawkbit_event_remove_callback(struct hawkbit_event_callback *cb);
 
 /**
  * @}

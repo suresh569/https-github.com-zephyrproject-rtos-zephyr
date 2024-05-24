@@ -15,9 +15,13 @@ menuconfig HAWKBIT
 	depends on DNS_RESOLVER
 	depends on JSON_LIBRARY
 	depends on BOOTLOADER_MCUBOOT
+	depends on SMF
+	depends on SMF_ANCESTOR_SUPPORT
+	select EVENTS
 	select MPU_ALLOW_FLASH_WRITE
 	select IMG_ENABLE_IMAGE_CHECK
 	select IMG_ERASE_PROGRESSIVELY
+	imply STREAM_FLASH_PROGRESS
 	help
 	  hawkBit is a domain independent back-end framework for polling out
 	  software updates to constrained edge devices as well as more powerful
@@ -37,6 +41,12 @@ config HAWKBIT_SHELL
 	depends on SHELL
 	help
 	  Activate shell module that provides hawkBit commands.
+
+config HAWKBIT_TENANT
+	string "Tenant name for the hawkbit server"
+	default "default"
+	help
+	  Configure the tenant name for the hawkbit server.
 
 config HAWKBIT_SERVER
 	string "User address for the hawkbit server"
@@ -144,6 +154,18 @@ config HAWKBIT_STATIC_CERT_TAG
 	  Static certificate tag for TLS connection to the hawkBit server.
 
 endif
+
+config HAWKBIT_EVENT_CALLBACKS
+	bool "Set hawkBit event callbacks"
+	help
+	  Be able to set event callbacks for hawkBit.
+
+config HAWKBIT_SAVE_PROGRESS
+	bool "Save the hawkBit update download progress"
+	depends on STREAM_FLASH_PROGRESS
+	default y
+	help
+	  Save the hawkBit update download progress.
 
 module = HAWKBIT
 module-str = Log Level for hawkbit
