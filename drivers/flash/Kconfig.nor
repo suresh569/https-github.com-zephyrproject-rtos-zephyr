@@ -75,4 +75,15 @@ config SPI_NOR_FLASH_LAYOUT_PAGE_SIZE
 	  (32768), the sector size (4096), or any non-zero multiple of the
 	  sector size.
 
+config SPI_NOR_DEEP_POWER_DOWN_INACTIVITY_TIMEOUT_MS
+	int "Duration after the last flash operation to return to DPD mode"
+	depends on PM_DEVICE_RUNTIME
+	default 10
+	help
+	  Flash operations are often closely spaced in time, where transitioning
+	  between DPD and active mode for every transaction would cause significant
+	  performance overheads. Instead, the driver keeps the device in active
+	  mode for some short period after use in case there is a repeated flash API
+	  call.
+
 endif # SPI_NOR
