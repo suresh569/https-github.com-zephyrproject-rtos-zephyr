@@ -24,6 +24,7 @@
 #include <mmu.h>
 
 #include "mmu.h"
+#include "paging.h"
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
@@ -1519,6 +1520,81 @@ void arch_mem_scratch(uintptr_t phys)
 		sync_domains(virt, size);
 		invalidate_tlb_page(virt);
 	}
+}
+
+/* Called from the fault handler. Returns true if the fault is resolved. */
+bool z_arm64_do_demand_paging(uint64_t esr, uint64_t far)
+{
+	uintptr_t virt = far;
+	uint64_t *pte, desc;
+
+	/* filter relevant exceptions */
+	switch (GET_ESR_EC(esr)) {
+	case 0x25: /* data abort from current EL */
+		break;
+	default:
+		return false;
+	}
+
+	/* make sure the fault happened in the expected range */
+	if (!IN_RANGE(virt,
+		      (uintptr_t)K_MEM_VIRT_RAM_START,
+		      ((uintptr_t)K_MEM_VIRT_RAM_END - 1))) {
+		return false;
+	}
+
+	pte = get_pte_location(&kernel_ptables, virt);
+	if (!pte) {
+		/* page mapping doesn't exist, let the core code do its thing */
+		return k_mem_page_fault((void *)virt);
+	}
+	desc = *pte;
+	if ((desc & PTE_DESC_TYPE_MASK) != PTE_PAGE_DESC) {
+		/* page is not loaded/mapped */
+		return k_mem_page_fault((void *)virt);
+	}
+
+	/*
+	 * From this point, we expect only 2 cases:
+	 *
+	 * 1) the Access Flag was not set so we set it marking the page
+	 *    as accessed;
+	 *
+	 * 2) the page was read-only and a write occurred so we clear the
+	 *    RO flag marking the page dirty.
+	 *
+	 * We bail out on anything else.
+	 */
+	uint32_t dfsc = GET_ESR_ISS(esr) & GENMASK(5, 0);
+	bool write = !!(GET_ESR_ISS(esr) & BIT(6)); /* WnR */
+
+	if (dfsc == (0b001000 | XLAT_LAST_LEVEL) &&
+	    (desc & PTE_BLOCK_DESC_AF) == 0) {
+		/* page is being accessed: set the access flag */
+		desc |= PTE_BLOCK_DESC_AF;
+		if (write) {
+			/*
+			 * Let's avoid another fault immediately after
+			 * returning by making the page read-write right away
+			 * effectively marking it "dirty" as well.
+			 */
+			desc &= ~PTE_BLOCK_DESC_AP_RO;
+		}
+		*pte = desc;
+		/* no TLB inval needed after setting AF */
+		return true;
+	}
+
+	if (dfsc == (0b001100 | XLAT_LAST_LEVEL) && write &&
+	    (desc & PTE_BLOCK_DESC_AP_RO) != 0) {
+		/* make it "dirty" i.e. read-write */
+		desc &= ~PTE_BLOCK_DESC_AP_RO;
+		*pte = desc;
+		invalidate_tlb_page(virt);
+		return true;
+	}
+
+	return false;
 }
 
 #endif /* CONFIG_DEMAND_PAGING */
