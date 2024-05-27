@@ -863,8 +863,10 @@ static int hci_driver_open(void)
 
 static int hci_driver_close(void)
 {
+	int err;
 	/* Resetting the LL stops all roles */
-	ll_deinit();
+	err = ll_deinit();
+	LL_ASSERT(!err);
 
 	/* Abort prio RX thread */
 	k_thread_abort(&prio_recv_thread_data);
