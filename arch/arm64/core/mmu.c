@@ -133,7 +133,7 @@ int arm64_mmu_tables_total_usage(void)
 
 static inline bool is_free_desc(uint64_t desc)
 {
-	return (desc & PTE_DESC_TYPE_MASK) == PTE_INVALID_DESC;
+	return desc == 0;
 }
 
 static inline bool is_table_desc(uint64_t desc, unsigned int level)
