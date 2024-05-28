@@ -17,7 +17,6 @@ import logging as logger
 from conftest import ZEPHYR_BASE
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/pylib/twister"))
 
-#from scripts.pylib.twister.twisterlib.statuses import HarnessStatus, TestCaseStatus, TestInstanceStatus
 from twisterlib.harness import (
     Bsim,
     Console,
@@ -29,7 +28,7 @@ from twisterlib.harness import (
     Robot,
     Test
 )
-from twisterlib.statuses import HarnessStatus, TestCaseStatus, TestInstanceStatus
+from twisterlib.statuses import TwisterStatus
 from twisterlib.testinstance import TestInstance
 
 GTEST_START_STATE = " RUN      "
@@ -76,13 +75,13 @@ def test_harness_parse_record(lines, pattern, expected_records):
     assert harness.recording == expected_records
 
 
-TEST_DATA_1 = [('RunID: 12345', False, False, False, HarnessStatus.NONE, True),
-                ('PROJECT EXECUTION SUCCESSFUL', False, False, False, HarnessStatus.PASS, False),
-                ('PROJECT EXECUTION SUCCESSFUL', True, False, False, HarnessStatus.FAIL, False),
-                ('PROJECT EXECUTION FAILED', False, False, False, HarnessStatus.FAIL, False),
-                ('ZEPHYR FATAL ERROR', False, True, False, HarnessStatus.NONE, False),
-                ('GCOV_COVERAGE_DUMP_START', None, None, True, HarnessStatus.NONE, False),
-                ('GCOV_COVERAGE_DUMP_END', None, None, False, HarnessStatus.NONE, False),]
+TEST_DATA_1 = [('RunID: 12345', False, False, False, TwisterStatus.NONE, True),
+                ('PROJECT EXECUTION SUCCESSFUL', False, False, False, TwisterStatus.PASS, False),
+                ('PROJECT EXECUTION SUCCESSFUL', True, False, False, TwisterStatus.FAIL, False),
+                ('PROJECT EXECUTION FAILED', False, False, False, TwisterStatus.FAIL, False),
+                ('ZEPHYR FATAL ERROR', False, True, False, TwisterStatus.NONE, False),
+                ('GCOV_COVERAGE_DUMP_START', None, None, True, TwisterStatus.NONE, False),
+                ('GCOV_COVERAGE_DUMP_END', None, None, False, TwisterStatus.NONE, False),]
 
 @pytest.mark.parametrize(
     "line, fault, fail_on_fault, cap_cov, exp_stat, exp_id",
@@ -93,7 +92,7 @@ def test_harness_process_test(line, fault, fail_on_fault, cap_cov, exp_stat, exp
     #Arrange
     harness = Harness()
     harness.run_id = 12345
-    harness.status = HarnessStatus.NONE
+    harness.status = TwisterStatus.NONE
     harness.fault = fault
     harness.fail_on_fault = fail_on_fault
     mock.patch.object(Harness, 'parse_record', return_value=None)
@@ -161,13 +160,13 @@ def test_robot_handle(tmp_path):
     tc = instance.get_case_or_create('test_case_1')
 
     #Assert
-    assert instance.status == TestInstanceStatus.PASS
-    assert tc.status == TestCaseStatus.PASS
+    assert instance.status == TwisterStatus.PASS
+    assert tc.status == TwisterStatus.PASS
 
 
 TEST_DATA_2 = [
-    ("", 0, TestInstanceStatus.PASS),
-    ("Robot test failure: sourcedir for mock_platform", 1, TestInstanceStatus.FAIL),
+    ("", 0, TwisterStatus.PASS),
+    ("Robot test failure: sourcedir for mock_platform", 1, TwisterStatus.FAIL),
 ]
 @pytest.mark.parametrize(
     "exp_out, returncode, expected_status",
@@ -261,13 +260,13 @@ def test_console_configure(tmp_path, type, num_patterns):
         assert console.pattern.pattern == 'pattern1'
 
 
-TEST_DATA_4 = [("one_line", True, HarnessStatus.PASS, "line", False, False),
-                ("multi_line", True, HarnessStatus.PASS, "line", False, False),
-                ("multi_line", False, HarnessStatus.PASS, "line", False, False),
-                ("invalid_type", False, HarnessStatus.NONE, "line", False, False),
-                ("invalid_type", False, HarnessStatus.NONE, "ERROR", True, False),
-                ("invalid_type", False, HarnessStatus.NONE, "COVERAGE_START", False, True),
-                ("invalid_type", False, HarnessStatus.NONE, "COVERAGE_END", False, False)]
+TEST_DATA_4 = [("one_line", True, TwisterStatus.PASS, "line", False, False),
+                ("multi_line", True, TwisterStatus.PASS, "line", False, False),
+                ("multi_line", False, TwisterStatus.PASS, "line", False, False),
+                ("invalid_type", False, TwisterStatus.NONE, "line", False, False),
+                ("invalid_type", False, TwisterStatus.NONE, "ERROR", True, False),
+                ("invalid_type", False, TwisterStatus.NONE, "COVERAGE_START", False, True),
+                ("invalid_type", False, TwisterStatus.NONE, "COVERAGE_END", False, False)]
 @pytest.mark.parametrize(
     "line_type, ordered_val, exp_state, line, exp_fault, exp_capture",
     TEST_DATA_4,
@@ -293,7 +292,7 @@ def test_console_handle(tmp_path, line_type, ordered_val, exp_state, line, exp_f
     console.patterns = [re.compile("pattern1"), re.compile("pattern2")]
     console.pattern = re.compile("pattern")
     console.patterns_expected = 0
-    console.status = HarnessStatus.NONE
+    console.status = TwisterStatus.NONE
     console.fail_on_fault = True
     console.FAULT = "ERROR"
     console.GCOV_START = "COVERAGE_START"
@@ -447,7 +446,7 @@ def test_pytest_run(tmp_path, caplog):
     # Act
     test_obj.pytest_run(timeout)
     # Assert
-    assert test_obj.status == HarnessStatus.FAIL
+    assert test_obj.status == TwisterStatus.FAIL
     assert exp_out in caplog.text
 
 
@@ -469,13 +468,13 @@ def test_get_harness(name):
     assert isinstance(harness_class, Test)
 
 
-TEST_DATA_7 = [("", "Running TESTSUITE suite_name", ['suite_name'], TestCaseStatus.NONE, True, HarnessStatus.NONE),
-            ("", "START - test_testcase", [], TestCaseStatus.STARTED, True, HarnessStatus.NONE),
-            ("", "PASS - test_example in 0 seconds", [], TestCaseStatus.PASS, True, HarnessStatus.NONE),
-            ("", "SKIP - test_example in 0 seconds", [], TestCaseStatus.SKIP, True, HarnessStatus.NONE),
-            ("", "FAIL - test_example in 0 seconds", [], TestCaseStatus.FAIL, True, HarnessStatus.NONE),
-            ("not a ztest and no state for  test_id", "START - test_testcase", [], TestCaseStatus.PASS, False, HarnessStatus.PASS),
-            ("not a ztest and no state for  test_id", "START - test_testcase", [], TestCaseStatus.FAIL, False, HarnessStatus.FAIL)]
+TEST_DATA_7 = [("", "Running TESTSUITE suite_name", ['suite_name'], TwisterStatus.NONE, True, TwisterStatus.NONE),
+            ("", "START - test_testcase", [], TwisterStatus.STARTED, True, TwisterStatus.NONE),
+            ("", "PASS - test_example in 0 seconds", [], TwisterStatus.PASS, True, TwisterStatus.NONE),
+            ("", "SKIP - test_example in 0 seconds", [], TwisterStatus.SKIP, True, TwisterStatus.NONE),
+            ("", "FAIL - test_example in 0 seconds", [], TwisterStatus.FAIL, True, TwisterStatus.NONE),
+            ("not a ztest and no state for  test_id", "START - test_testcase", [], TwisterStatus.PASS, False, TwisterStatus.PASS),
+            ("not a ztest and no state for  test_id", "START - test_testcase", [], TwisterStatus.FAIL, False, TwisterStatus.FAIL)]
 @pytest.mark.parametrize(
    "exp_out, line, exp_suite_name, exp_status, ztest, state",
    TEST_DATA_7,
@@ -539,7 +538,7 @@ def gtest(tmp_path):
 def test_gtest_start_test_no_suites_detected(gtest):
     process_logs(gtest, [SAMPLE_GTEST_START])
     assert len(gtest.detected_suite_names) == 0
-    assert gtest.status == HarnessStatus.NONE
+    assert gtest.status == TwisterStatus.NONE
 
 
 def test_gtest_start_test(gtest):
@@ -552,12 +551,12 @@ def test_gtest_start_test(gtest):
             ),
         ],
     )
-    assert gtest.status == HarnessStatus.NONE
+    assert gtest.status == TwisterStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
     assert gtest.instance.get_case_by_name("id.suite_name.test_name") is not None
     assert (
-        gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.STARTED
+        gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.STARTED
     )
 
 
@@ -574,11 +573,11 @@ def test_gtest_pass(gtest):
             ),
         ],
     )
-    assert gtest.status == HarnessStatus.NONE
+    assert gtest.status == TwisterStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.PASS
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.PASS
 
 
 def test_gtest_failed(gtest):
@@ -594,11 +593,11 @@ def test_gtest_failed(gtest):
             ),
         ],
     )
-    assert gtest.status == HarnessStatus.NONE
+    assert gtest.status == TwisterStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.FAIL
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.FAIL
 
 
 def test_gtest_skipped(gtest):
@@ -614,11 +613,11 @@ def test_gtest_skipped(gtest):
             ),
         ],
     )
-    assert gtest.status == HarnessStatus.NONE
+    assert gtest.status == TwisterStatus.NONE
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.SKIP
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.SKIP
 
 
 def test_gtest_all_pass(gtest):
@@ -635,11 +634,11 @@ def test_gtest_all_pass(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.status == HarnessStatus.PASS
+    assert gtest.status == TwisterStatus.PASS
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.PASS
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.PASS
 
 
 def test_gtest_one_skipped(gtest):
@@ -662,13 +661,13 @@ def test_gtest_one_skipped(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.status == HarnessStatus.PASS
+    assert gtest.status == TwisterStatus.PASS
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TestCaseStatus.PASS
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name1") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test_name1").status == TestCaseStatus.SKIP
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name").status == TwisterStatus.PASS
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name1") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test_name1").status == TwisterStatus.SKIP
 
 
 def test_gtest_one_fail(gtest):
@@ -691,13 +690,13 @@ def test_gtest_one_fail(gtest):
             SAMPLE_GTEST_END,
         ],
     )
-    assert gtest.status == HarnessStatus.FAIL
+    assert gtest.status == TwisterStatus.FAIL
     assert len(gtest.detected_suite_names) == 1
     assert gtest.detected_suite_names[0] == "suite_name"
-    assert gtest.instance.get_case_by_name("id.suite_name.test0") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test0").status == TestCaseStatus.PASS
-    assert gtest.instance.get_case_by_name("id.suite_name.test1") != TestCaseStatus.NONE
-    assert gtest.instance.get_case_by_name("id.suite_name.test1").status == TestCaseStatus.FAIL
+    assert gtest.instance.get_case_by_name("id.suite_name.test0") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test0").status == TwisterStatus.PASS
+    assert gtest.instance.get_case_by_name("id.suite_name.test1") != TwisterStatus.NONE
+    assert gtest.instance.get_case_by_name("id.suite_name.test1").status == TwisterStatus.FAIL
 
 
 def test_gtest_missing_result(gtest):

@@ -9,57 +9,24 @@ Status classes to be used instead of str statuses.
 from enum import Enum
 
 
-# Status Assignment tree:
-#   parent <- child <=> parent is assigned to child in code.
-#
-#   HarnessStatus
-#   └ QEMUOutputStatus
-#     └ TestInstanceStatus
-#       ├ TestSuiteStatus
-#       └ TestCaseStatus
-
-
-class TestInstanceStatus(str, Enum):
+class TwisterStatus(str, Enum):
     def __str__(self):
         return str(self.value)
 
-    # Values assigned directly
-    NONE = None  # to preserve old functionality
-    ERROR = 'error'
-    FAIL = 'failed'
-    FILTER = 'filtered'
-    PASS = 'passed'
-    SKIP = 'skipped'
-
-
-class TestSuiteStatus(str, Enum):
-    def __str__(self):
-        return str(self.value)
-
-    # Values assigned directly
-    NONE = None  # to preserve old functionality
-    FILTER = 'filtered'
-    PASS = 'passed'
-    SKIP = 'skipped'
-
-    # Values assigned via TestInstanceStatus
-    ERROR = 'error'
-    FAIL = 'failed'
-
-
-class TestCaseStatus(str, Enum):
-    def __str__(self):
-        return str(self.value)
-
-    # Values assigned directly
-    NONE = None  # to preserve old functionality
+    # All statuses below this comment can be used for TestCase
     BLOCK = 'blocked'
+    STARTED = 'started'
+
+    # All statuses below this comment can be used for TestSuite
+    # All statuses below this comment can be used for TestInstance
+    FILTER = 'filtered'
+
+    # All statuses below this comment can be used for Harness
+    NONE = None
     ERROR = 'error'
     FAIL = 'failed'
-    FILTER = 'filtered'
     PASS = 'passed'
     SKIP = 'skipped'
-    STARTED = 'started'
 
 
 class QEMUOutputStatus(str, Enum):
@@ -67,25 +34,13 @@ class QEMUOutputStatus(str, Enum):
         return str(self.value)
 
     # Values assigned directly
-    NONE = None  # to preserve old functionality
+    NONE = None
     BYTE = 'unexpected byte'
     EOF = 'unexpected eof'
     FAIL = 'failed'
     TIMEOUT = 'timeout'
 
-    # Values assigned via HarnessStatus
+    # Values assigned via Harness
     ERROR = 'error'
-    PASS = 'passed'
-    SKIP = 'skipped'
-
-
-class HarnessStatus(str, Enum):
-    def __str__(self):
-        return str(self.value)
-
-    # Values assigned directly
-    NONE = None  # to preserve old functionality
-    ERROR = 'error'
-    FAIL = 'failed'
     PASS = 'passed'
     SKIP = 'skipped'

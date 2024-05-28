@@ -11,12 +11,12 @@ import logging
 import contextlib
 import mmap
 import glob
-from typing import List, Union
+from typing import List
 
 from twisterlib.mixins import DisablePyTestCollectionMixin
 from twisterlib.environment import canonical_zephyr_base
 from twisterlib.error import TwisterException, TwisterRuntimeError
-from twisterlib.statuses import TestCaseStatus, TestInstanceStatus, TestSuiteStatus
+from twisterlib.statuses import TwisterStatus
 
 logger = logging.getLogger('twister')
 logger.setLevel(logging.DEBUG)
@@ -360,32 +360,25 @@ class TestCase(DisablePyTestCollectionMixin):
     def __init__(self, name=None, testsuite=None):
         self.duration = 0
         self.name = name
-        self._status = TestCaseStatus.NONE
+        self._status = TwisterStatus.NONE
         self.reason = None
         self.testsuite = testsuite
         self.output = ""
         self.freeform = False
 
     @property
-    def status(self) -> TestCaseStatus:
+    def status(self) -> TwisterStatus:
         return self._status
 
     @status.setter
-    def status(self, value : Union[TestCaseStatus, TestInstanceStatus]) -> None:
-        # Check for illegal assignments by type
-        allowed_types = [TestCaseStatus, TestInstanceStatus]
-        if not any([isinstance(value, t) for t in allowed_types]):
-            logger.warning(f'TestCase assigned status "{value}" of type {type(value)}'
-                           f' instead of any of allowed types: {allowed_types}.')
-
+    def status(self, value : TwisterStatus) -> None:
         # Check for illegal assignments by value
         try:
-            # We warn against str assignments, but we should handle them correctly
             key = value.name if isinstance(value, Enum) else value
-            self._status = TestCaseStatus[key]
+            self._status = TwisterStatus[key]
         except KeyError:
             logger.warning(f'TestCase assigned status "{value}"'
-                           f' without an equivalent in TestCaseStatus.'
+                           f' without an equivalent in TwisterStatus.'
                            f' Assignment was ignored.')
 
     def __lt__(self, other):
@@ -436,31 +429,24 @@ class TestSuite(DisablePyTestCollectionMixin):
 
         self.ztest_suite_names = []
 
-        self._status = TestSuiteStatus.NONE
+        self._status = TwisterStatus.NONE
 
         if data:
             self.load(data)
 
     @property
-    def status(self) -> TestSuiteStatus:
+    def status(self) -> TwisterStatus:
         return self._status
 
     @status.setter
-    def status(self, value : Union[TestSuiteStatus, TestInstanceStatus]) -> None:
-        # Check for illegal assignments by type
-        allowed_types = [TestSuiteStatus, TestInstanceStatus]
-        if not any([isinstance(value, t) for t in allowed_types]):
-            logger.warning(f'TestSuite assigned status "{value}" of type {type(value)}'
-                           f' instead of any of allowed types: {allowed_types}.')
-
+    def status(self, value : TwisterStatus) -> None:
         # Check for illegal assignments by value
         try:
-            # We warn against str assignments, but we should handle them correctly
             key = value.name if isinstance(value, Enum) else value
-            self._status = TestSuiteStatus[key]
+            self._status = TwisterStatus[key]
         except KeyError:
             logger.warning(f'TestSuite assigned status "{value}"'
-                           f' without an equivalent in TestSuiteStatus.'
+                           f' without an equivalent in TwisterStatus.'
                            f' Assignment was ignored.')
 
     def load(self, data):

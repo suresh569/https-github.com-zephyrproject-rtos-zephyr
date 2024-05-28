@@ -18,12 +18,7 @@ from twisterlib.testsuite import TestCase, TestSuite
 from twisterlib.platform import Platform
 from twisterlib.error import BuildError
 from twisterlib.size_calc import SizeCalculator
-from twisterlib.statuses import (
-    QEMUOutputStatus,
-    TestCaseStatus,
-    TestInstanceStatus,
-    TestSuiteStatus
-)
+from twisterlib.statuses import QEMUOutputStatus, TwisterStatus
 from twisterlib.handlers import (
     Handler,
     SimulationHandler,
@@ -54,7 +49,7 @@ class TestInstance:
         self.testsuite: TestSuite = testsuite
         self.platform: Platform = platform
 
-        self._status = TestInstanceStatus.NONE
+        self._status = TwisterStatus.NONE
         self.reason = "Unknown"
         self.metrics = dict()
         self.handler = None
@@ -99,30 +94,23 @@ class TestInstance:
                 cw.writerows(self.recording)
 
     @property
-    def status(self) -> TestInstanceStatus:
+    def status(self) -> TwisterStatus:
         return self._status
 
     @status.setter
-    def status(self, value : Union[TestInstanceStatus, TestSuiteStatus, QEMUOutputStatus]) -> None:
-        # Check for illegal assignments by type
-        allowed_types = [TestInstanceStatus, TestSuiteStatus, QEMUOutputStatus]
-        if not any([isinstance(value, t) for t in allowed_types]):
-            logger.warning(f'TestInstance assigned status "{value}" of type {type(value)}'
-                           f' instead of any of allowed types: {allowed_types}.')
-
+    def status(self, value : Union[TwisterStatus, QEMUOutputStatus]) -> None:
         # Check for illegal assignments by value
         try:
-            # We warn against str assignments, but we should handle them correctly
             key = value.name if isinstance(value, Enum) else value
-            self._status = TestInstanceStatus[key]
+            self._status = TwisterStatus[key]
         except KeyError:
             logger.warning(f'TestInstance assigned status "{value}"'
-                           f' without an equivalent in TestInstanceStatus.'
+                           f' without an equivalent in TwisterStatus.'
                            f' Assignment was ignored.')
 
     def add_filter(self, reason, filter_type):
         self.filters.append({'type': filter_type, 'reason': reason })
-        self.status = TestInstanceStatus.FILTER
+        self.status = TwisterStatus.FILTER
         self.reason = reason
         self.filter_type = filter_type
 
@@ -152,9 +140,9 @@ class TestInstance:
 
     def add_missing_case_status(self, status, reason=None):
         for case in self.testcases:
-            if case.status == TestCaseStatus.STARTED:
-                case.status = TestCaseStatus.FAIL
-            elif case.status == TestCaseStatus.NONE:
+            if case.status == TwisterStatus.STARTED:
+                case.status = TwisterStatus.FAIL
+            elif case.status == TwisterStatus.NONE:
                 case.status = status
                 if reason:
                     case.reason = reason
