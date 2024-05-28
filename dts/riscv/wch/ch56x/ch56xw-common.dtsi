@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2023-2024 Chen Xingyu <hi@xingrz.me>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <wch/ch56x/ch56x-common.dtsi>
+
+/ {
+	soc {
+		uart1: uart@40003400 {
+			compatible = "wch,ch5xx-uart";
+			reg = <0x40003400 0x400>;
+			interrupts = <30 16>;
+			clocks = <&hclk>;
+			status = "disabled";
+		};
+	};
+};
