@@ -186,6 +186,30 @@ The following variable are available for usage in CMake files:
 |                             |                 | ``VERSION_TWEAK``                                 |                  |
 +-----------------------------+-----------------+---------------------------------------------------+------------------+
 
+Automatic ``VERSION_TWEAK`` from git
+====================================
+
+If :kconfig:option:`CONFIG_APPLICATION_VERSION_TWEAK_FROM_GIT` is set, CMake
+will automatically determine the git commit hash of the application directory
+and set ``APP_TWEAK`` such that it matches the first 8 characters of the
+commit hash. For example:
+
+.. code-block::
+
+   # Current git commit hash
+   > git rev-parse HEAD
+   645e23bf9095825afbb38423cc60df9e87382ef0
+
+   # Generated version file
+   > cat app_version.h
+   ...
+   #define APP_TWEAK                    1683891135
+   ...
+
+   # APP_TWEAK is equivalent to hash
+   > printf "%08x" 1683891135
+   645e23bf
+
 Use in MCUboot-supported applications
 =====================================
 
