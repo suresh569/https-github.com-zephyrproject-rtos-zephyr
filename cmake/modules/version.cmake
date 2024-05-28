@@ -57,11 +57,16 @@ foreach(type file IN ZIP_LISTS VERSION_TYPE VERSION_FILE)
   string(REGEX MATCH "PATCHLEVEL = ([0-9]*)" _ ${ver})
   set(${type}_PATCHLEVEL ${CMAKE_MATCH_1})
 
-  string(REGEX MATCH "VERSION_TWEAK = ([0-9]*)" _ ${ver})
-  set(${type}_VERSION_TWEAK ${CMAKE_MATCH_1})
+  if(VERSION_TWEAK_OVERRIDE)
+    set(${type}_VERSION_TWEAK ${VERSION_TWEAK_OVERRIDE})
+  else()
+    string(REGEX MATCH "VERSION_TWEAK = ([0-9]*)" _ ${ver})
+    set(${type}_VERSION_TWEAK ${CMAKE_MATCH_1})
+  endif()
 
   string(REGEX MATCH "EXTRAVERSION = ([a-z0-9]*)" _ ${ver})
   set(${type}_VERSION_EXTRA ${CMAKE_MATCH_1})
+
 
   # Temporary convenience variables
   set(${type}_VERSION_WITHOUT_TWEAK ${${type}_VERSION_MAJOR}.${${type}_VERSION_MINOR}.${${type}_PATCHLEVEL})

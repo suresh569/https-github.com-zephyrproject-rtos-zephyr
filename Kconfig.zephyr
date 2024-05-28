@@ -846,6 +846,14 @@ config APPLICATION_DEFINED_SYSCALL
 	  Scan additional folders inside application source folder
 	  for application defined syscalls.
 
+config APPLICATION_VERSION_TWEAK_FROM_GIT
+	bool "Override the APP_TWEAK field with the git commit hash"
+	help
+	  Automatically determine the git commit hash of the application directory
+	  and set `APP_TWEAK` such that it matches the first 8 characters of
+	  the commit hash, converted to decimal. If this process fails for any
+	  reason, the value from VERSION is used.
+
 config MAKEFILE_EXPORTS
 	bool "Generate build metadata files named Makefile.exports"
 	help
