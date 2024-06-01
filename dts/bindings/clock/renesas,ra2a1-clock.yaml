@@ -1,0 +1,42 @@
+# Copyright (c) 2024 TOKITA Hiroshi
+# SPDX-License-Identifier: Apache-2.0
+
+description: Renesas RA2A1 Clock Generation Circuit
+
+compatible: "renesas,ra2a1-clock"
+
+include: [clock-controller.yaml, base.yaml]
+
+properties:
+  sysclock-source:
+    type: int
+    required: true
+  iclk-div:
+    type: int
+    required: true
+  pclkb-div:
+    type: int
+    required: true
+  pclkd-div:
+    type: int
+    required: true
+  fclk-div:
+    type: int
+    required: true
+  sdclk-out:
+    type: int
+    required: true
+
+  sdadcclk-source:
+    type: int
+    required: true
+  sdadcclk-div:
+    type: int
+    required: true
+
+  clkout-source:
+    type: int
+    required: true
+  clkout-div:
+    type: int
+    required: true
