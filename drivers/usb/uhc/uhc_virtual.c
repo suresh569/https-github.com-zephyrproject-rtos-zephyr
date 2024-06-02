@@ -449,9 +449,23 @@ static int uhc_vrt_enqueue(const struct device *dev,
 }
 
 static int uhc_vrt_dequeue(const struct device *dev,
-			    struct uhc_transfer *const xfer)
+			   struct uhc_transfer *const xfer)
 {
-	/* TODO */
+	struct uhc_data *data = dev->data;
+	struct uhc_transfer *tmp;
+	unsigned int key;
+
+	key = irq_lock();
+
+	SYS_DLIST_FOR_EACH_CONTAINER(&data->ctrl_xfers, tmp, node) {
+		if (xfer == tmp) {
+			LOG_DBG("Dequeue %p 0x%02x", xfer, xfer->ep);
+			tmp->err = -ECONNRESET;
+		}
+	}
+
+	irq_unlock(key);
+
 	return 0;
 }
 
