@@ -145,8 +145,9 @@ int main(void)
 	}
 #endif
 
+
 	/* Size to allocate for each buffer */
-	bsize = fmt.pitch * fmt.height;
+	bsize = fmt.pitch * fmt.height / caps.vbuf_per_frame;
 
 	/* Alloc video buffers and enqueue for capture */
 	for (i = 0; i < ARRAY_SIZE(buffers); i++) {
