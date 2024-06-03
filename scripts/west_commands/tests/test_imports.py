@@ -38,6 +38,7 @@ def test_runner_imports():
                     'nrfutil',
                     'nxp_s32dbg',
                     'openocd',
+                    'picorvd',
                     'pyocd',
                     'qemu',
                     'renode',
