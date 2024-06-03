@@ -313,7 +313,8 @@ static int video_stm32_dcmi_enqueue(const struct device *dev,
 		return -EINVAL;
 	}
 
-	vbuf->bytesused = data->pitch * data->height;
+	vbuf->bytesframe = vbuf->bytesused = data->pitch * data->height;
+	vbuf->flags = VIDEO_BUF_EOF;
 
 	k_fifo_put(&data->fifo_in, vbuf);
 
