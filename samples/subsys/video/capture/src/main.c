@@ -147,7 +147,12 @@ int main(void)
 
 
 	/* Size to allocate for each buffer */
-	bsize = fmt.pitch * fmt.height / caps.vbuf_per_frame;
+	if (caps.feature_flags & VIDEO_CAP_VARIABLE_VBUFS) {
+		/* Arbitrary buffer size supported, just use a KiB buffer */
+		bsize = 1024;
+	} else {
+		bsize = fmt.pitch * fmt.height / caps.vbuf_per_frame;
+	}
 
 	/* Alloc video buffers and enqueue for capture */
 	for (i = 0; i < ARRAY_SIZE(buffers); i++) {
