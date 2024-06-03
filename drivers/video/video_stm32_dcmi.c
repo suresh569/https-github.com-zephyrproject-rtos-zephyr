@@ -352,6 +352,7 @@ static int video_stm32_dcmi_get_caps(const struct device *dev,
 	}
 
 	caps->vbuf_per_frame = 1;
+	caps->feature_flags = 0;
 
 	/* Forward the message to the sensor device */
 	ret = video_get_caps(config->sensor_dev, ep, caps);

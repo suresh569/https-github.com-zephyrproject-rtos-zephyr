@@ -82,6 +82,17 @@ struct video_format_cap {
 };
 
 /**
+ * @name Video source feature flags
+ * @anchor VIDEO_CAPS
+ * @{
+ */
+
+/** Video source supports variably sized video buffers */
+#define VIDEO_CAP_VARIABLE_VBUFS BIT(0)
+
+/** @} */
+
+/**
  * @struct video_caps
  * @brief Video format capabilities
  *
@@ -100,6 +111,11 @@ struct video_caps {
 	 * into each vbuf
 	 */
 	uint8_t vbuf_per_frame;
+	/**
+	 * Feature flags for the video device. See @ref VIDEO_CAPS for all
+	 * supported feature flags
+	 */
+	uint8_t feature_flags;
 };
 
 /**
