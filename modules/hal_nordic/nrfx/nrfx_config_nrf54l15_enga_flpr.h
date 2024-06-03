@@ -1515,7 +1515,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_UARTE_CONFIG_RX_CACHE_ENABLED
-#define NRFX_UARTE_CONFIG_RX_CACHE_ENABLED 1
+#define NRFX_UARTE_CONFIG_RX_CACHE_ENABLED 0
 #endif
 
 /**
