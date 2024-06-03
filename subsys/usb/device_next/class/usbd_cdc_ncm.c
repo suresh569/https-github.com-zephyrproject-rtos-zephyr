@@ -506,8 +506,6 @@ static int _usbd_cdc_ncm_send_notification(const struct device *dev,
 	uint8_t ep;
 	int ret;
 
-	LOG_DBG("");
-
 	if (!atomic_test_bit(&data->state, CDC_NCM_CLASS_ENABLED)) {
 		LOG_INF("USB configuration is not enabled");
 		return 0;
@@ -701,7 +699,6 @@ static void usbd_cdc_ncm_suspended(struct usbd_class_data *const c_data)
 	const struct device *dev = usbd_class_get_private(c_data);
 	struct cdc_ncm_eth_data *data = dev->data;
 
-	LOG_DBG("");
 	atomic_set_bit(&data->state, CDC_NCM_CLASS_SUSPENDED);
 }   /* usbd_cdc_ncm_suspended */
 
@@ -715,7 +712,6 @@ static void usbd_cdc_ncm_resumed(struct usbd_class_data *const c_data)
 	const struct device *dev = usbd_class_get_private(c_data);
 	struct cdc_ncm_eth_data *data = dev->data;
 
-	LOG_DBG("");
 	atomic_clear_bit(&data->state, CDC_NCM_CLASS_SUSPENDED);
 }   /* usbd_cdc_ncm_resumed */
 
@@ -830,7 +826,6 @@ static void usbd_cdc_ncm_shutdown(struct usbd_class_data *const c_data)
 	struct cdc_ncm_eth_data *const data = dev->data;
 	struct usbd_cdc_ncm_desc *desc = data->desc;
 
-	LOG_DBG("");
 	desc->if0_ncm.iMACAddress = 0;
 	sys_dlist_remove(&data->mac_desc_data->node);
 }   /* usbd_cdc_ncm_shutdown */
@@ -944,7 +939,6 @@ static int cdc_ncm_set_config(const struct device *dev,
 {
 	struct cdc_ncm_eth_data *data = dev->data;
 
-	LOG_DBG("");
 	if (type == ETHERNET_CONFIG_TYPE_MAC_ADDRESS) {
 		memcpy(data->mac_addr, config->mac_address.addr,
 				sizeof(data->mac_addr));
@@ -964,7 +958,6 @@ static int cdc_ncm_get_config(const struct device *dev,
  * Get hardware specific configuration
  */
 {
-	LOG_DBG("");
 	return -ENOTSUP;
 }   /* cdc_ncm_get_config */
 
@@ -977,7 +970,6 @@ static enum ethernet_hw_caps cdc_ncm_get_capabilities(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
-	LOG_DBG("");
 	return ETHERNET_LINK_10BASE_T;
 }   /* cdc_ncm_get_capabilities */
 
