@@ -79,6 +79,7 @@ int main(void)
 	struct video_format fmt;
 	struct video_caps caps;
 	unsigned int frame = 0;
+	unsigned int framelen = 0;
 	size_t bsize;
 	int i = 0;
 	int err;
@@ -178,8 +179,20 @@ int main(void)
 			return 0;
 		}
 
-		printk("Got frame %u! size: %u; timestamp %u ms\n", frame++, vbuf->bytesused,
-		       vbuf->timestamp);
+		/* Account for this vbuf in the total frame length */
+		framelen += vbuf->bytesused;
+
+		if (vbuf->flags == VIDEO_BUF_EOF) {
+			if (framelen != vbuf->bytesframe) {
+				LOG_ERR("Total vbuf size %u does not match "
+					"frame size %u", framelen,
+					vbuf->bytesframe);
+				return 0;
+			}
+			printk("Got frame %u! size: %u; timestamp %u ms\n",
+			       frame++, vbuf->bytesframe, vbuf->timestamp);
+			framelen = 0;
+		}
 
 #if DT_HAS_CHOSEN(zephyr_display)
 		video_display_frame(display_dev, vbuf, fmt);
