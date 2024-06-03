@@ -981,7 +981,7 @@ static void hci_disconn_complete(struct net_buf *buf)
 #if defined(CONFIG_BT_CENTRAL) && !defined(CONFIG_BT_FILTER_ACCEPT_LIST)
 	if (atomic_test_bit(conn->flags, BT_CONN_AUTO_CONNECT)) {
 		bt_conn_set_state(conn, BT_CONN_SCAN_BEFORE_INITIATING);
-		bt_le_scan_update(false);
+		bt_le_scan_update_and_reconfigure(SCAN_UPDATE_REASON_NONE, BT_HCI_LE_SCAN_DISABLE);
 	}
 #endif /* defined(CONFIG_BT_CENTRAL) && !defined(CONFIG_BT_FILTER_ACCEPT_LIST) */
 
@@ -1394,7 +1394,8 @@ void bt_hci_le_enh_conn_complete(struct bt_hci_evt_le_enh_conn_complete *evt)
 		if (IS_ENABLED(CONFIG_BT_CENTRAL) &&
 		    evt->status == BT_HCI_ERR_UNKNOWN_CONN_ID) {
 			le_conn_complete_cancel(evt->status);
-			bt_le_scan_update(false);
+			bt_le_scan_update_and_reconfigure(SCAN_UPDATE_REASON_NONE,
+							  BT_HCI_LE_SCAN_DISABLE);
 			return;
 		}
 
@@ -1553,9 +1554,8 @@ void bt_hci_le_enh_conn_complete(struct bt_hci_evt_le_enh_conn_complete *evt)
 
 	bt_conn_unref(conn);
 
-	if (IS_ENABLED(CONFIG_BT_CENTRAL) &&
-	    conn->role == BT_HCI_ROLE_CENTRAL) {
-		bt_le_scan_update(false);
+	if (IS_ENABLED(CONFIG_BT_CENTRAL) && conn->role == BT_HCI_ROLE_CENTRAL) {
+		bt_le_scan_update_and_reconfigure(SCAN_UPDATE_REASON_NONE, BT_HCI_LE_SCAN_DISABLE);
 	}
 }
 
@@ -4090,7 +4090,7 @@ void bt_finalize_init(void)
 	atomic_set_bit(bt_dev.flags, BT_DEV_READY);
 
 	if (IS_ENABLED(CONFIG_BT_OBSERVER)) {
-		bt_le_scan_update(false);
+		bt_scan_reset();
 	}
 
 	bt_dev_show_info();

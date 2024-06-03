@@ -35,6 +35,7 @@
 #include "hci_core.h"
 #include "id.h"
 #include "adv.h"
+#include "scan.h"
 #include "conn_internal.h"
 #include "l2cap_internal.h"
 #include "keys.h"
@@ -1222,10 +1223,14 @@ void bt_conn_set_state(struct bt_conn *conn, bt_conn_state_t state)
 			 * the application through bt_conn_disconnect or by
 			 * timeout set by bt_conn_le_create_param.timeout.
 			 */
-			if (conn->err) {
-				notify_connected(conn);
+			if (IS_ENABLED(CONFIG_BT_CENTRAL)) {
+				bt_le_scan_update_and_reconfigure(
+					SCAN_ENABLED_REASON_SCAN_BEFORE_INITIATE,
+					BT_HCI_LE_SCAN_DISABLE);
+				if (conn->err) {
+					notify_connected(conn);
+				}
 			}
-
 			bt_conn_unref(conn);
 			break;
 		case BT_CONN_ADV_DIR_CONNECTABLE:
@@ -1645,7 +1650,8 @@ int bt_conn_disconnect(struct bt_conn *conn, uint8_t reason)
 		conn->err = reason;
 		bt_conn_set_state(conn, BT_CONN_DISCONNECTED);
 		if (IS_ENABLED(CONFIG_BT_CENTRAL)) {
-			bt_le_scan_update(false);
+			bt_le_scan_update_and_reconfigure(SCAN_ENABLED_REASON_SCAN_BEFORE_INITIATE,
+							  BT_HCI_LE_SCAN_ENABLE);
 		}
 		return 0;
 	case BT_CONN_INITIATING:
@@ -3222,8 +3228,7 @@ static int conn_le_create_common_checks(const bt_addr_le_t *peer,
 		return -EINVAL;
 	}
 
-	if (!BT_LE_STATES_SCAN_INIT(bt_dev.le.states) &&
-	    atomic_test_bit(bt_dev.flags, BT_DEV_EXPLICIT_SCAN)) {
+	if (!BT_LE_STATES_SCAN_INIT(bt_dev.le.states) && bt_le_explicit_scanner_running()) {
 		return -EAGAIN;
 	}
 
@@ -3288,7 +3293,8 @@ int bt_conn_le_create(const bt_addr_le_t *peer, const struct bt_conn_le_create_p
 		/* Use host-based identity resolving. */
 		bt_conn_set_state(conn, BT_CONN_SCAN_BEFORE_INITIATING);
 
-		err = bt_le_scan_update(true);
+		err = bt_le_scan_update_and_reconfigure(SCAN_ENABLED_REASON_SCAN_BEFORE_INITIATE,
+							BT_HCI_LE_SCAN_ENABLE);
 		if (err) {
 			bt_conn_set_state(conn, BT_CONN_DISCONNECTED);
 			bt_conn_unref(conn);
@@ -3309,7 +3315,7 @@ int bt_conn_le_create(const bt_addr_le_t *peer, const struct bt_conn_le_create_p
 		bt_conn_set_state(conn, BT_CONN_DISCONNECTED);
 		bt_conn_unref(conn);
 
-		bt_le_scan_update(false);
+		bt_le_scan_update_and_reconfigure(SCAN_UPDATE_REASON_NONE, BT_HCI_LE_SCAN_ENABLE);
 		return err;
 	}
 
@@ -3415,8 +3421,9 @@ int bt_le_set_auto_conn(const bt_addr_le_t *addr,
 	    atomic_test_bit(bt_dev.flags, BT_DEV_READY)) {
 		if (param) {
 			bt_conn_set_state(conn, BT_CONN_SCAN_BEFORE_INITIATING);
+			bt_le_scan_update_and_reconfigure(SCAN_ENABLED_REASON_SCAN_BEFORE_INITIATE,
+							  BT_HCI_LE_SCAN_ENABLE);
 		}
-		bt_le_scan_update(false);
 	}
 
 	bt_conn_unref(conn);
