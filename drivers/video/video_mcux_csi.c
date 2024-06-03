@@ -395,6 +395,7 @@ static int video_mcux_csi_get_caps(const struct device *dev, enum video_endpoint
 
 	/* NXP MCUX CSI request at least 2 buffer before starting */
 	caps->min_vbuf_count = 2;
+	caps->vbuf_per_frame = 1;
 
 	/* no source dev */
 	return err;

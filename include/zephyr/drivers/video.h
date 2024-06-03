@@ -94,6 +94,12 @@ struct video_caps {
 	 * the stream.
 	 */
 	uint8_t min_vbuf_count;
+	/** number of video buffers per frame. Video frames are
+	 * divided horizontally into buffers of equal size. Drivers may set this
+	 * value greater than 1 to indicate that they only stream part of a frame
+	 * into each vbuf
+	 */
+	uint8_t vbuf_per_frame;
 };
 
 /**

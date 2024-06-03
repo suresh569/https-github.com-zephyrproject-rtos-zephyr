@@ -226,6 +226,7 @@ static int video_sw_generator_get_caps(const struct device *dev, enum video_endp
 {
 	caps->format_caps = fmts;
 	caps->min_vbuf_count = 0;
+	caps->vbuf_per_frame = 1;
 
 	return 0;
 }
