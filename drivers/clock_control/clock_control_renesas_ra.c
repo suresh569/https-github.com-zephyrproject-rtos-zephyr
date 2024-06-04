@@ -4,14 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <string.h>
-
 #define DT_DRV_COMPAT renesas_ra_clock_generation_circuit
 
 #include <zephyr/drivers/clock_control.h>
-#include <zephyr/kernel.h>
-#include <soc.h>
 #include <zephyr/dt-bindings/clock/renesas-ra-cgc.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/math_extras.h>
 
 #if DT_SAME_NODE(DT_INST_PROP(0, clock_source), DT_PATH(clocks, pll))
 #define SYSCLK_SRC pll
@@ -53,7 +51,19 @@
 	(SCKDIVCR_BITS(iclk) | SCKDIVCR_BITS(pclka) | SCKDIVCR_BITS(pclkb) |                       \
 	 SCKDIVCR_BITS(pclkc) | SCKDIVCR_BITS(pclkd) | SCKDIVCR_BITS(bclk) | SCKDIVCR_BITS(fclk))
 
-#define HOCOWTCR_INIT_VALUE (6)
+#define SOMCR_INIT_VALUE DT_INST_ENUM_IDX(0, sosc_drive_mode)
+
+#define MOMCR_INIT_VALUE                                                                           \
+	((DT_INST_PROP(0, mosc_external) << 6) |                                                   \
+	 (!!(DT_PROP_OR(DT_PATH(clocks, mosc), clock_frequency, 0) < 10000000) << 3))
+
+#define MOSCWTCR_INIT_VALUE                                                                        \
+	(DT_INST_PROP(0, mosc_wait) == 2                                                           \
+		 ? 0                                                                               \
+		 : u32_count_trailing_zeros(DT_INST_PROP(0, mosc_wait) >> 9))
+
+#define HOCOWTCR_INIT_VALUE                                                                        \
+	((DT_PROP_OR(DT_PATH(clocks, hoco), clock_frequency, 0) >= 64000000) ? 6 : 5)
 
 /*
  * Required cycles for sub-clokc stabilizing.
@@ -111,6 +121,11 @@ static const uint32_t PRCR_CLOCKS = 0x1U;
 static const uint32_t PRCR_LOW_POWER = 0x2U;
 
 enum {
+	FCACHEE_OFFSET = 0x100,
+	FCACHEIV_OFFSET = 0x104,
+};
+
+enum {
 #if DT_INST_REG_SIZE_BY_NAME(0, mstp) == 16
 	MSTPCRA_OFFSET = -0x4,
 #else
@@ -131,9 +146,12 @@ enum {
 	OSCSF_OFFSET = 0x03C,
 	CKOCR_OFFSET = 0x03E,
 	OPCCR_OFFSET = 0x0A0,
+	MOSCWTCR_OFFSET = 0x0A2,
 	HOCOWTCR_OFFSET = 0x0A5,
 	PRCR_OFFSET = 0x3FE,
+	MOMCR_OFFSET = 0x413,
 	SOSCCR_OFFSET = 0x480,
+	SOMCR_OFFSET = 0x481,
 };
 
 enum {
@@ -157,6 +175,20 @@ static const int clock_freqs[] = {
 		     DT_PROP(DT_PATH(clocks, pll), clock_div)),
 		    (0)),
 };
+
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+
+static uint16_t FCACHE_read16(size_t offset)
+{
+	return sys_read16(DT_REG_ADDR_BY_NAME(DT_NODELABEL(fcu), fcache) + offset);
+}
+
+static void FCACHE_write16(size_t offset, uint16_t value)
+{
+	sys_write16(value, DT_REG_ADDR_BY_NAME(DT_NODELABEL(fcu), fcache) + offset);
+}
+
+#endif
 
 static uint32_t MSTP_read(size_t offset)
 {
@@ -219,7 +251,11 @@ static int clock_control_ra_get_rate(const struct device *dev, clock_control_sub
 
 	switch (clkid & 0xFFFFFF00) {
 	case RA_CLOCK_SCI(0):
+#if IS_ENABLED(CONFIG_CPU_CORTEX_M23)
+		*rate = FREQ_pclkb;
+#else
 		*rate = FREQ_pclka;
+#endif
 		break;
 	default:
 		return -EINVAL;
@@ -238,9 +274,14 @@ static void crude_busy_loop_impl(uint32_t cycles)
 {
 	__asm__ volatile(".align 8\n"
 			 "busy_loop:\n"
-			 "	sub	r0, r0, #1\n"
-			 "	cmp	r0, #0\n"
-			 "	bne.n	busy_loop\n");
+			 "	sub	%[cycles], %[cycles], #1\n"
+			 "	cmp	%[cycles], #0\n"
+#if IS_ENABLED(CONFIG_CPU_CORTEX_M23)
+			 "	bne	busy_loop\n"
+#else
+			 "	bne.n	busy_loop\n"
+#endif
+			 : [cycles] "+r"(cycles));
 }
 
 static inline void crude_busy_loop(uint32_t wait_us)
@@ -259,7 +300,20 @@ static int clock_control_ra_init(const struct device *dev)
 
 	SYSTEM_write16(PRCR_OFFSET, PRCR_KEY | PRCR_CLOCKS | PRCR_LOW_POWER);
 
-	if (clock_freqs[SCRSCK_hoco] == 64000000) {
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+	FCACHE_write16(FCACHEE_OFFSET, 0);
+#endif
+
+	if (IS_CLKSRC_ENABLED(sosc)) {
+		SYSTEM_write8(SOMCR_OFFSET, SOMCR_INIT_VALUE);
+	}
+
+	if (IS_CLKSRC_ENABLED(mosc)) {
+		SYSTEM_write8(MOMCR_OFFSET, MOMCR_INIT_VALUE);
+		SYSTEM_write8(MOSCWTCR_OFFSET, MOSCWTCR_INIT_VALUE);
+	}
+
+	if (IS_CLKSRC_ENABLED(hoco)) {
 		SYSTEM_write8(HOCOWTCR_OFFSET, HOCOWTCR_INIT_VALUE);
 	}
 
@@ -286,6 +340,8 @@ static int clock_control_ra_init(const struct device *dev)
 		}
 	}
 
+	SYSTEM_write8(MEMWAIT_OFFSET, 1);
+
 	SYSTEM_write32(SCKDIVCR_OFFSET, SCKDIVCR_INIT_VALUE);
 	SYSTEM_write8(SCKSCR_OFFSET, SCKSCR_INIT_VALUE);
 
@@ -298,7 +354,16 @@ static int clock_control_ra_init(const struct device *dev)
 		;
 	}
 
-	SYSTEM_write8(MEMWAIT_OFFSET, 1);
+#if DT_NODE_EXISTS(DT_NODELABEL(fcu))
+	FCACHE_write16(FCACHEIV_OFFSET, 1);
+
+	while (FCACHE_read16(FCACHEIV_OFFSET)) {
+		;
+	}
+
+	FCACHE_write16(FCACHEE_OFFSET, 1);
+#endif
+
 	SYSTEM_write16(PRCR_OFFSET, PRCR_KEY);
 
 	return 0;
