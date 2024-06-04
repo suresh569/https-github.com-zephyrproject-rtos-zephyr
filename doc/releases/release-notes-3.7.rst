@@ -176,6 +176,8 @@ Build system and Infrastructure
     choice to select the C Standard version. Additionally subsystems can select a minimum
     required C Standard version, with for example :kconfig:option:`CONFIG_REQUIRES_STD_C11`.
 
+  * Sysbuild snippet support has been added, these can be applied using ``-Dsysbuild_SNIPPET=x``.
+
 Drivers and Sensors
 *******************
 
