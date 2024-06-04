@@ -9,8 +9,8 @@
 
 int pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt, uintptr_t reg)
 {
-	R_PMISC->PWPRS = 0;
-	R_PMISC->PWPRS = BIT(R_PMISC_PWPR_PFSWE_Pos);
+	R_PMISC->PWPR = 0;
+	R_PMISC->PWPR = BIT(R_PMISC_PWPR_PFSWE_Pos);
 
 	for (uint8_t i = 0U; i < pin_cnt; i++) {
 		const pinctrl_soc_pin_t *pin = &pins[i];
@@ -30,8 +30,8 @@ int pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt, uintp
 		R_PFS->PORT[pin->port_num].PIN[pin->pin_num].PmnPFS = pin->cfg;
 	}
 
-	R_PMISC->PWPRS = 0;
-	R_PMISC->PWPRS = BIT(R_PMISC_PWPR_B0WI_Pos);
+	R_PMISC->PWPR = 0;
+	R_PMISC->PWPR = BIT(R_PMISC_PWPR_B0WI_Pos);
 
 	return 0;
 }

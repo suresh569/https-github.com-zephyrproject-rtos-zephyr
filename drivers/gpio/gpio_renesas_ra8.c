@@ -65,9 +65,6 @@ static int gpio_ra8_pin_configure(const struct device *dev, gpio_pin_t pin, gpio
 		R_SYSTEM->PRCR = ((R_SYSTEM->PRCR | PRCR_KEY) & (uint16_t)~R_SYSTEM_PRCR_PRC1_Msk);
 	}
 
-	R_PMISC->PWPRS = 0;
-	R_PMISC->PWPRS = BIT(R_PMISC_PWPR_PFSWE_Pos);
-
 	uint32_t value = R_PFS->PORT[config->port_num].PIN[pin].PmnPFS;
 
 	/* Change mode to general IO mode and disable IRQ and Analog input */
@@ -88,12 +85,12 @@ static int gpio_ra8_pin_configure(const struct device *dev, gpio_pin_t pin, gpio
 		WRITE_BIT(value, R_PFS_PORT_PIN_PmnPFS_PDR_Pos, 0);
 	}
 
-	R_PFS->PORT[config->port_num].PIN[pin].PmnPFS = value;
+	struct ra_pinctrl_soc_pin pincfg = { 0 };
+	pincfg.pin_num = pin;
+	pincfg.port_num = config->port_num;
+	pincfg.cfg = value;
 
-	R_PMISC->PWPRS = 0;
-	R_PMISC->PWPRS = BIT(R_PMISC_PWPR_B0WI_Pos);
-
-	return 0;
+	return pinctrl_configure_pins(&pincfg, 1, PINCTRL_REG_NONE);
 }
 
 static int gpio_ra8_port_get_raw(const struct device *dev, uint32_t *value)
