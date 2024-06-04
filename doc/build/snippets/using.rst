@@ -51,3 +51,13 @@ can be added to that application's ``CMakeLists.txt`` file. For example:
    endif()
 
    find_package(Zephyr ....)
+
+Sysbuild support
+****************
+
+Sysbuild can also have snippets applied to configure options, to apply a snippet to sysbuild it
+must be prefixed with the ``sysbuild_`` moniker. For example:
+
+.. code-block:: console
+
+   cmake -Sapp -Bbuild -Dsysbuild_SNIPPET="snippet1;snippet2" -DAPP_DIR=... [...] [path_to_zephyr/share/sysbuild]
