@@ -58,9 +58,8 @@ struct flash_pages_layout {
  */
 struct flash_parameters {
 	const size_t write_block_size;
-	/* Device capabilities. Only drivers are supposed to set the
-	 * capabilities directly, users need to call the FLASH_CAPS_
-	 * macros on pointer to flash_parameters to get capabilities.
+	/* User code should call flash_params_get_ functions on flash_parameters
+	 * to get capabilities, rather than accessing object contents directly.
 	 */
 	struct {
 		/* Device has no explicit erase, so it either erases on
@@ -324,7 +323,7 @@ __syscall int flash_fill(const struct device *dev, uint8_t val, off_t offset, si
  *  If device is explicit erase type device or device driver provides erase
  *  callback, the callback of the device is called, in which it behaves
  *  the same way as flash_erase.
- *  If a device is does not require explicit erase, either because
+ *  If a device does not require explicit erase, either because
  *  it has no erase at all or has auto-erase/erase-on-write,
  *  and does not provide erase callback then erase is emulated by
  *  leveling selected device memory area with erase_value assigned to
