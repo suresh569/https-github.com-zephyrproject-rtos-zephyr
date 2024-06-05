@@ -78,16 +78,15 @@ config SPI_NOR_FLASH_LAYOUT_PAGE_SIZE
 	  (32768), the sector size (4096), or any non-zero multiple of the
 	  sector size.
 
-config SPI_NOR_IDLE_IN_DPD
-	bool "Use Deep Power-Down mode when flash is not being accessed."
+config SPI_NOR_DEEP_POWER_DOWN_INACTIVITY_TIMEOUT_MS
+	int "Duration after the last flash operation to return to DPD mode"
+	depends on PM_DEVICE_RUNTIME
+	default 10
 	help
-	  Where supported deep power-down mode can reduce current draw
-	  to as little as 0.1% of standby current.  However it takes
-	  some milliseconds to enter and exit from this mode.
-
-	  Select this option for applications where device power
-	  management is not enabled, the flash remains inactive for
-	  long periods, and when used the impact of waiting for mode
-	  enter and exit delays is acceptable.
+	  Flash operations are often closely spaced in time, where transitioning
+	  between DPD and active mode for every transaction would cause significant
+	  performance overheads. Instead, the driver keeps the device in active
+	  mode for some short period after use in case there is a repeated flash API
+	  call.
 
 endif # SPI_NOR

@@ -301,6 +301,9 @@ Drivers and Sensors
 
 * Flash
 
+ * `CONFIG_SPI_NOR_IDLE_IN_DPD` has been removed. Users should transition to
+   :ref:`Device Runtime Power Management <pm-device-runtime-pm>`.
+
 * GNSS
 
 * GPIO
