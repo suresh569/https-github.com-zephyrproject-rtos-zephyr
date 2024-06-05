@@ -502,6 +502,11 @@ Libraries / Subsystems
     * Use the :c:func:`hawkbit_autohandler_set_delay` function to delay the next run of the
       autohandler.
 
+    * The hawkBit header file was separated into multiple header files. The main header file is now
+      ``<zephyr/mgmt/hawkbit/hawkbit.h>``, the autohandler header file is now
+      ``<zephyr/mgmt/hawkbit/autohandler.h>`` and the configuration header file is now
+      ``<zephyr/mgmt/hawkbit/config.h>``.
+
   * MCUmgr
 
     * Instructions for the deprecated mcumgr go tool have been removed, a list of alternative,
