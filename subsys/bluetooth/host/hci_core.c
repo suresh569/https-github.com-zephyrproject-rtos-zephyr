@@ -341,12 +341,13 @@ int bt_hci_cmd_send_sync(uint16_t opcode, struct net_buf *buf,
 	 */
 	err = k_sem_take(&sync_sem, HCI_CMD_TIMEOUT);
 	BT_ASSERT_MSG(err == 0,
-		      "Controller unresponsive, command opcode 0x%04x timeout with err %d",
-		      opcode, err);
+		      "Controller unresponsive, command opcode 0x%04x timeout with err "
+		      HCI_ERR_FMT,
+		      opcode, HCI_ERR(err));
 
 	status = cmd(buf)->status;
 	if (status) {
-		LOG_WRN("opcode 0x%04x status 0x%02x", opcode, status);
+		LOG_WRN("opcode 0x%04x status " HCI_ERR_FMT, opcode, HCI_ERR(status));
 		net_buf_unref(buf);
 
 		switch (status) {
@@ -866,7 +867,8 @@ static void hci_disconn_complete_prio(struct net_buf *buf)
 	uint16_t handle = sys_le16_to_cpu(evt->handle);
 	struct bt_conn *conn;
 
-	LOG_DBG("status 0x%02x handle %u reason 0x%02x", evt->status, handle, evt->reason);
+	LOG_DBG("status " HCI_ERR_FMT " handle %u reason " HCI_ERR_FMT,
+		HCI_ERR(evt->status), handle, HCI_ERR(evt->reason));
 
 	if (evt->status) {
 		return;

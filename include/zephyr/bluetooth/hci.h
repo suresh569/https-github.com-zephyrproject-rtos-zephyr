@@ -16,6 +16,14 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/hci_types.h>
 
+#ifdef CONFIG_BT_HCI_ERR_AS_STRING
+#define HCI_ERR_FMT "%s"
+#define HCI_ERR(err) bt_hci_err_to_str((err))
+#else
+#define HCI_ERR_FMT "0x%02x"
+#define HCI_ERR(err) err
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
