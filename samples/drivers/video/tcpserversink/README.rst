@@ -32,7 +32,7 @@ Building and Running
 For :ref:`mimxrt1064_evk`, build this sample application with the following commands:
 
 .. zephyr-app-commands::
-   :zephyr-app: samples/subsys/video/tcpserversink
+   :zephyr-app: samples/drivers/video/tcpserversink
    :board: mimxrt1064_evk
    :goals: build
    :compact:
