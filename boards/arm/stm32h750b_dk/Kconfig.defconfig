@@ -1,8 +1,12 @@
+# STM32H750B DK board configuration
+
 # Copyright (c) 2023 STMicroelectronics
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_STM32H750B_DK
-	select SOC_STM32H750XX
+if BOARD_STM32H750B_DK
+
+config BOARD
+	default "stm32h750b_dk"
 
 if DISPLAY
 
@@ -12,3 +16,5 @@ config MEMC
 	default y
 
 endif # DISPLAY
+
+endif # BOARD_STM32H750B_DK
