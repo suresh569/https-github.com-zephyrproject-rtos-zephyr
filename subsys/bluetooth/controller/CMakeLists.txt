@@ -176,7 +176,7 @@ zephyr_library_include_directories(
   )
 
 zephyr_library_include_directories_ifdef(
-  CONFIG_BT_CTLR_CRYPTO
+  CONFIG_BT_CRYPTO
   ../crypto
   )
 
