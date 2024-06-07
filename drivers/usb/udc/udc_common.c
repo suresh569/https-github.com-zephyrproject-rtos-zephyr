@@ -22,7 +22,70 @@ LOG_MODULE_REGISTER(udc, CONFIG_UDC_DRIVER_LOG_LEVEL);
 
 static inline void udc_buf_destroy(struct net_buf *buf);
 
-NET_BUF_POOL_VAR_DEFINE(udc_ep_pool,
+/*
+ * Here we try to get DMA-safe buffers, but we lack a consistent source of
+ * information about data cache properties, such as line cache size, and a
+ * consistent source of information about what part of memory is DMA'able. For
+ * testing, we simply assume that all available memory is DMA'able and use
+ * hardcoded alignment and granularity.
+ */
+#if CONFIG_UDC_DWC2
+/*
+ * These are appropriate values for nRF54H20, but may be different on other
+ * platforms.
+ */
+#define BUF_ALIGN		32U
+#define BUF_GRANULARITY		32U
+#else
+/* Defaults */
+#define BUF_ALIGN		4U
+#define BUF_GRANULARITY		4U
+#endif
+
+static uint8_t *udc_pool_data_alloc(struct net_buf *const buf, size_t *const size,
+				    k_timeout_t timeout)
+{
+	struct net_buf_pool *const buf_pool = net_buf_pool_get(buf->pool_id);
+	struct k_heap *const pool = buf_pool->alloc->alloc_data;
+	void *b;
+
+	*size = ROUND_UP(*size, BUF_GRANULARITY);
+	b = k_heap_aligned_alloc(pool, BUF_ALIGN, *size, timeout);
+	if (b == NULL) {
+		*size = 0;
+		return NULL;
+	}
+
+	return b;
+}
+
+static void udc_pool_data_unref(struct net_buf *buf, uint8_t *const data)
+{
+	struct net_buf_pool *buf_pool = net_buf_pool_get(buf->pool_id);
+	struct k_heap *pool = buf_pool->alloc->alloc_data;
+
+	k_heap_free(pool, data);
+}
+
+const struct net_buf_data_cb net_buf_dma_cb = {
+	.alloc = udc_pool_data_alloc,
+	.unref = udc_pool_data_unref,
+};
+
+#define NET_BUF_POOL_UDC_DEFINE(_name, _count, _data_size, _ud_size, _destroy) \
+	_NET_BUF_ARRAY_DEFINE(_name, _count, _ud_size);                        \
+	K_HEAP_DEFINE(net_buf_mem_pool_##_name, _data_size);                   \
+	static const struct net_buf_data_alloc net_buf_data_alloc_##_name = {  \
+		.cb = &net_buf_dma_cb,                                         \
+		.alloc_data = &net_buf_mem_pool_##_name,                       \
+		.max_alloc_size = 0,                                           \
+	};                                                                     \
+	static STRUCT_SECTION_ITERABLE(net_buf_pool, _name) =                  \
+		NET_BUF_POOL_INITIALIZER(_name, &net_buf_data_alloc_##_name,   \
+					 _net_buf_##_name, _count, _ud_size,   \
+					 _destroy)
+
+NET_BUF_POOL_UDC_DEFINE(udc_ep_pool,
 			CONFIG_UDC_BUF_COUNT, CONFIG_UDC_BUF_POOL_SIZE,
 			sizeof(struct udc_buf_info), udc_buf_destroy);
 

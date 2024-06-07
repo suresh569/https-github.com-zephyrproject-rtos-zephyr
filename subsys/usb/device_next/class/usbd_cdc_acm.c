@@ -31,9 +31,9 @@
 #endif
 LOG_MODULE_REGISTER(usbd_cdc_acm, CONFIG_USBD_CDC_ACM_LOG_LEVEL);
 
-NET_BUF_POOL_FIXED_DEFINE(cdc_acm_ep_pool,
-			  DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) * 2,
-			  512, sizeof(struct udc_buf_info), NULL);
+NET_BUF_POOL_USBD_DEFINE(cdc_acm_ep_pool,
+			 DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) * 2,
+			 512, sizeof(struct udc_buf_info), NULL);
 
 #define CDC_ACM_DEFAULT_LINECODING	{sys_cpu_to_le32(115200), 0, 0, 8}
 #define CDC_ACM_DEFAULT_INT_EP_MPS	16
