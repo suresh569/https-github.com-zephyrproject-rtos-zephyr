@@ -324,7 +324,11 @@ static int do_device_init(const struct init_entry *entry)
 		}
 	}
 
-	dev->state->initialized = true;
+	if (rc == 0) {
+		dev->state->status = DEVICE_INIT_STATUS_OK;
+	} else {
+		dev->state->status = DEVICE_INIT_STATUS_FAILED;
+	}
 
 	if (rc == 0) {
 		/* Run automatic device runtime enablement */
@@ -375,13 +379,27 @@ static void z_sys_init_run_level(enum init_level level)
 
 int z_impl_device_init(const struct device *dev)
 {
+	int ret;
+#ifdef CONFIG_DEVICE_NOTIFICATIONS
+	enum device_notification_type type;
+#endif
+
 	if (dev == NULL) {
 		return -ENOENT;
 	}
 
 	STRUCT_SECTION_FOREACH_ALTERNATE(_deferred_init, init_entry, entry) {
 		if (entry->dev == dev) {
-			return do_device_init(entry);
+			ret = do_device_init(entry);
+#ifdef CONFIG_DEVICE_NOTIFICATIONS
+			if (ret == 0) {
+				type = DEVICE_NOTIFICATION_DEFERRED_INIT;
+			} else {
+				type = DEVICE_NOTIFICATION_FAILURE;
+			}
+			device_notification_send(dev, type);
+#endif
+			return ret;
 		}
 	}
 

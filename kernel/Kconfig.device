@@ -26,6 +26,24 @@ config DEVICE_MUTABLE
 	  Support mutable devices. Mutable devices are instantiated in SRAM
 	  instead of Flash and are runtime modifiable in kernel mode.
 
+config DEVICE_NOTIFICATIONS
+	bool "Device notifications"
+	select ZBUS
+	help
+	  Enable device notifications. This allows application to be notified of
+	  changes in other devices. Uses Zbus for communication.
+
+config DEVICE_NOTIFICATIONS_PRIORITY
+	int "Device notifications priority"
+	default 6
+	help
+	  Priority of device notifications.
+
+config DEVICE_DEINIT
+	bool "Device deinitialization"
+	help
+	  Enable device deinitialization. This allows devices to be deinitialized
+	  and reinitialized at runtime.
 endmenu
 
 menu "Initialization Priorities"
