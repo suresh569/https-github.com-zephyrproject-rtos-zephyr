@@ -5,15 +5,14 @@
  */
 
 #include <zephyr.h>
-#include <drivers/flash.h>
-#include <device.h>
-#include <devicetree.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #if DT_NODE_HAS_STATUS(DT_INST(0, jedec_spi_nand), okay)
-#define FLASH_DEVICE DT_LABEL(DT_INST(0, jedec_spi_nand))
 #define FLASH_NAME "JEDEC SPI-NAND"
 #else
 #error Unsupported flash driver
@@ -27,17 +26,17 @@ void main(void)
 	static uint8_t expected[2048] = { 0 };
 	const size_t len = sizeof(expected);
 	static uint8_t buf[sizeof(expected)];
-	const struct device *flash_dev;
 	int rc;
 
 	printf("\n" FLASH_NAME " SPI NAND Flash testing\n");
 	printf("==========================\n");
 
-	flash_dev = device_get_binding(FLASH_DEVICE);
+	const struct device *flash_dev = DEVICE_DT_GET(DT_INST(0, jedec_spi_nand));
+
 
 	if (!flash_dev) {
 		printf("SPI NAND Flash driver %s was not found!\n",
-		       FLASH_DEVICE);
+		       flash_dev->name);
 		return;
 	}
 

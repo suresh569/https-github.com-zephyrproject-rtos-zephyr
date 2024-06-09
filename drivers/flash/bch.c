@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bch.h"
-#include <drivers/spi.h>
+#include <zephyr/drivers/spi.h>
 
 int find_last_set(int x)
 {
@@ -322,8 +322,8 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 	g = bch_alloc((bch->ecc_words + 1)  * sizeof(*g), &err);
 
 	if (err) {
-		free(g);
-		free(x);
+		K_free(g);
+		K_free(x);
 		bch_free(bch);
 		return NULL;
 	}
@@ -359,7 +359,7 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 		i++;
 	}
 
-	free(x);
+	K_free(x);
 	return g;
 }
 
@@ -420,7 +420,7 @@ struct bch_code *bch_init(int m, int t)
 	}
 
 	build_mod_tables(bch, genpoly);
-	free(genpoly);
+	K_free(genpoly);
 
 	if (err) {
 		bch_free(bch);
@@ -433,14 +433,14 @@ struct bch_code *bch_init(int m, int t)
 void bch_free(struct bch_code *bch)
 {
 	if (bch) {
-		free(bch->a_pow);
-		free(bch->a_log);
-		free(bch->mod_tab);
-		free(bch->ecc);
-		free(bch->syn);
-		free(bch->elp);
-		free(bch->buf);
-		free(bch->buf2);
-		free(bch);
+		K_free(bch->a_pow);
+		K_free(bch->a_log);
+		K_free(bch->mod_tab);
+		K_free(bch->ecc);
+		K_free(bch->syn);
+		K_free(bch->elp);
+		K_free(bch->buf);
+		K_free(bch->buf2);
+		K_free(bch);
 	}
 }

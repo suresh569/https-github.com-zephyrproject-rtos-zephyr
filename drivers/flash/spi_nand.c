@@ -7,11 +7,11 @@
 #define DT_DRV_COMPAT jedec_spi_nand
 
 #include <errno.h>
-#include <drivers/flash.h>
-#include <drivers/spi.h>
-#include <init.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/spi.h>
+#include <zephyr/init.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "spi_nand.h"
@@ -941,7 +941,7 @@ static int spi_nand_configure(const struct device *dev)
 	int rc;
 
 	/* Validate bus and CS is ready */
-	if (!spi_is_ready(&cfg->spi)) {
+	if (!spi_is_ready_dt(&cfg->spi)) {
 		return -ENODEV;
 	}
 

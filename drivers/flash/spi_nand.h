@@ -7,8 +7,8 @@
 #ifndef __SPI_NAND_H__
 #define __SPI_NAND_H__
 
-#include <sys/util.h>
-#include <sys/byteorder.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/byteorder.h>
 
 #define SPI_NAND_ID_LEN	2
 
