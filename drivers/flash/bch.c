@@ -322,8 +322,8 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 	g = bch_alloc((bch->ecc_words + 1)  * sizeof(*g), &err);
 
 	if (err) {
-		K_free(g);
-		K_free(x);
+		k_free(g);
+		k_free(x);
 		bch_free(bch);
 		return NULL;
 	}
@@ -359,7 +359,7 @@ static unsigned int *build_generator_poly(struct bch_code *bch)
 		i++;
 	}
 
-	K_free(x);
+	k_free(x);
 	return g;
 }
 
@@ -420,7 +420,7 @@ struct bch_code *bch_init(int m, int t)
 	}
 
 	build_mod_tables(bch, genpoly);
-	K_free(genpoly);
+	k_free(genpoly);
 
 	if (err) {
 		bch_free(bch);
@@ -433,14 +433,14 @@ struct bch_code *bch_init(int m, int t)
 void bch_free(struct bch_code *bch)
 {
 	if (bch) {
-		K_free(bch->a_pow);
-		K_free(bch->a_log);
-		K_free(bch->mod_tab);
-		K_free(bch->ecc);
-		K_free(bch->syn);
-		K_free(bch->elp);
-		K_free(bch->buf);
-		K_free(bch->buf2);
-		K_free(bch);
+		k_free(bch->a_pow);
+		k_free(bch->a_log);
+		k_free(bch->mod_tab);
+		k_free(bch->ecc);
+		k_free(bch->syn);
+		k_free(bch->elp);
+		k_free(bch->buf);
+		k_free(bch->buf2);
+		k_free(bch);
 	}
 }

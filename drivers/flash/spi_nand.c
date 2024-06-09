@@ -125,7 +125,7 @@ void bch_calculate_ecc(const struct device *dev,
 	bch_encode(data->nbc.bch, buf, (unsigned int *)code);
 }
 
-void bch_correct_data(const struct device *dev, 
+void bch_correct_data(const struct device *dev,
 		unsigned char *buf, unsigned char *read_ecc,
 		unsigned char *calc_ecc)
 {
@@ -184,7 +184,7 @@ static int spi_nand_access(const struct device *const dev,
 		} else if (access & NAND_ACCESS_8BIT_ADDR){
 			address_len = 1;
 		}
-		memcpy(&buf[1], &addr32.u8[3], address_len);
+		memcpy(&buf[1], &addr32.u8[4 - address_len], address_len);
 		spi_buf[0].len += address_len;
 	};
 
@@ -244,7 +244,7 @@ static void release_device(const struct device *dev)
 static int spi_nand_get_feature(const struct device *dev,
 				uint8_t feature_addr, uint8_t *val)
 {
-        int ret = spi_nand_access(dev, SPI_NAND_CMD_GET_FEATURE,
+    int ret = spi_nand_access(dev, SPI_NAND_CMD_GET_FEATURE,
 			NAND_ACCESS_ADDRESSED | NAND_ACCESS_8BIT_ADDR,
 			feature_addr, val, sizeof(*val));
 
@@ -254,7 +254,7 @@ static int spi_nand_get_feature(const struct device *dev,
 static int spi_nand_set_feature(const struct device *dev,
 				uint8_t feature_addr, uint8_t val)
 {
-        int ret = spi_nand_access(dev, SPI_NAND_CMD_SET_FEATURE,
+    int ret = spi_nand_access(dev, SPI_NAND_CMD_SET_FEATURE,
 			NAND_ACCESS_WRITE | NAND_ACCESS_ADDRESSED | NAND_ACCESS_8BIT_ADDR,
 			feature_addr, &val, sizeof(val));
 
@@ -332,8 +332,7 @@ static int spi_nand_conti_read_enable(const struct device *dev)
 		LOG_ERR("Enable continuous read failed: %d\n", secur_reg);
 	}
 
-out:
-	release_device(dev);
+out: release_device(dev);
 	return ret;
 }
 
@@ -367,8 +366,7 @@ static int spi_nand_conti_read_disable(const struct device *dev)
 		LOG_ERR("Disable continuous read failed: %d\n", secur_reg);
 	}
 
-out:
-	release_device(dev);
+out: release_device(dev);
 	return ret;
 }
 
@@ -405,13 +403,12 @@ static int spi_nand_read_cont(const struct device *dev, off_t addr, void *dest,
 
 	ret = spi_nand_conti_read_exit(dev);
 
-out:
-	release_device(dev);
+out: release_device(dev);
 
 	return ret;
 }
 
-static int spi_nand_read_normal(const struct device *dev, 
+static int spi_nand_read_normal(const struct device *dev,
 				off_t addr, void *dest, size_t size)
 {
 	struct spi_nand_data *data = dev->data;
@@ -425,7 +422,7 @@ static int spi_nand_read_normal(const struct device *dev,
 	while (size > 0) {
 		/* Read on _page_size_bytes boundaries (Default 2048 bytes a page) */
 		offset = addr % data->page_size;
-		chunk = (offset + size < data->page_size) ? 
+		chunk = (offset + size < data->page_size) ?
 			size : (data->page_size - offset);
 		read_bytes = chunk;
 
@@ -453,12 +450,12 @@ static int spi_nand_read_normal(const struct device *dev,
 		size -= chunk;
 	}
 
-out:	release_device(dev);
+out: release_device(dev);
 
 	return ret;
 }
 
-static int spi_nand_read_software_ecc(const struct device *dev, 
+static int spi_nand_read_software_ecc(const struct device *dev,
 			off_t addr, void *dest, size_t size)
 {
 	struct spi_nand_data *data = dev->data;
@@ -474,7 +471,7 @@ static int spi_nand_read_software_ecc(const struct device *dev,
 	while (size > 0) {
 		/* Read on _page_size_bytes boundaries (Default 2048 bytes a page) */
 		offset = addr % data->page_size;
-		chunk = (offset + size < data->page_size) ? 
+		chunk = (offset + size < data->page_size) ?
 			size : (data->page_size - offset);
 		read_bytes = chunk;
 
@@ -509,7 +506,7 @@ static int spi_nand_read_software_ecc(const struct device *dev,
 			int ret = bch_decode(data->nbc.bch, data->nbc.bch->input_data, (unsigned int *)(data->ecc_code + i));
 			if (ret < 0) {
 				LOG_ERR("Reading data failed");
-				return -ENODEV;
+				goto out;
 			}
 			memcpy(p, data->nbc.bch->input_data + data->ecc_bytes, data->ecc_size);
 		}
@@ -522,7 +519,7 @@ static int spi_nand_read_software_ecc(const struct device *dev,
 		size -= chunk;
 	}
 
-out:	release_device(dev);
+out: release_device(dev);
 
 	return ret;
 }
@@ -557,7 +554,7 @@ static int spi_nand_write(const struct device *dev, off_t addr,
 	uint32_t written_bytes = 0;
 
 	/* address must be sub-page-aligned */
-	if (!(addr & (SPI_NAND_SUB_PAGE_SIZE - 1)) && (addr != 0)) {
+	if (addr & (SPI_NAND_SUB_PAGE_SIZE - 1)) {
 		return -EINVAL;
 	}
 
@@ -591,7 +588,9 @@ static int spi_nand_write(const struct device *dev, off_t addr,
 
 			if (size < data->page_size) {
 				LOG_ERR("Write failed");
-				return -EINVAL;
+				ret = -EINVAL;
+				goto out;
+
 			}
 
 			/* prepare data */
@@ -619,7 +618,7 @@ static int spi_nand_write(const struct device *dev, off_t addr,
 			}
 		}
 
-		ret = spi_nand_access(dev, SPI_NAND_CMD_PROGRAM_EXEC, 
+		ret = spi_nand_access(dev, SPI_NAND_CMD_PROGRAM_EXEC,
 			NAND_ACCESS_WRITE | NAND_ACCESS_ADDRESSED | NAND_ACCESS_24BIT_ADDR,
 			addr >> data->page_shift, NULL, 0);
 		if (ret != 0) {
@@ -634,7 +633,7 @@ static int spi_nand_write(const struct device *dev, off_t addr,
 		ret = spi_nand_wait_until_ready(dev);
 	}
 
-out:	release_device(dev);
+out: release_device(dev);
 	return ret;
 }
 
@@ -676,7 +675,7 @@ static int spi_nand_erase(const struct device *dev, off_t addr, size_t size)
 		}
 	}
 
-out:	release_device(dev);
+out: release_device(dev);
 
 	return ret;
 }
@@ -692,7 +691,7 @@ static int spi_nand_check_id(const struct device *dev)
 
 	acquire_device(dev);
 
-        int ret = spi_nand_access(dev, SPI_NAND_CMD_RDID, NAND_ACCESS_DUMMY,
+    int ret = spi_nand_access(dev, SPI_NAND_CMD_RDID, NAND_ACCESS_DUMMY,
 			0, read_id, SPI_NAND_ID_LEN);
 
 	release_device(dev);
@@ -700,7 +699,7 @@ static int spi_nand_check_id(const struct device *dev)
 	if (memcmp(expected_id, read_id, sizeof(read_id)) != 0) {
 		LOG_ERR("Wrong ID: %02X %02X , "
 			"expected: %02X %02X ",
-			read_id[0], read_id[1], 
+			read_id[0], read_id[1],
 			expected_id[0], expected_id[1]);
 		return -ENODEV;
 	}
@@ -816,9 +815,10 @@ static int spi_nand_read_otp_onfi(const struct device *dev)
 
 	if (!(secur_reg & SPINAND_SECURE_BIT_OTP_EN)) {
 		LOG_ERR("Enable OTP failed: %d\n", secur_reg);
+		ret = -EINVAL;
 	}
 
-out0:	release_device(dev);
+out0: release_device(dev);
 	if (ret != 0) {
 		return ret;
 	}
@@ -829,7 +829,7 @@ out0:	release_device(dev);
 		return ret;
 	}
 
-	if (onfi_table[0] == 'O' && onfi_table[1] == 'N'  
+	if (onfi_table[0] == 'O' && onfi_table[1] == 'N'
 		&& onfi_table[2] == 'F' && onfi_table[3] == 'I') {
 		LOG_ERR("ONFI table found\n");
 		data->page_size = onfi_table[80] + (onfi_table[81] << 8) + (onfi_table[82] << 16);
@@ -865,7 +865,7 @@ out0:	release_device(dev);
 			acquire_device(dev);
 
 			secur_reg |= SPINAND_SECURE_BIT_ECC_EN;
-			ret = spi_nand_set_feature(dev, 
+			ret = spi_nand_set_feature(dev,
 				SPI_NAND_FEA_ADDR_CONF_B0, secur_reg);
 			if (ret != 0) {
 				LOG_ERR("set feature failed: %d", ret);
@@ -920,9 +920,10 @@ out0:	release_device(dev);
 
 	if (secur_reg & SPINAND_SECURE_BIT_OTP_EN) {
 		LOG_ERR("Disable OTP failed: %d\n", secur_reg);
+		ret = -EINVAL;
 	}
 
-out1:	release_device(dev);
+out1: release_device(dev);
 	return ret;
 }
 
@@ -955,19 +956,26 @@ static int spi_nand_configure(const struct device *dev)
 	acquire_device(dev);
 
 	rc = spi_nand_get_feature(dev, SPI_NAND_FEA_ADDR_BLOCK_PROT, &reg);
-		
+
+	if (rc != 0) {
+		LOG_ERR("get feature failed: %d", rc);
+		goto out;
+	}
+
 	/* Only clear if GET_FEATURE worked and something's set. */
 	if (reg & SPINAND_BLOCK_PROT_BIT_BP_MASK) {
 		reg = 0;
 		rc = spi_nand_set_feature(dev, SPI_NAND_FEA_ADDR_BLOCK_PROT, reg);
+		if (rc != 0) {
+		    LOG_ERR("set feature failed: %d", rc);
+	    }
 	}
+
+out: release_device(dev);
 
 	if (rc != 0) {
-		LOG_ERR("BP clear failed: %d\n", rc);
-		return -ENODEV;
+		return rc;
 	}
-
-	release_device(dev);
 
 	rc = spi_nand_read_otp_onfi(dev);
 	if (rc != 0) {

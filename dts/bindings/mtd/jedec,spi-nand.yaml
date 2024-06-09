@@ -8,7 +8,6 @@ description: |
 
         mx31lf1ge4bc: spi-nand-flash@0 {
                 compatible = "jedec,spi-nand";
-                label = "MX31LF1GE4BC";
                 reg = <0>;
                 spi-max-frequency = <80000000>;
                 size = <0x4000000>;
@@ -28,8 +27,6 @@ properties:
       type: int
       required: true
       description: Maximum clock frequency of device's SPI interface in Hz
-    label:
-      required: true
     size:
       type: int
       required: true

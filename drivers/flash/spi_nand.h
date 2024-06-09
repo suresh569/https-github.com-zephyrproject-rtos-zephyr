@@ -80,10 +80,10 @@
 #define SPI_NAND_CMD_PROGRAM_EXEC    0x10    /* Execute program */
 #define SPI_NAND_CMD_BE              0xD8    /* Block erase */
 
-#define SPI_NAND_CMD_GET_FEATURE     0x0F    
-#define SPI_NAND_CMD_SET_FEATURE     0x1F  
-#define SPI_NAND_CMD_RESET           0xFF    
-#define SPI_NAND_CMD_ECC_STAT_READ   0x7C  
+#define SPI_NAND_CMD_GET_FEATURE     0x0F
+#define SPI_NAND_CMD_SET_FEATURE     0x1F
+#define SPI_NAND_CMD_RESET           0xFF
+#define SPI_NAND_CMD_ECC_STAT_READ   0x7C
 
 /* Page, sector, and block size are standard, not configurable. */
 #define SPI_NAND_PAGE_SIZE    2048
