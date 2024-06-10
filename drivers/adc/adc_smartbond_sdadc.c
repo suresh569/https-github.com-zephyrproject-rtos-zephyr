@@ -119,9 +119,7 @@ static inline void sdadc_smartbond_pm_policy_state_lock_get(const struct device 
 					      struct sdadc_smartbond_data *data)
 {
 #if defined(CONFIG_PM_DEVICE)
-#if defined(CONFIG_PM_DEVICE_RUNTIME)
 	pm_device_runtime_get(dev);
-#endif
 
 	if (!atomic_test_and_set_bit(data->pm_policy_state_flag, 0)) {
 		/*
@@ -136,9 +134,7 @@ static inline void sdadc_smartbond_pm_policy_state_lock_put(const struct device 
 					      struct sdadc_smartbond_data *data)
 {
 #if defined(CONFIG_PM_DEVICE)
-#if defined(CONFIG_PM_DEVICE_RUNTIME)
 	pm_device_runtime_put(dev);
-#endif
 
 	if (atomic_test_and_clear_bit(data->pm_policy_state_flag, 0)) {
 		/*
