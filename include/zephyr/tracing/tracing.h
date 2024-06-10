@@ -2324,6 +2324,24 @@
 
 /** @} */ /* end of subsys_tracing_apis_socket */
 
+/**
+ * @brief User Custom Tracing APIs
+ * @defgroup subsys_tracing_apis_user User custom tracing APIs
+ * @{
+ */
+
+/*
+ * @brief Called by user to generate custom events
+ *
+ * @param name name of event. Tracing subsystems may place a limit on
+ * the length of this string
+ * @param arg0 arbitrary user-provided data for this event
+ * @param arg1 arbitrary user-provided data for this event
+ */
+#define sys_trace_user_event(name, arg0, arg1)
+
+/** @} */ /* end of subsys_tracing_apis_user */
+
 #if defined(CONFIG_PERCEPIO_TRACERECORDER)
 #include "tracing_tracerecorder.h"
 #else
