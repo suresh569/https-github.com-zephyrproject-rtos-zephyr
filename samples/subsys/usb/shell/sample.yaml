@@ -9,7 +9,7 @@ tests:
     depends_on: usb_device
     harness: keyboard
     tags: usb
-  sample.usbh.shell:
+  sample.usbd.usbh.shell:
     depends_on: usb_device
     tags:
       - usb

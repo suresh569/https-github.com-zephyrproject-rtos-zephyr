@@ -35,6 +35,7 @@
 			interrupts = <101 0>, <98 0>, <99 0>;
 			interrupt-names = "otgfs", "ep1_out", "ep1_in";
 			num-bidir-endpoints = <9>;
+			num-host-channels = <16>;
 			ram-size = <4096>;
 			maximum-speed = "full-speed";
 			clocks = <&rcc STM32_CLOCK_BUS_AHB1 0x08000000>,

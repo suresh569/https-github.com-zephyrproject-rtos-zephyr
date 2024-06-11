@@ -18,7 +18,7 @@ Assuming the board has a supported USB device controller, the example can be
 built like:
 
 .. zephyr-app-commands::
-   :zephyr-app: samples/subsys/usb/shell
+   :zephyr-app: samples/subsys/usb/shell/device_next
    :board: reel_board
    :goals: flash
    :compact:
@@ -27,7 +27,7 @@ For the USB host functionality a supported host controller is required,
 currently it is only MAX3421E. The example can be built as follows:
 
 .. zephyr-app-commands::
-   :zephyr-app: samples/subsys/usb/shell
+   :zephyr-app: samples/subsys/usb/shell/device_next
    :board: nrf52840dk/nrf52840
    :shield: sparkfun_max3421e
    :gen-args: -DCONFIG_UHC_DRIVER=y -DCONFIG_USB_HOST_STACK=y
@@ -39,7 +39,7 @@ for all platforms, eventually the devicetree overlay has to be adjusted slightly
 the platform has already defined or not `zephyr_uhc0` or `zephyr_udc0` nodelabels.
 
 .. zephyr-app-commands::
-   :zephyr-app: samples/subsys/usb/shell
+   :zephyr-app: samples/subsys/usb/shell/device_next
    :board: nrf52840dk/nrf52840
    :gen-args: -DEXTRA_CONF_FILE=virtual.conf -DDTC_OVERLAY_FILE=virtual.overlay
    :goals: flash

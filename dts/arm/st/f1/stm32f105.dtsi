@@ -143,6 +143,7 @@
 			interrupts = <67 0>;
 			interrupt-names = "otgfs";
 			num-bidir-endpoints = <4>;
+			num-host-channels = <8>;
 			ram-size = <1280>;
 			clocks = <&rcc STM32_CLOCK_BUS_AHB1 0x00001000>;
 			phys = <&otgfs_phy>;
