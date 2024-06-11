@@ -515,19 +515,30 @@ test_i2c_iis2iclx: iis2iclx@4c {
 	odr = <IIS2ICLX_DT_ODR_833Hz>;
 };
 
-test_i2c_wsen_hids: wsen_hids@4d {
-	compatible = "we,wsen-hids";
+test_i2c_wsen_hids_2525020210001: wsen_hids_2525020210001@4d {
+	compatible = "we,wsen-hids-2525020210001";
 	reg = <0x4d>;
 	drdy-gpios = <&test_gpio 0 0>;
 	odr = "1";
 };
 
-test_i2c_itds: itds@4e {
-	compatible = "we,wsen-itds";
+test_i2c_itds_2533020201601: wsen_itds_2533020201601@4e {
+	compatible = "we,wsen-itds-2533020201601";
 	reg = <0x4e>;
-	int-gpios = <&test_gpio 0 0>;
-	odr = "800";
+	events-interrupt-gpios = <&test_gpio 0 0>;
+	drdy-interrupt-gpios = <&test_gpio 0 0>;
+	odr = "400";
+	tap-threshold = <0>, <0>, <6>;
+	tap-latency = < 5 >;
+	tap-shock = < 2 >;
+	tap-quiet = < 1 >;
+	tap-mode = < 1 >;
+	freefall-duration = < 6 >;
+	freefall-threshold = < 10 >;
+	delta-duration = < 1 >;
+	delta-threshold = < 4 >;
 	op-mode = "high-perf";
+	power-mode = "normal";
 };
 
 test_i2c_max17055: max17055@4f {
@@ -662,13 +673,11 @@ test_i2c_akm09918c: akm09918c@5f {
 	reg = <0x5f>;
 };
 
-test_i2c_wsen_tids: wsen_tids@60 {
-	compatible = "we,wsen-tids";
+test_i2c_wsen_tids_2521020222501: wsen_tids_2521020222501@60 {
+	compatible = "we,wsen-tids-2521020222501";
 	reg = <0x60>;
-	int-gpios = <&test_gpio 0 0>;
+	interrupt-gpios = <&test_gpio 0 0>;
 	odr = <25>;
-	temp-high-threshold = <0>;
-	temp-low-threshold = <0>;
 };
 
 test_i2c_vl53l1x: vl53l1x@61 {
@@ -692,11 +701,11 @@ test_i2c_tmd2620: tmd2620@62 {
 	wait-time-factor = <0>;
 };
 
-test_i2c_wsen_pads: wsen_pads@63 {
-	compatible = "we,wsen-pads";
+test_i2c_wsen_pads_2511020213301: wsen_pads_2511020213301@63 {
+	compatible = "we,wsen-pads-2511020213301";
 	reg = <0x63>;
-	drdy-gpios = <&test_gpio 0 0>;
-	odr = <1>;
+	interrupt-gpios = <&test_gpio 0 0>;
+	odr = <10>;
 };
 
 test_i2c_s11059: s11059@64 {
@@ -705,10 +714,10 @@ test_i2c_s11059: s11059@64 {
 	integration-time = <546000>;
 };
 
-test_i2c_wsen_pdus: wsen_pdus@65 {
-	compatible = "we,wsen-pdus";
+test_i2c_wsen_pdus_25131308XXXXX: wsen_pdus_25131308XXXXX@65 {
+	compatible = "we,wsen-pdus-25131308XXXXX";
 	reg = <0x65>;
-	sensor-type = <3>;
+	sensor-type = < 4 >;
 };
 
 test_i2c_veml7700: veml7700@66 {
@@ -1048,4 +1057,25 @@ test_i2c_ina226: ina226@8d {
 	reg = <0x8d>;
 	current-lsb-microamps = <5000>;
 	rshunt-micro-ohms = <500>;
+};
+
+test_i2c_wsen_hids_2525020210002: wsen_hids_2525020210002@8e {
+	compatible = "we,wsen-hids-2525020210002";
+	reg = <0x8e>;
+	precision = "High";
+};
+
+test_i2c_wsen_isds_2536030320001: wsen_isds_2536030320001@8f {
+	compatible = "we,wsen-isds-2536030320001";
+	reg = <0x8f>;
+	accel-odr = "416";
+	gyro-odr = "416";
+	tap-threshold = < 9 >;
+	tap-latency = < 5 >;
+	tap-shock = < 2 >;
+	tap-quiet = < 1 >;
+	tap-mode = < 1 >;
+	tap-axis-enable = < 0 0 1 >;
+	events-interrupt-gpios = <&test_gpio 0 0>;
+	drdy-interrupt-gpios = <&test_gpio 0 0>;
 };
