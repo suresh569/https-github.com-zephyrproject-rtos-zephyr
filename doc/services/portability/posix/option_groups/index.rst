@@ -895,7 +895,7 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     :header: API, Supported
     :widths: 50,10
 
-    asctime_r(),
+    asctime_r(), yes
     ctime_r(),
     flockfile(),
     ftrylockfile(),

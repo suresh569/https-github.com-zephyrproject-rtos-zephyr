@@ -51,6 +51,8 @@ typedef _SUSECONDS_T_ suseconds_t;
 struct tm *gmtime(const time_t *timep);
 struct tm *gmtime_r(const time_t *ZRESTRICT timep,
 		    struct tm *ZRESTRICT result);
+char *asctime(const struct tm *timeptr);
+char *asctime_r(const struct tm *ZRESTRICT tp, char *ZRESTRICT buf);
 
 time_t time(time_t *tloc);
 
