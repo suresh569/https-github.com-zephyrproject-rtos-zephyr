@@ -64,6 +64,11 @@ void bt_cap_common_set_subproc(enum bt_cap_common_subproc_type subproc_type)
 	active_proc.subproc_type = subproc_type;
 }
 
+bool bt_cap_common_proc_is_type(enum bt_cap_common_proc_type proc_type)
+{
+	return active_proc.proc_type == proc_type;
+}
+
 bool bt_cap_common_subproc_is_type(enum bt_cap_common_subproc_type subproc_type)
 {
 	return active_proc.subproc_type == subproc_type;
