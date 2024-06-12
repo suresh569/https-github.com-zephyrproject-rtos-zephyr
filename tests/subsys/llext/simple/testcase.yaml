@@ -52,7 +52,7 @@ tests:
     arch_exclude: arm arm64
     filter: not CONFIG_MPU and not CONFIG_MMU
     integration_platforms:
-      - qemu_xtensa
+      - qemu_xtensa/dc233c
     extra_configs:
       - CONFIG_MODULES=y
       - CONFIG_LLEXT_STORAGE_WRITABLE=y
@@ -117,7 +117,7 @@ tests:
     arch_exclude: arm arm64
     filter: not CONFIG_MPU and not CONFIG_MMU
     integration_platforms:
-      - qemu_xtensa
+      - qemu_xtensa/dc233c
     extra_configs:
       - CONFIG_MODULES=y
       - CONFIG_LLEXT_STORAGE_WRITABLE=y
