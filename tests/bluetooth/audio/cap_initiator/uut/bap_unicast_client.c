@@ -184,18 +184,86 @@ int bt_bap_unicast_client_start(struct bt_bap_stream *stream)
 
 int bt_bap_unicast_client_disable(struct bt_bap_stream *stream)
 {
-	zassert_unreachable("Unexpected call to '%s()' occurred", __func__);
+	if (stream == NULL || stream->ep == NULL) {
+		return -EINVAL;
+	}
+
+	switch (stream->ep->status.state) {
+	case BT_BAP_EP_STATE_ENABLING:
+	case BT_BAP_EP_STATE_STREAMING:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	/* Even though the ASCS spec does not have the disabling state for sink ASEs, the unicast
+	 * client implementation fakes the behavior of it and always calls the disabled callback
+	 * when leaving the streaming state in a non-release manner
+	 */
+	stream->ep->status.state = BT_BAP_EP_STATE_DISABLING;
+
+	if (stream->ops != NULL && stream->ops->disabled != NULL) {
+		stream->ops->disabled(stream);
+	}
+
+	/* Disabled sink ASEs go directly to the QoS configured state */
+	if (stream->ep->dir == BT_AUDIO_DIR_SINK) {
+		stream->ep->status.state = BT_BAP_EP_STATE_QOS_CONFIGURED;
+
+		if (stream->ops != NULL && stream->ops->qos_set != NULL) {
+			stream->ops->qos_set(stream);
+		}
+	}
+
 	return 0;
 }
 
 int bt_bap_unicast_client_stop(struct bt_bap_stream *stream)
 {
-	zassert_unreachable("Unexpected call to '%s()' occurred", __func__);
+	/* As per the ASCS spec, only source streams can be started by the client */
+	if (stream == NULL || stream->ep == NULL || stream->ep->dir == BT_AUDIO_DIR_SINK) {
+		return -EINVAL;
+	}
+
+	switch (stream->ep->status.state) {
+	case BT_BAP_EP_STATE_DISABLING:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	stream->ep->status.state = BT_BAP_EP_STATE_QOS_CONFIGURED;
+
+	if (stream->ops != NULL && stream->ops->qos_set != NULL) {
+		stream->ops->qos_set(stream);
+	}
+
 	return 0;
 }
 
 int bt_bap_unicast_client_release(struct bt_bap_stream *stream)
 {
-	zassert_unreachable("Unexpected call to '%s()' occurred", __func__);
+	if (stream == NULL || stream->ep == NULL) {
+		return -EINVAL;
+	}
+
+	switch (stream->ep->status.state) {
+	case BT_BAP_EP_STATE_CODEC_CONFIGURED:
+	case BT_BAP_EP_STATE_QOS_CONFIGURED:
+	case BT_BAP_EP_STATE_ENABLING:
+	case BT_BAP_EP_STATE_STREAMING:
+	case BT_BAP_EP_STATE_DISABLING:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	bt_bap_stream_reset(stream);
+	stream->ep->status.state = BT_BAP_EP_STATE_IDLE;
+
+	if (stream->ops != NULL && stream->ops->released != NULL) {
+		stream->ops->released(stream);
+	}
+
 	return 0;
 }
