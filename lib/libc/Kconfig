@@ -79,6 +79,7 @@ config MINIMAL_LIBC
 	imply COMPILER_FREESTANDING
 	select COMMON_LIBC_ABORT
 	select COMMON_LIBC_STRNLEN
+	select POSIX_FILE_LOCKING
 	help
 	  Build with minimal C library.
 
@@ -91,6 +92,10 @@ config PICOLIBC
 	imply COMMON_LIBC_MALLOC
 	depends on !NATIVE_APPLICATION
 	depends on PICOLIBC_SUPPORTED
+	select POSIX_FILE_LOCKING
+	imply POSIX_FD_MGMT_ALIAS_FLOCKFILE
+	imply POSIX_FD_MGMT_ALIAS_FTRYLOCKFILE
+	imply POSIX_FD_MGMT_ALIAS_FUNLOCKFILE
 	help
 	  Build with picolibc library. The picolibc library is built as
 	  a module if PICOLIBC_MODULE is set, otherwise picolibc is

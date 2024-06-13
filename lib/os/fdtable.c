@@ -30,10 +30,19 @@ struct fd_entry {
 	const struct fd_op_vtable *vtable;
 	atomic_t refcount;
 	struct k_mutex lock;
+#if defined(CONFIG_POSIX_FILE_LOCKING)
+	struct k_mutex fs_lock;
+#endif
 	struct k_condvar cond;
 	size_t offset;
 	uint32_t mode;
 };
+
+#if defined(CONFIG_POSIX_FILE_LOCKING)
+#define POSIX_INITIALIZE_FS_LOCK(fd) .fs_lock = Z_MUTEX_INITIALIZER(fdtable[fd].fs_lock),
+#else
+#define POSIX_INITIALIZE_FS_LOCK(...)
+#endif /* CONFIG_POSIX_FILE_LOCKING */
 
 #if defined(CONFIG_POSIX_DEVICE_IO)
 static const struct fd_op_vtable stdinout_fd_op_vtable;
@@ -51,6 +60,7 @@ static struct fd_entry fdtable[CONFIG_ZVFS_OPEN_MAX] = {
 		.vtable = &stdinout_fd_op_vtable,
 		.refcount = ATOMIC_INIT(1),
 		.lock = Z_MUTEX_INITIALIZER(fdtable[0].lock),
+		POSIX_INITIALIZE_FS_LOCK(0)
 		.cond = Z_CONDVAR_INITIALIZER(fdtable[0].cond),
 	},
 	{
@@ -58,6 +68,7 @@ static struct fd_entry fdtable[CONFIG_ZVFS_OPEN_MAX] = {
 		.vtable = &stdinout_fd_op_vtable,
 		.refcount = ATOMIC_INIT(1),
 		.lock = Z_MUTEX_INITIALIZER(fdtable[1].lock),
+		POSIX_INITIALIZE_FS_LOCK(1)
 		.cond = Z_CONDVAR_INITIALIZER(fdtable[1].cond),
 	},
 	{
@@ -65,6 +76,7 @@ static struct fd_entry fdtable[CONFIG_ZVFS_OPEN_MAX] = {
 		.vtable = &stdinout_fd_op_vtable,
 		.refcount = ATOMIC_INIT(1),
 		.lock = Z_MUTEX_INITIALIZER(fdtable[2].lock),
+		POSIX_INITIALIZE_FS_LOCK(2)
 		.cond = Z_CONDVAR_INITIALIZER(fdtable[2].cond),
 	},
 #else
@@ -248,6 +260,9 @@ int z_reserve_fd(void)
 		fdtable[fd].obj = NULL;
 		fdtable[fd].vtable = NULL;
 		k_mutex_init(&fdtable[fd].lock);
+#if defined(CONFIG_POSIX_FILE_LOCKING)
+		k_mutex_init(&fdtable[fd].fs_lock);
+#endif
 		k_condvar_init(&fdtable[fd].cond);
 	}
 
@@ -391,6 +406,35 @@ int zvfs_fsync(int fd)
 
 	return z_fdtable_call_ioctl(fdtable[fd].vtable, fdtable[fd].obj, ZFD_IOCTL_FSYNC);
 }
+
+#if defined(CONFIG_POSIX_FILE_LOCKING)
+void zvfs_flockfile(int fd)
+{
+	if (_check_fd(fd) < 0) {
+		return;
+	}
+
+	(void)k_mutex_lock(&fdtable[fd].fs_lock, K_FOREVER);
+}
+
+int zvfs_ftrylockfile(int fd)
+{
+	if (_check_fd(fd) < 0) {
+		return -1;
+	}
+
+	return k_mutex_lock(&fdtable[fd].fs_lock, K_NO_WAIT);
+}
+
+void zvfs_funlockfile(int fd)
+{
+	if (_check_fd(fd) < 0) {
+		return;
+	}
+
+	(void)k_mutex_unlock(&fdtable[fd].fs_lock);
+}
+#endif /* CONFIG_POSIX_FILE_LOCKING */
 
 static inline off_t zvfs_lseek_wrap(int fd, int cmd, ...)
 {
