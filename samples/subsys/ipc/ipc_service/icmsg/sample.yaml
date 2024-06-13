@@ -8,3 +8,13 @@ tests:
     tags: ipc
     sysbuild: true
     harness: remote
+
+  sample.ipc.icmsg.nrf54l15:
+    platform_allow: nrf54l15pdk/nrf54l15/cpuapp
+    integration_platforms:
+      - nrf54l15pdk/nrf54l15/cpuapp
+    tags: ipc
+    extra_args:
+      icmsg_SNIPPET=nordic-flpr
+    sysbuild: true
+    harness: remote
