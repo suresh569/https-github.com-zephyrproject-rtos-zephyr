@@ -55,6 +55,10 @@ CREATE_FLAG(flag_pa_sync_lost);
 CREATE_FLAG(flag_pa_request);
 CREATE_FLAG(flag_bis_sync_requested);
 CREATE_FLAG(flag_base_metadata_updated);
+CREATE_FLAG(flag_unicast_stream_configured);
+
+static K_SEM_DEFINE(sem_broadcast_started, 0U, ARRAY_SIZE(broadcast_sink_streams));
+static K_SEM_DEFINE(sem_broadcast_stopped, 0U, ARRAY_SIZE(broadcast_sink_streams));
 
 static struct bt_bap_broadcast_sink *g_broadcast_sink;
 static struct bt_le_scan_recv_info broadcaster_info;
@@ -62,9 +66,6 @@ static bt_addr_le_t broadcaster_addr;
 static struct bt_le_per_adv_sync *pa_sync;
 static uint32_t broadcaster_broadcast_id;
 static struct audio_test_stream broadcast_sink_streams[CONFIG_BT_BAP_BROADCAST_SNK_STREAM_COUNT];
-static struct bt_le_ext_adv *ext_adv;
-static uint32_t requested_bis_sync;
-static const struct bt_bap_scan_delegator_recv_state *req_recv_state;
 
 static const struct bt_audio_codec_cap codec_cap = BT_AUDIO_CODEC_CAP_LC3(
 	BT_AUDIO_CODEC_CAP_FREQ_ANY, BT_AUDIO_CODEC_CAP_DURATION_ANY,
@@ -75,9 +76,6 @@ static const struct bt_audio_codec_qos_pref unicast_qos_pref =
 	BT_AUDIO_CODEC_QOS_PREF(true, BT_GAP_LE_PHY_2M, 0u, 60u, 20000u, 40000u, 20000u, 40000u);
 
 static bool auto_start_sink_streams;
-
-static K_SEM_DEFINE(sem_broadcast_started, 0U, ARRAY_SIZE(broadcast_sink_streams));
-static K_SEM_DEFINE(sem_broadcast_stopped, 0U, ARRAY_SIZE(broadcast_sink_streams));
 
 /* Create a mask for the maximum BIS we can sync to using the number of
  * broadcast_sink_streams we have. We add an additional 1 since the bis indexes
@@ -90,8 +88,6 @@ static uint32_t bis_index_bitfield;
 
 static struct bt_cap_stream unicast_streams[CONFIG_BT_ASCS_ASE_SNK_COUNT +
 					    CONFIG_BT_ASCS_ASE_SRC_COUNT];
-
-CREATE_FLAG(flag_unicast_stream_configured);
 
 static bool subgroup_data_func_cb(struct bt_data *data, void *user_data)
 {
@@ -384,10 +380,9 @@ static int pa_sync_req_cb(struct bt_conn *conn,
 	}
 
 	printk("Sync request\n");
-	req_recv_state = recv_state;
 
-	bt_addr_le_copy(&broadcaster_addr, &req_recv_state->addr);
-	broadcaster_info.sid = req_recv_state->adv_sid;
+	bt_addr_le_copy(&broadcaster_addr, &recv_state->addr);
+	broadcaster_info.sid = recv_state->adv_sid;
 	broadcaster_info.interval = pa_interval;
 
 	SET_FLAG(flag_pa_request);
@@ -402,8 +397,6 @@ static int pa_sync_term_req_cb(struct bt_conn *conn,
 		return -EALREADY;
 	}
 
-	req_recv_state = recv_state;
-
 	UNSET_FLAG(flag_pa_request);
 
 	return 0;
@@ -414,7 +407,6 @@ static int bis_sync_req_cb(struct bt_conn *conn,
 			   const uint32_t bis_sync_req[CONFIG_BT_BAP_BASS_MAX_SUBGROUPS])
 {
 	/* We only care about a single subgroup in this test */
-	requested_bis_sync = bis_sync_req[0];
 	broadcaster_broadcast_id = recv_state->broadcast_id;
 	if (bis_sync_req[0] != 0) {
 		SET_FLAG(flag_bis_sync_requested);
@@ -430,8 +422,6 @@ static void broadcast_code_cb(struct bt_conn *conn,
 			      const uint8_t broadcast_code[BT_AUDIO_BROADCAST_CODE_SIZE])
 {
 	printk("Broadcast code received for %p\n", recv_state);
-
-	req_recv_state = recv_state;
 
 	SET_FLAG(flag_broadcast_code);
 }
@@ -645,6 +635,7 @@ static int set_supported_contexts(void)
 void test_start_adv(void)
 {
 	int err;
+	struct bt_le_ext_adv *ext_adv;
 
 	/* Create a connectable non-scannable advertising set */
 	err = bt_le_ext_adv_create(BT_LE_ADV_CONN_ONE_TIME, NULL, &ext_adv);
