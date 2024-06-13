@@ -174,6 +174,9 @@ extern "C" {
 #define sys_port_trace_k_timer_status_sync_exit(timer, result)			\
 	sys_trace_k_timer_status_sync_exit(timer, result)
 
+/* GPIO */
+#define sys_port_trace_gpio_pin_active(port, pin)   sys_trace_gpio_pin_active(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin) sys_trace_gpio_pin_inactive(port, pin)
 
 #define sys_port_trace_k_condvar_init(condvar, ret)
 #define sys_port_trace_k_condvar_signal_enter(condvar)
@@ -348,6 +351,9 @@ extern "C" {
 #define sys_port_trace_pm_device_runtime_enable_exit(dev, ret)
 #define sys_port_trace_pm_device_runtime_disable_enter(dev)
 #define sys_port_trace_pm_device_runtime_disable_exit(dev, ret)
+
+#define sys_port_trace_gpio_pin_active(port, pin)   sys_trace_gpio_pin_active(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin) sys_trace_gpio_pin_inactive(port, pin)
 
 void sys_trace_idle(void);
 void sys_trace_isr_enter(void);
@@ -565,6 +571,11 @@ void sys_trace_socket_getsockname_exit(int sock, const struct sockaddr *addr, co
 				       int ret);
 void sys_trace_socket_socketpair_enter(int family, int type, int proto, int *sv);
 void sys_trace_socket_socketpair_exit(int sock_A, int sock_B, int ret);
+
+/* GPIO */
+typedef uint8_t gpio_pin_t;
+void sys_trace_gpio_pin_active(const struct device *port, gpio_pin_t pin);
+void sys_trace_gpio_pin_inactive(const struct device *port, gpio_pin_t pin);
 
 #ifdef __cplusplus
 }

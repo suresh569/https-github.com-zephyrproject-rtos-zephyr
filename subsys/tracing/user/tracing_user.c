@@ -22,6 +22,13 @@ void __weak sys_trace_thread_priority_set_user(struct k_thread *thread, int prio
 void __weak sys_trace_isr_enter_user(void) {}
 void __weak sys_trace_isr_exit_user(void) {}
 void __weak sys_trace_idle_user(void) {}
+void __weak sys_trace_gpio_pin_active_user(const struct device *port, gpio_pin_t pin) {}
+void __weak sys_trace_gpio_pin_inactive_user(const struct device *port, gpio_pin_t pin) {}
+void __weak sys_trace_gpio_pin_configured_output_user(const struct device *port, gpio_pin_t pin, gpio_flags_t flags) {}
+void __weak sys_trace_gpio_pin_configured_input_user(const struct device *port, gpio_pin_t pin, gpio_flags_t flags) {}
+void __weak sys_trace_gpio_pin_event_attached_user(const struct device *port, struct gpio_callback *callback) {}
+void __weak sys_trace_gpio_pin_event_removed_user(const struct device *port, struct gpio_callback *callback) {}
+void __weak sys_trace_gpio_pin_event_executed_user(const struct device *port, struct gpio_callback *callback) {}
 
 void sys_trace_thread_create(struct k_thread *thread)
 {
@@ -91,4 +98,32 @@ void sys_trace_isr_exit(void)
 void sys_trace_idle(void)
 {
 	sys_trace_idle_user();
+}
+
+void sys_trace_gpio_pin_active(const struct device *port, gpio_pin_t pin) {
+	sys_trace_gpio_pin_active_user(port, pin);
+}
+
+void sys_trace_gpio_pin_inactive(const struct device *port, gpio_pin_t pin) {
+	sys_trace_gpio_pin_inactive_user(port, pin);
+}
+
+void sys_trace_gpio_pin_configured_output(const struct device *port, gpio_pin_t pin, gpio_flags_t flags) {
+	sys_trace_gpio_pin_configured_output_user(port, pin, flags);
+}
+
+void sys_trace_gpio_pin_configured_input(const struct device *port, gpio_pin_t pin, gpio_flags_t flags) {
+	sys_trace_gpio_pin_configured_input_user(port, pin, flags);
+}
+
+void sys_trace_gpio_pin_event_attached(const struct device *port, struct gpio_callback *callback) {
+	sys_trace_gpio_pin_event_attached_user(port, callback);
+}
+
+void sys_trace_gpio_pin_event_removed(const struct device *port, struct gpio_callback *callback) {
+	sys_trace_gpio_pin_event_removed_user(port, callback);
+}
+
+void sys_trace_gpio_pin_event_executed(const struct device *port, struct gpio_callback *callback) {
+	sys_trace_gpio_pin_event_executed_user(port, callback);
 }
