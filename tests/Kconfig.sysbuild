@@ -1,0 +1,7 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+# For tests on cpuppr on nrf54h20 we need vpr_launcher application on cpuapp
+# which kickstarts cpuppr.
+config VPR_LAUNCHER
+	default y if BOARD_NRF54H20DK_NRF54H20_CPUPPR
