@@ -44,6 +44,17 @@ void sys_trace_isr_enter(void);
 void sys_trace_isr_exit(void);
 void sys_trace_idle(void);
 
+struct gpio_callback;
+typedef uint8_t gpio_pin_t;
+typedef uint32_t gpio_flags_t;
+void sys_trace_gpio_pin_active_user(const struct device *port, gpio_pin_t pin);
+void sys_trace_gpio_pin_inactive_user(const struct device *port, gpio_pin_t pin);
+void sys_trace_gpio_pin_configured_output_user(const struct device *port, gpio_pin_t pin, gpio_flags_t flags);
+void sys_trace_gpio_pin_configured_input_user(const struct device *port, gpio_pin_t pin, gpio_flags_t flags);
+void sys_trace_gpio_pin_event_attached_user(const struct device *port, struct gpio_callback *callback);
+void sys_trace_gpio_pin_event_removed_user(const struct device *port, struct gpio_callback *callback);
+void sys_trace_gpio_pin_event_executed_user(const struct device *port, struct gpio_callback *callback);
+
 #define sys_port_trace_k_thread_foreach_enter()
 #define sys_port_trace_k_thread_foreach_exit()
 #define sys_port_trace_k_thread_foreach_unlocked_enter()
