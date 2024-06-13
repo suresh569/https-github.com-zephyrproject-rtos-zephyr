@@ -510,7 +510,7 @@ bap_broadcast_assistant_recv_state_cb(struct bt_conn *conn, int err,
 		FAIL("Encryption state is BT_BAP_BIG_ENC_STATE_BAD_CODE");
 	}
 
-	for (int i = 0; i < state->num_subgroups; i++) {
+	for (uint8_t i = 0; i < state->num_subgroups; i++) {
 		const struct bt_bap_bass_subgroup *subgroup = &state->subgroups[i];
 		struct net_buf_simple buf;
 
@@ -526,6 +526,7 @@ bap_broadcast_assistant_recv_state_cb(struct bt_conn *conn, int err,
 		}
 	}
 
+#if defined(CONFIG_BT_PER_ADV_SYNC_TRANSFER_SENDER)
 	if (state->pa_sync_state == BT_BAP_PA_STATE_INFO_REQ) {
 		err = bt_le_per_adv_sync_transfer(g_pa_sync, conn, BT_UUID_BASS_VAL);
 		if (err != 0) {
@@ -533,6 +534,7 @@ bap_broadcast_assistant_recv_state_cb(struct bt_conn *conn, int err,
 			return;
 		}
 	}
+#endif /* CONFIG_BT_PER_ADV_SYNC_TRANSFER_SENDER */
 
 	if (state->pa_sync_state == BT_BAP_PA_STATE_SYNCED) {
 	}
