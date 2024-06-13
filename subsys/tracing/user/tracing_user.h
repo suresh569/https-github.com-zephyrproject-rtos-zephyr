@@ -8,6 +8,7 @@
 #ifndef _TRACE_USER_H
 #define _TRACE_USER_H
 #include <zephyr/kernel.h>
+#include <zephyr/device.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -377,6 +378,14 @@ void sys_trace_idle(void);
 #define sys_port_trace_socket_getsockname_exit(sock, addr, addrlen, ret)
 #define sys_port_trace_socket_socketpair_enter(family, type, proto, sv)
 #define sys_port_trace_socket_socketpair_exit(sockA, sockB, ret)
+
+#define sys_port_trace_gpio_pin_active(port, pin)   sys_trace_gpio_pin_active_user(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin) sys_trace_gpio_pin_inactive_user(port, pin)
+#define sys_port_trace_gpio_pin_configured_output(port, pin, flag) sys_trace_gpio_pin_configured_output_user(port, pin, flag)
+#define sys_port_trace_gpio_pin_configured_input(port, pin, flag) sys_trace_gpio_pin_configured_input_user(port, pin, flag)
+#define sys_port_trace_gpio_pin_event_attached(port, callback) sys_trace_gpio_pin_event_attached_user(port, callback)
+#define sys_port_trace_gpio_pin_event_removed(port, callback) sys_trace_gpio_pin_event_removed_user(port, callback)
+#define sys_port_trace_gpio_pin_event_executed(port, callback) sys_trace_gpio_pin_event_executed_user(port, callback)
 
 #ifdef __cplusplus
 }

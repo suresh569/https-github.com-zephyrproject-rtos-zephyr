@@ -675,6 +675,14 @@ void sys_trace_k_thread_info(struct k_thread *thread);
 	SEGGER_SYSVIEW_RecordEndCallU32(TID_PM_DEVICE_RUNTIME_DISABLE,	       \
 					(uint32_t)ret)
 
+#define sys_port_trace_gpio_pin_active(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin)
+#define sys_port_trace_gpio_pin_configured_output(port, pin, flags)
+#define sys_port_trace_gpio_pin_configured_input(port, pin, flags)
+#define sys_port_trace_gpio_pin_event_attached(port, callback)
+#define sys_port_trace_gpio_pin_event_removed(port, callback)
+#define sys_port_trace_gpio_pin_event_executed(port, callback)
+
 #ifdef __cplusplus
 }
 #endif

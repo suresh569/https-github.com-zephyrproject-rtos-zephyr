@@ -732,4 +732,12 @@ void sys_trace_k_event_init(struct k_event *event);
 #define sys_port_trace_socket_socketpair_enter(family, type, proto, sv)
 #define sys_port_trace_socket_socketpair_exit(sockA, sockB, ret)
 
+#define sys_port_trace_gpio_pin_active(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin)
+#define sys_port_trace_gpio_pin_configured_output(port, pin, flags)
+#define sys_port_trace_gpio_pin_configured_input(port, pin, flags)
+#define sys_port_trace_gpio_pin_event_attached(port, callback)
+#define sys_port_trace_gpio_pin_event_removed(port, callback)
+#define sys_port_trace_gpio_pin_event_executed(port, callback)
+
 #endif /* ZEPHYR_TRACE_TEST_H */

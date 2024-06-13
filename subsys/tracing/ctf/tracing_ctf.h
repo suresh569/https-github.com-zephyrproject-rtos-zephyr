@@ -174,6 +174,9 @@ extern "C" {
 #define sys_port_trace_k_timer_status_sync_exit(timer, result)			\
 	sys_trace_k_timer_status_sync_exit(timer, result)
 
+/* GPIO */
+#define sys_port_trace_gpio_pin_active(port, pin)   sys_trace_gpio_pin_active(port, pin)
+#define sys_port_trace_gpio_pin_inactive(port, pin) sys_trace_gpio_pin_inactive(port, pin)
 
 #define sys_port_trace_k_condvar_init(condvar, ret)
 #define sys_port_trace_k_condvar_signal_enter(condvar)

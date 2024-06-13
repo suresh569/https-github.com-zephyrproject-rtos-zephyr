@@ -634,4 +634,13 @@ void sys_trace_socket_socketpair_enter(int family, int type, int proto, int *sv)
 void sys_trace_socket_socketpair_exit(int sock_A, int sock_B, int ret)
 {
 	ctf_top_socket_socketpair_exit(sock_A, sock_B, ret);
+/* GPIO */
+void sys_port_trace_gpio_pin_active(const struct device *port, gpio_pin_t pin)
+{
+	ctf_top_gpio_pin_active((uint32_t)(uintptr_t)port, (uint32_t)pin);
+}
+
+void sys_port_trace_gpio_pin_inactive(const struct device *port, gpio_pin_t pin)
+{
+	ctf_top_gpio_pin_inactive((uint32_t)(uintptr_t)port, (uint32_t)pin);
 }
