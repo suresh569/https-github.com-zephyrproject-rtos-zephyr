@@ -63,6 +63,10 @@ size_t fwrite(const void *ZRESTRICT ptr, size_t size, size_t nitems,
 #define putc(c, stream) fputc(c, stream)
 #define putchar(c) putc(c, stdout)
 
+void flockfile(FILE *file);
+int ftrylockfile(FILE *file);
+void funlockfile(FILE *file);
+
 #ifdef __cplusplus
 }
 #endif
