@@ -1135,7 +1135,7 @@ ZTEST(libc_common, test_time_asctime)
 }
 
 /**
-  * @brief Test time function
+ * @brief Test time function
  *
  * @see localtime(), localtime_r().
  */
@@ -1154,6 +1154,23 @@ ZTEST(libc_common, test_time_localtime)
 	tp.tm_wday = -5;
 	zassert_not_null(localtime_r(&tests3, &tp), "localtime_r failed");
 	zassert_not_null(localtime_r(&tests4, &tp), "localtime_r failed");
+}
+
+/**
+ * @brief Test time function
+ *
+ * @see ctime(), ctime_r().
+ */
+ZTEST(libc_common, test_time_ctime)
+{
+	char buf[26] = {0};
+	time_t time = 1718260000;
+
+	zassert_not_null(ctime_r(&time, buf));
+	zassert_equal(strncmp("Thu Jun 13 06:26:40 2024\n", buf, sizeof(buf)), 0);
+
+	zassert_not_null(ctime(&time));
+	zassert_equal(strncmp("Thu Jun 13 06:26:40 2024\n", ctime(&time), sizeof(buf)), 0);
 }
 
 /**

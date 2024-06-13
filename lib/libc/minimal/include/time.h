@@ -55,6 +55,8 @@ char *asctime(const struct tm *timeptr);
 char *asctime_r(const struct tm *ZRESTRICT tp, char *ZRESTRICT buf);
 struct tm *localtime(const time_t *timer);
 struct tm *localtime_r(const time_t *ZRESTRICT timer, struct tm *ZRESTRICT result);
+char *ctime(const time_t *clock);
+char *ctime_r(const time_t *clock, char *buf);
 
 time_t time(time_t *tloc);
 

@@ -896,7 +896,7 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     :widths: 50,10
 
     asctime_r(), yes
-    ctime_r(),
+    ctime_r(), yes (UTC timezone only)
     flockfile(),
     ftrylockfile(),
     funlockfile(),
