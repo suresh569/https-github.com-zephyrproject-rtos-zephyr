@@ -71,6 +71,7 @@ struct flash_parameters {
 		bool no_explicit_erase: 1;
 	} caps;
 	uint8_t erase_value; /* Byte value of erased flash */
+	bool no_erase;
 };
 
 /** Set for ordinary Flash where erase is needed before write of random data */
