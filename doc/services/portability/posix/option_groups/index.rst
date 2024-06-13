@@ -907,7 +907,7 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     getpwnam_r(),
     getpwuid_r(),
     gmtime_r(), yes
-    localtime_r(),
+    localtime_r(), yes (UTC timezone only)
     putc_unlocked(), yes
     putchar_unlocked(), yes
     rand_r(), yes

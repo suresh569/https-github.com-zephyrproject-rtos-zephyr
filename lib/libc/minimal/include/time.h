@@ -53,6 +53,8 @@ struct tm *gmtime_r(const time_t *ZRESTRICT timep,
 		    struct tm *ZRESTRICT result);
 char *asctime(const struct tm *timeptr);
 char *asctime_r(const struct tm *ZRESTRICT tp, char *ZRESTRICT buf);
+struct tm *localtime(const time_t *timer);
+struct tm *localtime_r(const time_t *ZRESTRICT timer, struct tm *ZRESTRICT result);
 
 time_t time(time_t *tloc);
 

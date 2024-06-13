@@ -1135,6 +1135,28 @@ ZTEST(libc_common, test_time_asctime)
 }
 
 /**
+  * @brief Test time function
+ *
+ * @see localtime(), localtime_r().
+ */
+ZTEST(libc_common, test_time_localtime)
+{
+	time_t tests1 = 0;
+	time_t tests2 = -5;
+	time_t tests3 = (time_t) -214748364800;
+	time_t tests4 = 951868800;
+
+	struct tm tp;
+
+	zassert_not_null(localtime(&tests1), "localtime failed");
+	zassert_not_null(localtime(&tests2), "localtime failed");
+
+	tp.tm_wday = -5;
+	zassert_not_null(localtime_r(&tests3, &tp), "localtime_r failed");
+	zassert_not_null(localtime_r(&tests4, &tp), "localtime_r failed");
+}
+
+/**
  *
  * @brief Test rand function
  *

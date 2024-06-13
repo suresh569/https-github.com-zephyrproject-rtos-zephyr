@@ -16,6 +16,14 @@ config COMMON_LIBC_GMTIME_R
 	help
 	  common implementation of gmtime_r().
 
+config COMMON_LIBC_LOCALTIME_R_UTC
+	bool
+	depends on COMMON_LIBC_GMTIME_R
+	help
+	  Simple implementation of localtime() & localtime_r().
+	  This option just wraps around the gmtime(), the result is always expressed as
+	  Coordinated Universal Time (UTC).
+
 config COMMON_LIBC_TIME
 	bool
 	help
