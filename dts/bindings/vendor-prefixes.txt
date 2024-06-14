@@ -82,6 +82,7 @@ asus	AsusTek Computer Inc.
 atlas	Atlas Scientific LLC
 atmarktechno	Atmark Techno, Inc.
 atmel	Atmel Corporation
+atmosic	Atmosic Technologies
 auo	AU Optronics Corporation
 auvidea	Auvidea GmbH
 avago	Avago Technologies
