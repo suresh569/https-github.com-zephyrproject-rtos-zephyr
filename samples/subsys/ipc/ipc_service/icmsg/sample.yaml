@@ -18,3 +18,17 @@ tests:
       icmsg_SNIPPET=nordic-flpr
     sysbuild: true
     harness: remote
+
+  sample.ipc.icmsg.nrf54l15_no_multithreading:
+    platform_allow: nrf54l15pdk/nrf54l15/cpuapp
+    integration_platforms:
+      - nrf54l15pdk/nrf54l15/cpuapp
+    tags: ipc
+    extra_args:
+      icmsg_SNIPPET=nordic-flpr
+      icmsg_CONFIG_MULTITHREADING=n
+      icmsg_CONFIG_LOG=n
+      remote_CONFIG_MULTITHREADING=n
+      remote_CONFIG_LOG=n
+    sysbuild: true
+    harness: remote
