@@ -23,6 +23,7 @@
 #include <zephyr/dt-bindings/sensor/tmag5273.h>
 #include <zephyr/dt-bindings/sensor/stts22h.h>
 #include <zephyr/dt-bindings/sensor/ina226.h>
+#include <zephyr/dt-bindings/sensor/apds9253.h>
 
 /****************************************
  * PLEASE KEEP REG ADDRESSES SEQUENTIAL *
@@ -1054,4 +1055,13 @@ test_i2c_shtc1: shtc1@8e {
 	reg = <0x8e>;
 	measure-mode = "low-power";
 	clock-stretching;
+};
+
+test_i2c_apds9253: apds9253@8f {
+	compatible = "avago,apds9253";
+	reg = <0x8f>;
+	int-gpios = <&test_gpio 0 0>;
+	gain = <APDS9253_GAIN_RANGE_1>;
+	rate = <APDS9253_MEASUREMENT_RATE_50MS>;
+	resolution = <APDS9253_RESOLUTION_16BIT_25MS>;
 };
