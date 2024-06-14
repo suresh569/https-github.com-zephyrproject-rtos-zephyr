@@ -1,0 +1,26 @@
+# Copyright 2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_MCXN23X
+	bool
+	select SOC_FAMILY_NXP_MCX
+
+config SOC_SERIES
+	default "mcxn23x" if SOC_SERIES_MCXN23X
+
+config SOC_MCXN236
+	bool
+	select SOC_SERIES_MCXN23X
+
+config SOC
+	default "mcxn236" if SOC_MCXN236
+
+config SOC_PART_NUMBER_MCXN236VDF
+	bool
+
+config SOC_PART_NUMBER_MCXN236VNL
+	bool
+
+config SOC_PART_NUMBER
+	default "MCXN236VDF" if SOC_PART_NUMBER_MCXN236VDF
+	default "MCXN236VNL" if SOC_PART_NUMBER_MCXN236VNL

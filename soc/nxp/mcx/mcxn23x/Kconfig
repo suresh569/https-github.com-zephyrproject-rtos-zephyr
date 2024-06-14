@@ -1,0 +1,39 @@
+# Copyright 2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_MCXN23X
+	select HAS_MCUX
+	select HAS_MCUX_FLEXCOMM
+	select CPU_CORTEX_M_HAS_SYSTICK
+	select CPU_CORTEX_M_HAS_DWT
+	select PLATFORM_SPECIFIC_INIT
+
+config SOC_MCXN236
+	select CPU_CORTEX_M33
+	select CPU_HAS_ARM_SAU
+	select CPU_HAS_ARM_MPU
+	select CPU_HAS_FPU
+	select ARMV8_M_DSP
+	select ARM_TRUSTZONE_M
+	select HAS_MCUX_CACHE
+
+if SOC_SERIES_MCXN23X
+
+DT_CHOSEN_Z_FLASH := zephyr,flash
+DT_COMPAT_FLEXSPI := nxp,imx-flexspi
+
+DT_CHOSEN_FLASH_NODE := $(dt_chosen_path,$(DT_CHOSEN_Z_FLASH))
+DT_CHOSEN_FLASH_PARENT := $(dt_node_parent,$(DT_CHOSEN_FLASH_NODE))
+
+DT_FLASH_PARENT_IS_FLEXSPI := $(dt_node_has_compat,$(DT_CHOSEN_FLASH_PARENT),$(DT_COMPAT_FLEXSPI))
+DT_FLASH_HAS_SIZE_PROP := $(dt_node_has_prop,$(DT_CHOSEN_FLASH_NODE),size)
+
+config FLASH_BASE_ADDRESS
+	default $(dt_node_reg_addr_hex,$(DT_CHOSEN_FLASH_PARENT),1) \
+		if $(DT_FLASH_PARENT_IS_FLEXSPI)
+
+config FLASH_SIZE
+	default $(dt_node_int_prop_int,$(DT_CHOSEN_FLASH_NODE),size,Kb) \
+		if $(DT_FLASH_HAS_SIZE_PROP)
+
+endif # SOC_SERIES_MCXN23X
