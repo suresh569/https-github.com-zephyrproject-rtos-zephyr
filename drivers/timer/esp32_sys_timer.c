@@ -136,7 +136,7 @@ uint64_t sys_clock_cycle_get_64(void)
 	return get_systimer_alarm();
 }
 
-static int sys_clock_driver_init(void)
+int init_sys_clock_driver(void)
 {
 
 	esp_intr_alloc(DT_IRQN(DT_NODELABEL(systimer0)),
@@ -155,6 +155,3 @@ static int sys_clock_driver_init(void)
 	set_systimer_alarm(last_count + CYC_PER_TICK);
 	return 0;
 }
-
-SYS_INIT(sys_clock_driver_init, PRE_KERNEL_1,
-	 CONFIG_SYSTEM_CLOCK_INIT_PRIORITY);
