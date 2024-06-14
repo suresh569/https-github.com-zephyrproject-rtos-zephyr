@@ -17,4 +17,12 @@ struct data_packet {
 	unsigned char data[DATA_SIZE];
 };
 
+#if defined(CONFIG_MULTITHREADING)
+#define INF(...) LOG_INF(__VA_ARGS__);
+#define ERR(...) LOG_ERR(__VA_ARGS__);
+#else
+#define INF(...) printk(__VA_ARGS__); printk("\r\n");
+#define ERR(...) printk(__VA_ARGS__); printk("\r\n");
+#endif
+
 #endif /* __COMMON_H__ */
