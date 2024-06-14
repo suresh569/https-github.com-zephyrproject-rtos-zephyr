@@ -53,5 +53,7 @@ Zephyr network support.
 
 See :zephyr:code-sample:`zperf` for reference.
 To build the sample for the new device support, set the configuration overlay file
-``-DDEXTRA_CONF_FILE=overlay-usbd_next_ecm.conf`` and devicetree overlay file
-``-DDTC_OVERLAY_FILE="usbd_next_ecm.overlay`` either directly or via ``west``.
+``-DDEXTRA_CONF_FILE=overlay-usbd_next.conf`` and devicetree overlay file
+``-DDTC_OVERLAY_FILE="usbd_next_ecm.overlay`` for ECM either directly or via ``west``.
+To build with NCM, set the configuration overlay file as above and the devicetree overlay
+file to ``-DDTC_OVERLAY_FILE="usbd_next_ncm.overlay``.
