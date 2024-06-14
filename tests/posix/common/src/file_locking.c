@@ -11,6 +11,8 @@
 void flockfile(FILE *file);
 int ftrylockfile(FILE *file);
 void funlockfile(FILE *file);
+int putc_unlocked(int, FILE *);
+int putchar_unlocked(int);
 #endif
 
 #include <zephyr/sys/fdtable.h>
@@ -114,4 +116,11 @@ ZTEST(file_locking, test_file_locking)
 	zassert_not_ok(ftrylockfile(file));
 }
 
+ZTEST(file_locking, test_stdio)
+{
+	int ret;
+
+	ret = putc_unlocked('T', stdout);
+	zassert_equal(ret, 84, "putc \'T\' failed");
+}
 ZTEST_SUITE(file_locking, NULL, NULL, NULL, NULL, NULL);

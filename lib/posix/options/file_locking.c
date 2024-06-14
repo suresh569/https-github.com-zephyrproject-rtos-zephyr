@@ -35,3 +35,15 @@ void funlockfile(FILE *file)
 #ifdef CONFIG_POSIX_FD_MGMT_ALIAS_FUNLOCKFILE
 FUNC_ALIAS(funlockfile, _funlockfile, void);
 #endif /* CONFIG_POSIX_FD_MGMT_ALIAS_FUNLOCKFILE */
+
+#undef putc_unlocked
+int putc_unlocked(int c, FILE *stream)
+{
+	return putc(c, stream);
+}
+
+#undef putchar_unlocked
+int putchar_unlocked(int c)
+{
+	return putchar(c);
+}
