@@ -902,10 +902,10 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     funlockfile(), yes
     getc_unlocked(), yes
     getchar_unlocked(), yes
-    getgrgid_r(),
-    getgrnam_r(),
-    getpwnam_r(),
-    getpwuid_r(),
+    getgrgid_r(),yes (will fail with ``ENOSYS``:ref:`†<posix_undefined_behaviour>`)
+    getgrnam_r(),yes (will fail with ``ENOSYS``:ref:`†<posix_undefined_behaviour>`)
+    getpwnam_r(),yes (will fail with ``ENOSYS``:ref:`†<posix_undefined_behaviour>`)
+    getpwuid_r(),yes (will fail with ``ENOSYS``:ref:`†<posix_undefined_behaviour>`)
     gmtime_r(), yes
     localtime_r(),
     putc_unlocked(), yes
