@@ -31,7 +31,9 @@ ZTEST(posix_headers, test_dirent_h)
 	/* zassert_not_null(fdopendir); */ /* not implemented */
 	zassert_not_null(opendir);
 	zassert_not_null(readdir);
-	/* zassert_not_null(readdir_r); */ /* not implemented */
+#ifdef CONFIG_POSIX_THREAD_SAFE_FUNCTIONS
+	zassert_not_null(readdir_r);
+#endif
 	/* zassert_not_null(rewinddir); */ /* not implemented */
 	/* zassert_not_null(scandir); */   /* not implemented */
 	/* zassert_not_null(seekdir); */   /* not implemented */
