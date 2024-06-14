@@ -611,7 +611,7 @@ int tester_gap_create_adv_instance(struct bt_le_adv_param *param, uint8_t own_ad
 	}
 
 	if (atomic_test_bit(&current_settings, BTP_GAP_SETTINGS_CONNECTABLE)) {
-		param->options |= BT_LE_ADV_OPT_CONNECTABLE;
+		param->options |= BT_LE_ADV_OPT_CONN;
 
 		if (filter_list_in_use) {
 			param->options |= BT_LE_ADV_OPT_FILTER_CONN;
@@ -677,10 +677,8 @@ static uint8_t start_advertising(const void *cmd, uint16_t cmd_len,
 {
 	const struct btp_gap_start_advertising_cmd *cp = cmd;
 	struct btp_gap_start_advertising_rp *rp = rsp;
-	struct bt_le_adv_param param = BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_ONE_TIME,
-							    BT_GAP_ADV_FAST_INT_MIN_2,
-							    BT_GAP_ADV_FAST_INT_MAX_2,
-							    NULL);
+	struct bt_le_adv_param param =
+		BT_LE_ADV_PARAM_INIT(0, BT_GAP_ADV_FAST_INT_MIN_2, BT_GAP_ADV_FAST_INT_MAX_2, NULL);
 	uint8_t own_addr_type;
 	uint32_t duration;
 	uint8_t adv_len;
@@ -1432,10 +1430,8 @@ static struct bt_le_per_adv_sync_cb pa_sync_cb = {
 int tester_gap_padv_configure(const struct bt_le_per_adv_param *param)
 {
 	int err;
-	struct bt_le_adv_param ext_adv_param = BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_ONE_TIME,
-								    param->interval_min,
-								    param->interval_max,
-								    NULL);
+	struct bt_le_adv_param ext_adv_param =
+		BT_LE_ADV_PARAM_INIT(0, param->interval_min, param->interval_max, NULL);
 
 	if (ext_adv == NULL) {
 		current_settings = BIT(BTP_GAP_SETTINGS_DISCOVERABLE) |

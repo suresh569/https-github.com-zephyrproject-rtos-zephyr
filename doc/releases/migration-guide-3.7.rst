@@ -657,6 +657,50 @@ Bluetooth Host
   longer used in Zephyr 3.4.0 and later. Any references to this field should be removed. No further
   action is needed.
 
+* This release deprecates advertiser option :code:`BT_LE_ADV_OPT_CONNECTABLE`.
+
+  Affects all users relying on Host-automatic resumption of the advertiser after a
+  connection.
+
+  To migrate, perform the following steps:
+
+  * Replace all
+   - :code:`bt_le_ext_adv_create(BT_LE_ADV_CONN, ...)`
+   + :code:`bt_le_ext_adv_create(BT_LE_ADV_FAST_2, ...)`
+
+  * Replace all
+    - :code:`bt_le_ext_adv_update_param(..., BT_LE_ADV_CONN)`
+    + :code:`bt_le_ext_adv_update_param(..., BT_LE_ADV_FAST_2)`
+
+  * For all instances of `struct bt_le_adv_param`:
+    * If it is ever passed to `bt_le_adv_start`, note this.
+    * Remove `BT_LE_ADV_OPT_ONE_TIME` from options.
+    * Replace
+      - `BT_LE_ADV_OPT_CONNECTABLE`
+      + `BT_LE_ADV_OPT_CONN`
+
+  * If nothing was noted, the migration is completed at this step.
+
+  * The rest of the guide explains
+    how to implement advertiser restarting in the application. The exact behavior of the
+    Host-automatic resumption differs between Zephyr versions and the Controller in use, so it's not
+    viable to fully characterize it here. Instead the application developer is expected to adapt the
+    sketch layed out here to reflect the applications needs.
+
+
+  There is no replacement for :code:`BT_LE_ADV_OPT_CONN` without
+
+
+The application need to include the device name explicitly. One
+  way to do it is by adding the following to the advertising data or scan response data passed to
+  the host:
+
+  .. code-block:: c
+
+   BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1)
+
+  (:github:`71686`)
+
 Networking
 **********
 
