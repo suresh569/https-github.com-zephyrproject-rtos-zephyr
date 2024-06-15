@@ -59,10 +59,22 @@ int putc(int c, FILE *stream)
 	return zephyr_fputc(c, stream);
 }
 
+#undef putc_unlocked
+int putc_unlocked(int c, FILE *stream)
+{
+	return putc(c, stream);
+}
+
 #undef putchar
 int putchar(int c)
 {
 	return zephyr_fputc(c, stdout);
+}
+
+#undef putchar_unlocked
+int putchar_unlocked(int c)
+{
+	return putchar(c);
 }
 
 size_t z_impl_zephyr_fwrite(const void *ZRESTRICT ptr, size_t size,

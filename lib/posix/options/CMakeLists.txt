@@ -55,6 +55,7 @@ zephyr_library_sources_ifdef(CONFIG_POSIX_MEMLOCK mlockall.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_MEMLOCK_RANGE mlock.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_MEMORY_PROTECTION mprotect.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_MAPPED_FILES mmap.c)
+zephyr_library_sources_ifdef(CONFIG_POSIX_FILE_LOCKING file_locking.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_MESSAGE_PASSING mqueue.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_MULTI_PROCESS
   sleep.c
@@ -81,9 +82,11 @@ zephyr_library_sources_ifdef(CONFIG_POSIX_READER_WRITER_LOCKS rwlock.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_SEMAPHORES semaphore.c)
 zephyr_library_sources_ifdef(CONFIG_POSIX_THREADS
   cond.c
+  grp.c
   key.c
   mutex.c
   pthread.c
+  pwd.c
 )
 zephyr_library_sources_ifdef(CONFIG_XOPEN_STREAMS stropts.c)
 zephyr_library_sources_ifdef(CONFIG_XSI_SYSTEM_LOGGING syslog.c)

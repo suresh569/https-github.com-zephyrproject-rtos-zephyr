@@ -890,6 +890,9 @@ ZTEST(sprintf, test_put)
 	ret = fputc('T', stderr);
 	zassert_equal(ret, 84, "fputc \'T\' failed");
 
+	ret = putc_unlocked('T', stdout);
+	zassert_equal(ret, 84, "putc \'T\' failed");
+
 	ret = fputc('T', stdin);
 	zassert_equal(ret, EOF, "fputc to stdin");
 }
