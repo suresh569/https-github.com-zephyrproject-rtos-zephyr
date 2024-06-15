@@ -65,7 +65,6 @@ enum test_steps {
 	STATE_C_2ND_RUN,
 	STATE_C_2ND_EXIT,
 	PARENT_C_2ND_EXIT,
-	STATE_D_ENTRY,
 
 	/* End of run */
 	FINAL_VALUE,
@@ -83,7 +82,7 @@ static uint32_t test_value[] = {
 	/* Initial Setup */
 	BIT_MASK(ROOT_ENTRY),
 	BIT_MASK(PARENT_AB_ENTRY),
-	BIT_MASK( STATE_A_ENTRY),
+	BIT_MASK(STATE_A_ENTRY),
 	/* Run 0 */
 	BIT_MASK(STATE_A_RUN),
 	BIT_MASK(STATE_A_EXIT),
@@ -108,7 +107,6 @@ static uint32_t test_value[] = {
 	BIT_MASK(STATE_C_2ND_RUN),
 	BIT_MASK(STATE_C_2ND_EXIT),
 	BIT_MASK(PARENT_C_2ND_EXIT),
-	BIT_MASK(STATE_D_ENTRY),
 	/* Post-run Check */
 	BIT_MASK(FINAL_VALUE),
 };
@@ -222,6 +220,12 @@ static void parent_ab_run(void *obj)
 	o->transition_bits |= BIT(PARENT_AB_RUN);
 
 	smf_set_state(SMF_CTX(obj), &test_states[STATE_C]);
+	/*
+	 * You should not call smf_set_handled() after smf_set_state().
+	 * There was a bug that did not reset the handled bit if both were called,
+	 * so check it's still fixed:
+	 */
+	smf_set_handled(SMF_CTX(obj));
 }
 
 static void parent_ab_exit(void *obj)
