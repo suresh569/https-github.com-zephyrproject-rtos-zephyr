@@ -1062,3 +1062,10 @@ test_i2c_lm95234: lm95234@8f {
 	reg = <0x8f>;
 	status = "okay";
 };
+
+test_i2c_bmp180: bmp180@8e {
+	compatible = "bosch,bmp180";
+	status = "okay";
+	reg = <0x8e>;
+	oversampling = <1>;
+};
