@@ -895,8 +895,8 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     :header: API, Supported
     :widths: 50,10
 
-    asctime_r(),
-    ctime_r(),
+    asctime_r(), yes
+    ctime_r(), yes (UTC timezone only)
     flockfile(),
     ftrylockfile(),
     funlockfile(),
@@ -907,7 +907,7 @@ _POSIX_THREAD_SAFE_FUNCTIONS
     getpwnam_r(),
     getpwuid_r(),
     gmtime_r(), yes
-    localtime_r(),
+    localtime_r(), yes (UTC timezone only)
     putc_unlocked(), yes
     putchar_unlocked(), yes
     rand_r(), yes
