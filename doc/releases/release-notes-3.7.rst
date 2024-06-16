@@ -300,6 +300,18 @@ Drivers and Sensors
 
 * Crypto
 
+* Disk
+
+  * Support for eMMC devices was added to the STM32 SD driver. This can
+    be enabled with :kconfig:option:`CONFIG_SDMMC_STM32_EMMC`.
+  * Added a loopback disk driver, to expose a disk device backed by a file.
+    A file can be registered with the loopback disk driver using
+    :c:func:`loopback_disk_access_register`
+  * Added support for :c:macro:`DISK_IOCTL_CTRL_INIT` and
+    :c:macro:`DISK_IOCTL_CTRL_DEINIT` macros, which allow for initializing
+    and de-initializing a disk at runtime. This allows hotpluggable
+    disk devices (like SD cards) to be removed and reinserted at runtime.
+
 * Display
 
 * DMA
@@ -385,6 +397,9 @@ Drivers and Sensors
 * SMBUS:
 
 * SDHC
+
+  * Added ESP32 SDHC driver (:dtcompatible:`espressif,esp32-sdhc`).
+  * Added SDHC driver for Renesas MMC controller (:dtcompatible:`renesas,rcar-mmc`).
 
 * Sensor
 
@@ -545,6 +560,14 @@ Libraries / Subsystems
 * Retention
 
 * SD
+
+  * SDMMC and SDIO frequency and timing selection logic have been reworked,
+    to resolve an issue where a timing mode would not be selected if the
+    SDHC device in use did not report support for the maximum frequency
+    possible in that mode. Now, if the host controller and card both report
+    support for a given timing mode but not the highest frequency that
+    mode supports, the timing mode will be selected and configured at
+    the reduced frequency (:github:`72705`).
 
 * State Machine Framework
 
