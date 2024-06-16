@@ -4,7 +4,8 @@
 config FLASH_MSPI
 	bool "MSPI flash drivers"
 	default y
-	depends on FLASH
+	depends on DT_HAS_ZEPHYR_MSPI_EMUL_FLASH_ENABLED || \
+		   DT_HAS_MSPI_ATXP032_ENABLED
 	select FLASH_HAS_DRIVER_ENABLED
 	select MSPI
 
