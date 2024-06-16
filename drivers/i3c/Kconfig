@@ -111,5 +111,6 @@ rsource "Kconfig.nxp"
 rsource "Kconfig.cdns"
 rsource "Kconfig.npcx"
 rsource "Kconfig.test"
+rsource "mux/Kconfig.renesas"
 
 endif # I3C
