@@ -344,6 +344,9 @@ test_i2c_lis3mdl_magn: lis3mdl-magn@30 {
 test_i2c_lps22hb_press: lps22hb-press@31 {
 	compatible = "st,lps22hb-press";
 	reg = <0x31>;
+	drdy-gpios = <&test_gpio 0 0>;
+	odr = <75>;
+
 };
 
 test_i2c_lps22hh: lps22hh@32 {

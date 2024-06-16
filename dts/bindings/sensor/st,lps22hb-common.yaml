@@ -1,0 +1,49 @@
+# Copyright (c) 2021 STMicroelectronics
+# SPDX-License-Identifier: Apache-2.0
+
+description: |  
+  Example:
+
+  lps22hb: lps22hb@0 {
+    ...
+    odr = <75>;
+  };
+
+include: sensor-device.yaml
+
+compatible: "st,lps22hb-press"
+
+properties:
+  drdy-gpios:
+    type: phandle-array
+    description: |
+      DRDY pin
+
+      This pin defaults to active high when produced by the sensor.
+      The property value should ensure the flags properly describe
+      the signal that is presented to the driver.
+
+  odr:
+    type: int
+    default: 0
+    description: |
+      Specify the default output data rate expressed in samples per second (Hz).
+      Data rates supported by the chip are 1, 10, 25, 50, 75.
+
+    enum: [0, 1, 10, 25, 50, 75]
+
+  lpf_en:
+    type: boolean
+    description: |
+      Control the internal low-pass filter.
+
+  lpf_mode:
+    type: int
+    default: 2
+    description: |
+      Set the default filter bandwidth of the internal low-pass filter
+
+      - 0 # ODR/2
+      - 2 # ODR/9
+      - 3 # ODR/20
+    enum: [0, 2, 3]
