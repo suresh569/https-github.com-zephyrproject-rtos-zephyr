@@ -16,18 +16,15 @@
 #   KERNEL_VERSION_EXTENDED_STRING    "1.14.99-extraver+7"
 #   KERNEL_VERSION_TWEAK_STRING       "1.14.99+7"
 #
-#   KERNEL_VERSION_MAJOR      1
-#   KERNEL_VERSION_MINOR        14
-#   KERNEL_PATCHLEVEL              99
-#   KERNEL_VERSION_TWEAK              07
+#   KERNEL_VERSION_MAJOR     1
+#   KERNEL_VERSION_MINOR     14
+#   KERNEL_PATCHLEVEL        99
+#   KERNEL_VERSION_TWEAK     07
 #   KERNELVERSION            0x10E6307
 #   KERNEL_VERSION_NUMBER    0x10E63
-#   ZEPHYR_VERSION_CODE        69219
+#   ZEPHYR_VERSION_CODE      69219
 #
 # Most outputs are converted to C macros, see ``version.h.in``
-#
-# See also: independent and more dynamic ``BUILD_VERSION`` in
-# ``git.cmake``.
 
 # Note: version.cmake is loaded multiple times by ZephyrConfigVersion.cmake to
 # determine this Zephyr package version and thus the correct Zephyr CMake
@@ -76,7 +73,7 @@ foreach(type file IN ZIP_LISTS VERSION_TYPE VERSION_FILE)
   set(TWEAK ${${type}_VERSION_TWEAK}) # Temporary convenience variable
 
   math(EXPR ${type}_VERSION_NUMBER_INT "(${MAJOR} << 16) + (${MINOR} << 8)  + (${PATCH})")
-  math(EXPR ${type}VERSION_INT         "(${MAJOR} << 24) + (${MINOR} << 16) + (${PATCH} << 8) + (${TWEAK})")
+  math(EXPR ${type}VERSION_INT         "(${MAJOR} << 24) + (${MINOR} << 16) + (${PATCH} << 8)")
 
   math(EXPR ${type}_VERSION_NUMBER "${${type}_VERSION_NUMBER_INT}"  OUTPUT_FORMAT HEXADECIMAL)
   math(EXPR ${type}VERSION         "${${type}VERSION_INT}"          OUTPUT_FORMAT HEXADECIMAL)
