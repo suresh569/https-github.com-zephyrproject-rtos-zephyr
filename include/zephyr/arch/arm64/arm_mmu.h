@@ -161,6 +161,12 @@
 #define TCR_PS_BITS_16TB	0x4ULL
 #define TCR_PS_BITS_256TB	0x5ULL
 
+/* Definitions used by arch_page_info_get() */
+#define ARCH_DATA_PAGE_LOADED		BIT(0)
+#define ARCH_DATA_PAGE_ACCESSED		BIT(1)
+#define ARCH_DATA_PAGE_DIRTY		BIT(2)
+#define ARCH_DATA_PAGE_NOT_MAPPED	BIT(3)
+
 #ifndef _ASMLANGUAGE
 
 /* Region definition data structure */
