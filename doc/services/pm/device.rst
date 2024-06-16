@@ -87,9 +87,13 @@ from a sleep state, devices are resumed in the opposite order that they were
 suspended.
 
 The decision about suspending devices when entering a low power state is done based on the
-state and if it has set the property ``zephyr,pm-device-disabled``. Here is
-an example of a target with two low power states with only one triggering device power
-management:
+state and if it has set the property ``zephyr,pm-device-disabled``.
+
+Instead of suspending the devices before entering a low power state, the system could turn
+off the device if the property ``zephyr,pm-turn-on-off-action`` is enabled for the state.
+This will invoke the ``PM_DEVICE_ACTION_TURN_OFF`` and ``PM_DEVICE_ACTION_TURN_ON`` actions.
+Here is an example of a target with three low power states, with two triggering device power
+management and one of them requesting to use the turn on and off actions:
 
 .. code-block:: devicetree
 
@@ -108,6 +112,13 @@ management:
                         power-state-name = "suspend-to-ram";
                         min-residency-us = <8000>;
                         exit-latency-us = <360>;
+                };
+                state3: state3 {
+                        compatible = "zephyr,power-state";
+                        power-state-name = "soft-off";
+                        min-residency-us = <10000>;
+                        exit-latency-us = <500>;
+                        zephyr,pm-turn-on-off-action;
                 };
         };
    };

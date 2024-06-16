@@ -27,6 +27,7 @@ static bool idle_entered;
 static bool testing_device_runtime;
 static bool testing_device_order;
 static bool testing_force_state;
+static bool testing_turn_on_off_action;
 
 enum pm_state forced_state;
 static const struct device *device_dummy;
@@ -207,6 +208,15 @@ void pm_state_set(enum pm_state state, uint8_t substate_id)
 		zassert_true(device_power_state == PM_DEVICE_STATE_ACTIVE);
 	}
 
+	if (testing_turn_on_off_action) {
+		set_pm = true;
+		/* We have forced a state that triggers the turn off
+		 * action on the device. Ensure the device is turned off.
+		 */
+		pm_device_state_get(device_c, &device_power_state);
+		zassert_true(device_power_state == PM_DEVICE_STATE_OFF);
+	}
+
 	/* at this point, notify_pm_state_entry() implemented in
 	 * this file has been called and set_pm should have been set
 	 */
@@ -239,6 +249,18 @@ void pm_state_exit_post_ops(enum pm_state state, uint8_t substate_id)
 	ARG_UNUSED(state);
 	ARG_UNUSED(substate_id);
 
+	enum pm_device_state device_power_state;
+
+	if (testing_turn_on_off_action) {
+		testing_turn_on_off_action = false;
+		/* We have forced a state that triggers the turn on
+		 * action on device resume. Ensure the device is
+		 * turned on.
+		 */
+		pm_device_state_get(device_c, &device_power_state);
+		zassert_true(device_power_state == PM_DEVICE_STATE_ACTIVE);
+	}
+
 	/* pm_system_suspend is entered with irq locked
 	 * unlock irq before leave pm_system_suspend
 	 */
@@ -250,7 +272,7 @@ const struct pm_state_info *pm_policy_next_state(uint8_t cpu, int32_t ticks)
 {
 	const struct pm_state_info *cpu_states;
 
-	zassert_true(pm_state_cpu_get_all(cpu, &cpu_states) == 2,
+	zassert_true(pm_state_cpu_get_all(cpu, &cpu_states) == 3,
 		     "There is no power state defined");
 
 	/* make sure this is idle thread */
@@ -459,6 +481,18 @@ ZTEST(power_management_1cpu, test_empty_states)
 	uint8_t state = pm_state_cpu_get_all(1u, &cpu_states);
 
 	zassert_equal(state, 0, NULL);
+}
+
+
+ZTEST(power_management_1cpu, test_turn_on_off_action)
+{
+	const struct pm_state_info *cpu_states;
+
+	pm_state_cpu_get_all(0, &cpu_states);
+	pm_state_force(0, &cpu_states[2]);
+
+	testing_turn_on_off_action = true;
+	k_sleep(K_SECONDS(1U));
 }
 
 ZTEST(power_management_1cpu, test_force_state)
