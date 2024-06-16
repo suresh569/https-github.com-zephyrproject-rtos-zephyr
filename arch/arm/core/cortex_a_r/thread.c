@@ -94,7 +94,7 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 	iframe->a3 = (uint32_t)p2;
 	iframe->a4 = (uint32_t)p3;
 
-	iframe->xpsr = A_BIT | MODE_SYS;
+	iframe->xpsr = E_BIT | A_BIT | MODE_SYS;
 #if defined(CONFIG_COMPILER_ISA_THUMB2)
 	iframe->xpsr |= T_BIT;
 #endif /* CONFIG_COMPILER_ISA_THUMB2 */
