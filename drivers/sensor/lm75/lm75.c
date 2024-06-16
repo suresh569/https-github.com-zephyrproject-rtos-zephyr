@@ -352,26 +352,24 @@ int lm75_init(const struct device *dev)
 	k_thread_name_set(&data->workq.thread, "lm75_trigger");
 	k_work_init(&data->work, lm75_trigger_work_handler);
 
-	if (cfg->int_gpio.port != NULL) {
-		if (!device_is_ready(cfg->int_gpio.port)) {
-			LOG_ERR("INT GPIO not ready");
-			return -EINVAL;
-		}
+	if (!device_is_ready(cfg->int_gpio.port)) {
+		LOG_ERR("INT GPIO not ready");
+		return -EINVAL;
+	}
 
-		ret = gpio_pin_configure_dt(&cfg->int_gpio, GPIO_INPUT);
-		if (ret < 0) {
-			LOG_ERR("failed to configure INT GPIO (ret %d)", ret);
-			return ret;
-		}
+	ret = gpio_pin_configure_dt(&cfg->int_gpio, GPIO_INPUT);
+	if (ret < 0) {
+		LOG_ERR("failed to configure INT GPIO (ret %d)", ret);
+		return ret;
+	}
 
-		gpio_init_callback(&data->int_gpio_cb, lm75_int_gpio_callback_handler,
-				   BIT(cfg->int_gpio.pin));
+	gpio_init_callback(&data->int_gpio_cb, lm75_int_gpio_callback_handler,
+				BIT(cfg->int_gpio.pin));
 
-		ret = gpio_add_callback(cfg->int_gpio.port, &data->int_gpio_cb);
-		if (ret < 0) {
-			LOG_ERR("failed to add INT GPIO callback (ret %d)", ret);
-			return ret;
-		}
+	ret = gpio_add_callback(cfg->int_gpio.port, &data->int_gpio_cb);
+	if (ret < 0) {
+		LOG_ERR("failed to add INT GPIO callback (ret %d)", ret);
+		return ret;
 	}
 #endif /* LM75_TRIGGER_SUPPORT */
 
