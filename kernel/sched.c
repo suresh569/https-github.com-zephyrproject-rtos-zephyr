@@ -56,14 +56,6 @@ BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
 int32_t z_sched_prio_cmp(struct k_thread *thread_1,
 	struct k_thread *thread_2)
 {
-	/* `prio` is <32b, so the below cannot overflow. */
-	int32_t b1 = thread_1->base.prio;
-	int32_t b2 = thread_2->base.prio;
-
-	if (b1 != b2) {
-		return b2 - b1;
-	}
-
 #ifdef CONFIG_SCHED_DEADLINE
 	/* If we assume all deadlines live within the same "half" of
 	 * the 32 bit modulus space (this is a documented API rule),
@@ -84,6 +76,15 @@ int32_t z_sched_prio_cmp(struct k_thread *thread_1,
 		return (int32_t) (d2 - d1);
 	}
 #endif /* CONFIG_SCHED_DEADLINE */
+
+	/* `prio` is <32b, so the below cannot overflow. */
+	int32_t b1 = thread_1->base.prio;
+	int32_t b2 = thread_2->base.prio;
+
+	if (b1 != b2) {
+		return b2 - b1;
+	}
+
 	return 0;
 }
 
