@@ -378,6 +378,8 @@ void sys_trace_idle(void);
 #define sys_port_trace_socket_socketpair_enter(family, type, proto, sv)
 #define sys_port_trace_socket_socketpair_exit(sockA, sockB, ret)
 
+#define sys_trace_user_event(name, arg0, arg1)
+
 #ifdef __cplusplus
 }
 #endif

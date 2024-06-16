@@ -151,6 +151,7 @@ typedef enum {
 	CTF_EVENT_SOCKET_GETSOCKNAME_EXIT = 0x59,
 	CTF_EVENT_SOCKET_SOCKETPAIR_ENTER = 0x5A,
 	CTF_EVENT_SOCKET_SOCKETPAIR_EXIT = 0x5B,
+	CTF_EVENT_USER_EVENT = 0x5C,
 
 } ctf_event_t;
 
@@ -607,6 +608,13 @@ static inline void ctf_top_socket_socketpair_enter(uint32_t family, uint32_t typ
 static inline void ctf_top_socket_socketpair_exit(int32_t sock_A, int32_t sock_B, int32_t ret)
 {
 	CTF_EVENT(CTF_LITERAL(uint8_t, CTF_EVENT_SOCKET_SOCKETPAIR_EXIT), sock_A, sock_B, ret);
+}
+
+static inline void ctf_user_event(ctf_bounded_string_t name, uint32_t arg0,
+				  uint32_t arg1)
+{
+	CTF_EVENT(CTF_LITERAL(uint8_t, CTF_EVENT_USER_EVENT), name,
+		  arg0, arg1);
 }
 
 #endif /* SUBSYS_DEBUG_TRACING_CTF_TOP_H */

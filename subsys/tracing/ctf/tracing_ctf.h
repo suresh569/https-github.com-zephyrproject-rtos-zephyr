@@ -566,6 +566,8 @@ void sys_trace_socket_getsockname_exit(int sock, const struct sockaddr *addr, co
 void sys_trace_socket_socketpair_enter(int family, int type, int proto, int *sv);
 void sys_trace_socket_socketpair_exit(int sock_A, int sock_B, int ret);
 
+void sys_trace_user_event(const char *name, uint32_t arg0, uint32_t arg1);
+
 #ifdef __cplusplus
 }
 #endif

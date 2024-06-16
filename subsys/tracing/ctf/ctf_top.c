@@ -635,3 +635,14 @@ void sys_trace_socket_socketpair_exit(int sock_A, int sock_B, int ret)
 {
 	ctf_top_socket_socketpair_exit(sock_A, sock_B, ret);
 }
+
+void sys_trace_user_event(const char *name, uint32_t arg0, uint32_t arg1)
+{
+	ctf_bounded_string_t ctf_name = {""};
+
+	strncpy(ctf_name.buf, name, CTF_MAX_STRING_LEN);
+	/* Make sure buffer is NULL terminated */
+	ctf_name.buf[CTF_MAX_STRING_LEN - 1] = '\0';
+
+	ctf_user_event(ctf_name, arg0, arg1);
+}

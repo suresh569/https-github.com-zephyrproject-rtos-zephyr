@@ -707,3 +707,13 @@ event {
 		int32_t result;
 	};
 };
+
+event {
+	name = user_event;
+	id = 0x5C;
+	fields := struct {
+		ctf_bounded_string_t name[20];
+		uint32_t arg0;
+		uint32_t arg1;
+	};
+};
