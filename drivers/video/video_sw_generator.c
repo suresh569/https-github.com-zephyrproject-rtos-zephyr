@@ -133,7 +133,8 @@ static void __fill_buffer_colorbar(struct video_sw_generator_data *data, struct 
 	}
 
 	vbuf->timestamp = k_uptime_get_32();
-	vbuf->bytesused = i;
+	vbuf->bytesframe = vbuf->bytesused = i;
+	vbuf->flags = VIDEO_BUF_EOF;
 }
 
 static void __buffer_work(struct k_work *work)
@@ -225,6 +226,8 @@ static int video_sw_generator_get_caps(const struct device *dev, enum video_endp
 {
 	caps->format_caps = fmts;
 	caps->min_vbuf_count = 0;
+	caps->vbuf_per_frame = 1;
+	caps->feature_flags = 0;
 
 	return 0;
 }

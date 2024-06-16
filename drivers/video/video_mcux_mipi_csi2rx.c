@@ -179,6 +179,9 @@ static int mipi_csi2rx_get_caps(const struct device *dev, enum video_endpoint_id
 		return -EINVAL;
 	}
 
+	caps->vbuf_per_frame = 1;
+	caps->feature_flags = 0;
+
 	/* Just forward to sensor dev for now */
 	return video_get_caps(config->sensor_dev, ep, caps);
 }
