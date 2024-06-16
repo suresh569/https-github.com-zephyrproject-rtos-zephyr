@@ -13,6 +13,8 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/toolchain.h>
 
+#include <zephyr/sys/util_init.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,6 +42,8 @@ extern "C" {
  * - `APPLICATION`: Executed just before application code (`main`).
  * - `SMP`: Only available if @kconfig{CONFIG_SMP} is enabled, specific for
  *   SMP.
+ * - `MANUAL`: Executed "manually" at runtime, unlike other levels which are
+ *   ran one after another automatically.
  *
  * Initialization priority can take a value in the range of 0 to 99.
  *
@@ -124,6 +128,7 @@ struct init_entry {
 #define Z_INIT_POST_KERNEL_POST_KERNEL	 1
 #define Z_INIT_APPLICATION_APPLICATION	 1
 #define Z_INIT_SMP_SMP			 1
+#define Z_INIT_MANUAL_MANUAL		 1
 
 /* Init level ordinals */
 #define Z_INIT_ORD_EARLY	0
@@ -132,6 +137,7 @@ struct init_entry {
 #define Z_INIT_ORD_POST_KERNEL	3
 #define Z_INIT_ORD_APPLICATION	4
 #define Z_INIT_ORD_SMP		5
+#define Z_INIT_ORD_MANUAL	6
 
 /**
  * @brief Obtain init entry name.
@@ -147,9 +153,9 @@ struct init_entry {
  * linker scripts to sort them according to the specified
  * level/priority/sub-priority.
  */
-#define Z_INIT_ENTRY_SECTION(level, prio, sub_prio)                           \
-	__attribute__((__section__(                                           \
-		".z_init_" #level STRINGIFY(prio)"_" STRINGIFY(sub_prio)"_")))
+#define Z_INIT_ENTRY_SECTION(node_id, level, prio, sub_prio)		\
+	__attribute__((__section__(                                     \
+	".z_init_" STRINGIFY(ZINIT_GET_LEVEL(node_id, level)) "_" STRINGIFY(prio)"_")))
 
 
 /* Designated initializers where added to C in C99. There were added to
@@ -190,7 +196,7 @@ struct init_entry {
  * @brief Obtain the ordinal for an init level.
  *
  * @param level Init level (EARLY, PRE_KERNEL_1, PRE_KERNEL_2, POST_KERNEL,
- * APPLICATION, SMP).
+ * APPLICATION, SMP, MANUAL).
  *
  * @return Init level ordinal.
  */
@@ -201,7 +207,8 @@ struct init_entry {
 	(COND_CODE_1(Z_INIT_POST_KERNEL_##level, (Z_INIT_ORD_POST_KERNEL),     \
 	(COND_CODE_1(Z_INIT_APPLICATION_##level, (Z_INIT_ORD_APPLICATION),     \
 	(COND_CODE_1(Z_INIT_SMP_##level, (Z_INIT_ORD_SMP),                     \
-	(ZERO_OR_COMPILE_ERROR(0)))))))))))))
+	(COND_CODE_1(Z_INIT_MANUAL_##level, (Z_INIT_ORD_MANUAL),               \
+	(ZERO_OR_COMPILE_ERROR(0)))))))))))))))
 
 /**
  * @brief Register an initialization function.
@@ -211,8 +218,8 @@ struct init_entry {
  *
  * @param init_fn Initialization function.
  * @param level Initialization level. Allowed tokens: `EARLY`, `PRE_KERNEL_1`,
- * `PRE_KERNEL_2`, `POST_KERNEL`, `APPLICATION` and `SMP` if
- * @kconfig{CONFIG_SMP} is enabled.
+ * `PRE_KERNEL_2`, `POST_KERNEL`, `APPLICATION` , `SMP` if
+ * @kconfig{CONFIG_SMP} is enabled, and `MANUAL`.
  * @param prio Initialization priority within @p _level. Note that it must be a
  * decimal integer literal without leading zeroes or sign (e.g. `32`), or an
  * equivalent symbolic name (e.g. `#define MY_INIT_PRIO 32`); symbolic
@@ -237,7 +244,8 @@ struct init_entry {
  */
 #define SYS_INIT_NAMED(name, init_fn_, level, prio)                                       \
 	static const Z_DECL_ALIGN(struct init_entry)                                      \
-		Z_INIT_ENTRY_SECTION(level, prio, 0) __used __noasan                      \
+		Z_INIT_ENTRY_SECTION(name, level, ZINIT_GET_PRIORITY(name, name), 0)      \
+		__used __noasan                                                           \
 		Z_INIT_ENTRY_NAME(name) = {.init_fn = {.sys = (init_fn_)},                \
 			Z_INIT_SYS_INIT_DEV_NULL}
 
