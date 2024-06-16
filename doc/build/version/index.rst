@@ -76,10 +76,9 @@ following defines are available:
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
 | Define                      | Type              | Field(s)                                             | Example                 |
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
-| APPVERSION                  | Numerical         | ``VERSION_MAJOR`` (left shifted by 24 bits), |br|    | 0x1020304               |
+| APPVERSION                  | Numerical         | ``VERSION_MAJOR`` (left shifted by 24 bits), |br|    | 0x1020300               |
 |                             |                   | ``VERSION_MINOR`` (left shifted by 16 bits), |br|    |                         |
-|                             |                   | ``PATCHLEVEL`` (left shifted by 8 bits), |br|        |                         |
-|                             |                   | ``VERSION_TWEAK``                                    |                         |
+|                             |                   | ``PATCHLEVEL`` (left shifted by 8 bits)              |                         |
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
 | APP_VERSION_NUMBER          | Numerical         | ``VERSION_MAJOR`` (left shifted by 16 bits), |br|    | 0x10203                 |
 |                             |                   | ``VERSION_MINOR`` (left shifted by 8 bits), |br|     |                         |
@@ -91,7 +90,7 @@ following defines are available:
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
 | APP_PATCHLEVEL              | Numerical         | ``PATCHLEVEL``                                       | 3                       |
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
-| APP_VERSION_TWEAK           | Numerical         | ``VERSION_TWEAK``                                    | 4                       |
+| APP_TWEAK                   | Numerical         | ``VERSION_TWEAK``                                    | 4                       |
 +-----------------------------+-------------------+------------------------------------------------------+-------------------------+
 | APP_VERSION_STRING          | String (quoted)   | ``VERSION_MAJOR``, |br|                              | "1.2.3-unstable"        |
 |                             |                   | ``VERSION_MINOR``, |br|                              |                         |
@@ -154,10 +153,9 @@ The following variable are available for usage in CMake files:
 +-----------------------------+-----------------+---------------------------------------------------+------------------+
 | Variable                    | Type            | Field(s)                                          | Example          |
 +-----------------------------+-----------------+---------------------------------------------------+------------------+
-| APPVERSION                  | Numerical (hex) | ``VERSION_MAJOR`` (left shifted by 24 bits), |br| | 0x1020304        |
+| APPVERSION                  | Numerical (hex) | ``VERSION_MAJOR`` (left shifted by 24 bits), |br| | 0x1020300        |
 |                             |                 | ``VERSION_MINOR`` (left shifted by 16 bits), |br| |                  |
-|                             |                 | ``PATCHLEVEL`` (left shifted by 8 bits), |br|     |                  |
-|                             |                 | ``VERSION_TWEAK``                                 |                  |
+|                             |                 | ``PATCHLEVEL`` (left shifted by 8 bits)           |                  |
 +-----------------------------+-----------------+---------------------------------------------------+------------------+
 | APP_VERSION_NUMBER          | Numerical (hex) | ``VERSION_MAJOR`` (left shifted by 16 bits), |br| | 0x10203          |
 |                             |                 | ``VERSION_MINOR`` (left shifted by 8 bits), |br|  |                  |

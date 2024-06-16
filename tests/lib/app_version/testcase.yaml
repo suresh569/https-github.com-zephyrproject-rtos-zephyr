@@ -1,0 +1,5 @@
+tests:
+  libraries.app_version.basic:
+    tags: version
+    integration_platforms:
+      - native_sim
