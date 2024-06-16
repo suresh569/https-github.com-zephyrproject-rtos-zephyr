@@ -35,6 +35,33 @@ extern "C" {
  * @{
  */
 
+/* Only for testing, see description in udc_common.c */
+#if CONFIG_UDC_DWC2
+#define BUF_ALIGN		32U
+#define BUF_GRANULARITY		32U
+#else
+/* Defaults */
+#define BUF_ALIGN		4U
+#define BUF_GRANULARITY		4U
+#endif
+
+#define NET_BUF_POOL_USBD_DEFINE(_name, _count, _data_size, _ud_size, _destroy) \
+	_NET_BUF_ARRAY_DEFINE(_name, _count, _ud_size);                         \
+	static uint8_t __noinit __aligned(BUF_ALIGN)                            \
+		net_buf_data_##_name[_count][_data_size] __net_buf_align;       \
+	static const struct net_buf_pool_fixed net_buf_fixed_##_name = {        \
+		.data_pool = (uint8_t *)net_buf_data_##_name,                   \
+	};                                                                      \
+	static const struct net_buf_data_alloc net_buf_fixed_alloc_##_name = {  \
+		.cb = &net_buf_fixed_cb,                                        \
+		.alloc_data = (void *)&net_buf_fixed_##_name,                   \
+		.max_alloc_size = _data_size,                                   \
+	};                                                                      \
+	static STRUCT_SECTION_ITERABLE(net_buf_pool, _name) =                   \
+		NET_BUF_POOL_INITIALIZER(_name, &net_buf_fixed_alloc_##_name,   \
+					 _net_buf_##_name, _count, _ud_size,    \
+					 _destroy)
+
 /*
  * The USB Unicode bString is encoded in UTF16LE, which means it takes up
  * twice the amount of bytes than the same string encoded in ASCII7.
