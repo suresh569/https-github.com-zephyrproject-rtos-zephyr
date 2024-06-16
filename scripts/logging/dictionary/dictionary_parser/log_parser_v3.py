@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Intel Corporation
+# Copyright (c) 2021, 2024 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# Parsers are gonig to have very similar code.
+# So tell pylint not to care.
+# pylint: disable=duplicate-code
+
 """
-Dictionary-based Logging Parser Version 1
+Dictionary-based Logging Parser Version 3
 
 This contains the implementation of the parser for
-version 1 databases.
+version 3 databases.
 """
 
 import logging
-import math
 import struct
 import colorama
 from colorama import Fore
@@ -28,17 +31,17 @@ HEX_BYTES_IN_LINE = 16
 #
 # struct log_dict_output_normal_msg_hdr_t {
 #     uint8_t type;
-#     uint32_t domain:3;
-#     uint32_t level:3;
-#     uint32_t package_len:10;
-#     uint32_t data_len:12;
+#     uint32_t domain:4;
+#     uint32_t level:4;
+#     uint32_t package_len:16;
+#     uint32_t data_len:16;
 #     uintptr_t source;
 #     log_timestamp_t timestamp;
 # } __packed;
 #
 # Note "type" and "timestamp" are encoded separately below.
-FMT_MSG_HDR_32 = "II"
-FMT_MSG_HDR_64 = "IQ"
+FMT_MSG_HDR_32 = "BHHI"
+FMT_MSG_HDR_64 = "BHHQ"
 
 # Message type
 # 0: normal message
@@ -60,15 +63,17 @@ FMT_DROPPED_CNT = "H"
 logger = logging.getLogger("parser")
 
 
-class LogParserV1(LogParser):
+class LogParserV3(LogParser):
     """Log Parser V1"""
     def __init__(self, database):
         super().__init__(database=database)
 
         if self.database.is_tgt_little_endian():
             endian = "<"
+            self.is_big_endian = False
         else:
             endian = ">"
+            self.is_big_endian = True
 
         self.fmt_msg_type = endian + FMT_MSG_TYPE
         self.fmt_dropped_cnt = endian + FMT_DROPPED_CNT
@@ -97,7 +102,7 @@ class LogParserV1(LogParser):
             str_idx /= self.data_types.get_sizeof(DataTypes.INT)
 
             if int(str_idx) not in string_tbl:
-                ret = "<string@0x{0:x}>".format(arg)
+                ret = f'<string@0x{arg:x}>'
             else:
                 ret = string_tbl[int(str_idx)]
 
@@ -236,7 +241,7 @@ class LogParserV1(LogParser):
         chr_done = 0
 
         for one_hex in hex_data:
-            hex_vals += "%x " % one_hex
+            hex_vals += f'{one_hex:02x} '
             chr_vals += chr(one_hex)
             chr_done += 1
 
@@ -260,17 +265,20 @@ class LogParserV1(LogParser):
     def parse_one_normal_msg(self, logdata, offset):
         """Parse one normal log message and print the encoded message"""
         # Parse log message header
-        log_desc, source_id = struct.unpack_from(self.fmt_msg_hdr, logdata, offset)
+        domain_lvl, pkg_len, data_len, source_id = struct.unpack_from(self.fmt_msg_hdr,
+                                                                      logdata, offset)
         offset += struct.calcsize(self.fmt_msg_hdr)
 
         timestamp = struct.unpack_from(self.fmt_msg_timestamp, logdata, offset)[0]
         offset += struct.calcsize(self.fmt_msg_timestamp)
 
-        # domain_id, level, pkg_len, data_len
-        domain_id = log_desc & 0x07
-        level = (log_desc >> 3) & 0x07
-        pkg_len = (log_desc >> 6) & int(math.pow(2, 10) - 1)
-        data_len = (log_desc >> 16) & int(math.pow(2, 12) - 1)
+        # domain_id, level
+        if self.is_big_endian:
+            level = domain_lvl & 0x0F
+            domain_id = (domain_lvl >> 4) & 0x0F
+        else:
+            domain_id = domain_lvl & 0x0F
+            level = (domain_lvl >> 4) & 0x0F
 
         level_str, color = get_log_level_str_color(level)
         source_id_str = self.database.get_log_source_string(domain_id, source_id)
@@ -331,6 +339,7 @@ class LogParserV1(LogParser):
 
         if level == 0:
             print(f"{log_msg}", end='')
+            log_prefix = ""
         else:
             log_prefix = f"[{timestamp:>10}] <{level_str}> {source_id_str}: "
             print(f"{color}%s%s{Fore.RESET}" % (log_prefix, log_msg))
