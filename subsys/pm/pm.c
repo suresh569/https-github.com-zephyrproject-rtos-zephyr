@@ -131,6 +131,13 @@ bool pm_system_suspend(int32_t ticks)
 	} else {
 		const struct pm_state_info *info;
 
+#ifdef CONFIG_PM_LOW_LATENCY_EVENTS
+		/*
+		 * In this case CPU needs to be fully wake up before the event is
+		 * triggered. We need to find out first the ticks to the next event
+		 */
+		ticks = pm_policy_next_low_latency_event_ticks(ticks);
+#endif
 		info = pm_policy_next_state(id, ticks);
 		if (info != NULL) {
 			z_cpus_pm_state[id] = *info;
@@ -163,6 +170,15 @@ bool pm_system_suspend(int32_t ticks)
 	}
 #endif
 
+#if defined(CONFIG_PM_LOW_LATENCY_EVENTS)
+	/*
+	 * In this case CPU needs to be fully wake up before the event is
+	 * triggered. We need to find out first the ticks to the next event
+	 */
+	ticks = pm_policy_next_event(ticks);
+#endif
+
+	printk("%s Riadh, ticks : %d\n", __func__, ticks);
 	if ((z_cpus_pm_state[id].exit_latency_us != 0) &&
 	    (ticks != K_TICKS_FOREVER)) {
 		/*
