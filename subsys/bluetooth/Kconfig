@@ -15,6 +15,15 @@ menuconfig BT
 
 if BT
 
+config BT_HCI_ERROR_CODE_AS_STRING
+	bool "Print error codes as string"
+	default y
+	help
+	  When set, this configuration maps all HCI error codes
+	  printed using `HCI_ERR_FMT` and `HCI_ERR` to human
+	  readable strings. When not set, the error codes are
+	  printed decimal only.
+
 choice BT_STACK_SELECTION
 	prompt "Bluetooth Stack Selection"
 	default BT_HCI
