@@ -1,0 +1,5 @@
+tests:
+  libraries.app_version.git_tweak:
+    tags: version
+    integration_platforms:
+      - native_sim
