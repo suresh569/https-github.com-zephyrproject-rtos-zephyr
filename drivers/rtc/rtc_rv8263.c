@@ -98,9 +98,6 @@ struct rv8263c8_data {
 
 #if (CONFIG_RTC_ALARM || CONFIG_RTC_UPDATE) && DT_ANY_INST_HAS_PROP_STATUS_OKAY(int_gpios)
 	const struct device *dev;
-#endif
-
-#if (CONFIG_RTC_ALARM || CONFIG_RTC_UPDATE) && DT_ANY_INST_HAS_PROP_STATUS_OKAY(int_gpios)
 	struct gpio_callback gpio_cb;
 #endif
 
