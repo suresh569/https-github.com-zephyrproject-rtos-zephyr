@@ -145,7 +145,7 @@ static void rv8263c8_gpio_callback_handler(const struct device *p_port, struct g
 	k_work_submit(&data->alarm_work);
 #endif
 
-#if CONFIG_RTC_UPDATE && DT_ANY_INST_HAS_PROP_STATUS_OKAY(int_gpios)
+#if CONFIG_RTC_UPDATE
 	k_work_submit(&data->update_work);
 #endif
 }
