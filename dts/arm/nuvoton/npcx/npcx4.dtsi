@@ -63,6 +63,13 @@
 	soc {
 		compatible = "nuvoton,npcx4", "nuvoton,npcx", "simple-bus";
 
+		bbram: bb-ram@400af001 {
+			compatible = "nuvoton,npcx-bbram";
+			reg = <0x400af001 0x7F
+			       0x400af100 0x1>;
+			reg-names = "memory", "status";
+		};
+
 		/* Specific soc devices in npcx4 series */
 		itims: timer@400b0000 {
 			compatible = "nuvoton,npcx-itim-timer";
