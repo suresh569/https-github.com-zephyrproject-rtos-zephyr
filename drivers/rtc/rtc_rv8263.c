@@ -141,7 +141,7 @@ static void rv8263c8_gpio_callback_handler(const struct device *p_port, struct g
 
 	struct rv8263c8_data *data = CONTAINER_OF(p_cb, struct rv8263c8_data, gpio_cb);
 
-#if CONFIG_RTC_ALARM && DT_ANY_INST_HAS_PROP_STATUS_OKAY(int_gpios)
+#if CONFIG_RTC_ALARM
 	k_work_submit(&data->alarm_work);
 #endif
 
